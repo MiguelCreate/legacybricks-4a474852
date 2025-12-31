@@ -1,4 +1,4 @@
-import { Home, Building2, Users, Wallet, Settings, Target, ChevronLeft, ChevronRight, Snowflake, PiggyBank, Sunset, FileText, Heart, ClipboardCheck, Calculator } from "lucide-react";
+import { Home, Building2, Users, Wallet, Settings, Target, ChevronLeft, ChevronRight, Snowflake, PiggyBank, Sunset, FileText, Heart, ClipboardCheck, Calculator, Wrench } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ const mainNavItems = [
   { icon: Home, label: "Dashboard", path: "/" },
   { icon: Building2, label: "Panden", path: "/panden" },
   { icon: Users, label: "Huurders", path: "/huurders" },
+  { icon: Wrench, label: "Aannemers", path: "/aannemers" },
   { icon: FileText, label: "Contracten", path: "/contracten" },
   { icon: ClipboardCheck, label: "Inchecklijsten", path: "/inchecklijsten" },
   { icon: Wallet, label: "Financiën", path: "/financien" },

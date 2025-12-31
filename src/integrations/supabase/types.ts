@@ -61,6 +61,45 @@ export type Database = {
           },
         ]
       }
+      contractors: {
+        Row: {
+          bedrijfsnaam: string
+          contactpersoon: string | null
+          created_at: string
+          email: string | null
+          id: string
+          notities: string | null
+          telefoon: string | null
+          type_werkzaamheden: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bedrijfsnaam: string
+          contactpersoon?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          notities?: string | null
+          telefoon?: string | null
+          type_werkzaamheden: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bedrijfsnaam?: string
+          contactpersoon?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          notities?: string | null
+          telefoon?: string | null
+          type_werkzaamheden?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contracts: {
         Row: {
           created_at: string
@@ -605,6 +644,90 @@ export type Database = {
           },
         ]
       }
+      property_contractors: {
+        Row: {
+          contractor_id: string
+          created_at: string
+          id: string
+          property_id: string
+        }
+        Insert: {
+          contractor_id: string
+          created_at?: string
+          id?: string
+          property_id: string
+        }
+        Update: {
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_contractors_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_contractors_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          actieve_huurder_id: string | null
+          created_at: string
+          huurprijs: number
+          id: string
+          naam: string
+          oppervlakte_m2: number | null
+          property_id: string
+          updated_at: string
+        }
+        Insert: {
+          actieve_huurder_id?: string | null
+          created_at?: string
+          huurprijs?: number
+          id?: string
+          naam: string
+          oppervlakte_m2?: number | null
+          property_id: string
+          updated_at?: string
+        }
+        Update: {
+          actieve_huurder_id?: string | null
+          created_at?: string
+          huurprijs?: number
+          id?: string
+          naam?: string
+          oppervlakte_m2?: number | null
+          property_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_actieve_huurder_id_fkey"
+            columns: ["actieve_huurder_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rooms_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants: {
         Row: {
           actief: boolean
@@ -617,6 +740,7 @@ export type Database = {
           naam: string
           notities: string | null
           property_id: string
+          room_id: string | null
           telefoon: string | null
           unit_nummer: number
           updated_at: string
@@ -632,6 +756,7 @@ export type Database = {
           naam: string
           notities?: string | null
           property_id: string
+          room_id?: string | null
           telefoon?: string | null
           unit_nummer?: number
           updated_at?: string
@@ -647,6 +772,7 @@ export type Database = {
           naam?: string
           notities?: string | null
           property_id?: string
+          room_id?: string | null
           telefoon?: string | null
           unit_nummer?: number
           updated_at?: string
@@ -657,6 +783,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
             referencedColumns: ["id"]
           },
         ]
