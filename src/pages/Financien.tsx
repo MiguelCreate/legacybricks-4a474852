@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Euro, TrendingUp, TrendingDown, Plus, Receipt, PiggyBank, BarChart3, Trash2, Landmark } from "lucide-react";
+import { Euro, TrendingUp, TrendingDown, Plus, Receipt, PiggyBank, BarChart3, Trash2, Landmark, Building2, Pencil, Calendar, Percent } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatCard } from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
@@ -440,6 +440,114 @@ const Financien = () => {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Hypotheek Overzicht */}
+          <div className="bg-card rounded-xl border shadow-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h2 className="font-semibold text-foreground">Hypotheek Overzicht</h2>
+                <InfoTooltip
+                  title="Hypotheek Overzicht"
+                  content="Bekijk alle hypotheken per pand met de belangrijkste details zoals maandlast, hoofdsom en rente."
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsHypotheekDialogOpen(true)}
+                className="gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Toevoegen
+              </Button>
+            </div>
+            
+            {loans.length === 0 ? (
+              <p className="text-muted-foreground text-sm py-8 text-center">
+                Nog geen hypotheken geregistreerd
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {loans.map((loan) => {
+                  const property = properties.find((p) => p.id === loan.property_id);
+                  const isAdvanced = loan.hypotheek_type === "gevorderd";
+                  
+                  return (
+                    <div
+                      key={loan.id}
+                      className="p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Building2 className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {property?.naam || "Onbekend pand"}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {isAdvanced ? "Gevorderd" : "Eenvoudig"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-foreground">
+                            €{Number(loan.maandlast).toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
+                            <span className="text-sm font-normal text-muted-foreground">/mnd</span>
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {isAdvanced && (
+                        <div className="mt-3 pt-3 border-t border-border/50 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Euro className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-muted-foreground text-xs">Hoofdsom</p>
+                              <p className="font-medium">€{Number(loan.hoofdsom || 0).toLocaleString("nl-NL")}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Percent className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-muted-foreground text-xs">Rente</p>
+                              <p className="font-medium">{Number(loan.rente_percentage || 0).toFixed(2)}% {loan.rente_type}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-muted-foreground text-xs">Looptijd</p>
+                              <p className="font-medium">{loan.looptijd_jaren || 0} jaar</p>
+                            </div>
+                          </div>
+                          {loan.restschuld && (
+                            <div className="flex items-center gap-2">
+                              <TrendingDown className="w-4 h-4 text-muted-foreground" />
+                              <div>
+                                <p className="text-muted-foreground text-xs">Restschuld</p>
+                                <p className="font-medium">€{Number(loan.restschuld).toLocaleString("nl-NL")}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                
+                {/* Totaal */}
+                <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                  <p className="font-medium text-muted-foreground">Totaal maandlasten</p>
+                  <p className="text-lg font-bold text-foreground">
+                    €{totalMonthlyLoanPayments.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
+                    <span className="text-sm font-normal text-muted-foreground">/mnd</span>
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
