@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink, Calendar, Clock, DoorOpen, BedDouble, Percent, Sparkles, Map } from "lucide-react";
+import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink, Calendar, Clock, DoorOpen, BedDouble, Percent, Sparkles, Map, Wrench } from "lucide-react";
 import { PropertyMap } from "@/components/panden/PropertyMap";
 import { RoomManager } from "@/components/panden/RoomManager";
+import { PropertyFeaturesManager } from "@/components/panden/PropertyFeaturesManager";
+import { MaintenanceOverview } from "@/components/panden/MaintenanceOverview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -465,6 +467,10 @@ const Panden = () => {
                 <Map className="w-4 h-4" />
                 Kaart
               </TabsTrigger>
+              <TabsTrigger value="maintenance" className="gap-2">
+                <Wrench className="w-4 h-4" />
+                Onderhoud
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="map" className="mt-0">
@@ -711,6 +717,10 @@ const Panden = () => {
               })}
             </div>
           )}
+            </TabsContent>
+
+            <TabsContent value="maintenance" className="mt-0">
+              <MaintenanceOverview />
             </TabsContent>
           </Tabs>
         </div>

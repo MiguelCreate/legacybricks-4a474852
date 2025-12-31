@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapPin } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Fix for default marker icons in Leaflet with Vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -31,6 +32,8 @@ interface PropertyBase {
   maandelijkse_huur?: number | null;
   aantal_units?: number;
   gezondheidsscore?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 interface PropertyWithCoords extends PropertyBase {
@@ -81,6 +84,18 @@ const geocodeAddress = async (address: string): Promise<{ lat: number; lng: numb
   return null;
 };
 
+// Save coordinates to database
+const saveCoordinates = async (propertyId: string, lat: number, lng: number) => {
+  try {
+    await supabase
+      .from("properties")
+      .update({ latitude: lat, longitude: lng } as any)
+      .eq("id", propertyId);
+  } catch (error) {
+    console.error("Error saving coordinates:", error);
+  }
+};
+
 const statusLabels: Record<string, string> = {
   aankoop: "Aankoop",
   renovatie: "Renovatie",
@@ -99,7 +114,15 @@ export const PropertyMap = ({ properties, onPropertyClick }: PropertyMapProps) =
       const results: PropertyWithCoords[] = [];
 
       for (const property of properties) {
-        // Check cache first
+        // First check if we have stored coordinates
+        if (property.latitude && property.longitude) {
+          const coords = { lat: Number(property.latitude), lng: Number(property.longitude) };
+          geocodedRef.current.set(property.id, coords);
+          results.push({ ...property, ...coords });
+          continue;
+        }
+
+        // Check cache
         if (geocodedRef.current.has(property.id)) {
           const coords = geocodedRef.current.get(property.id)!;
           results.push({ ...property, ...coords });
@@ -111,6 +134,8 @@ export const PropertyMap = ({ properties, onPropertyClick }: PropertyMapProps) =
         if (coords) {
           geocodedRef.current.set(property.id, coords);
           results.push({ ...property, ...coords });
+          // Save to database for future use
+          saveCoordinates(property.id, coords.lat, coords.lng);
         }
 
         // Rate limit to avoid Nominatim limits
@@ -173,12 +198,15 @@ export const PropertyMap = ({ properties, onPropertyClick }: PropertyMapProps) =
         {propertiesWithCoords.map((property) => (
           <Marker key={property.id} position={[property.lat, property.lng]} icon={customIcon}>
             <Popup>
-              <div style={{ minWidth: "180px", padding: "4px" }}>
+              <div style={{ minWidth: "200px", padding: "4px" }}>
                 <h4 style={{ fontWeight: 600, marginBottom: "4px", fontSize: "14px" }}>
                   {property.naam}
                 </h4>
                 <p style={{ fontSize: "12px", color: "#666", marginBottom: "6px" }}>
                   📍 {property.locatie}
+                </p>
+                <p style={{ fontSize: "10px", color: "#999", marginBottom: "6px" }}>
+                  {property.lat.toFixed(5)}, {property.lng.toFixed(5)}
                 </p>
                 <p style={{ fontSize: "11px", marginBottom: "4px" }}>
                   <span style={{ 

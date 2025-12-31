@@ -494,8 +494,10 @@ export type Database = {
           inrichting_kosten: number | null
           is_pinned: boolean | null
           kostenstijging_percentage: number | null
+          latitude: number | null
           leegstand_buffer_percentage: number | null
           locatie: string
+          longitude: number | null
           maandelijkse_huur: number | null
           naam: string
           notaris_kosten: number | null
@@ -519,6 +521,7 @@ export type Database = {
           updated_at: string
           user_id: string
           verzekering_jaarlijks: number | null
+          volledig_adres: string | null
           waardegroei_percentage: number | null
           waardering: number | null
           waarom_gekocht: string | null
@@ -549,8 +552,10 @@ export type Database = {
           inrichting_kosten?: number | null
           is_pinned?: boolean | null
           kostenstijging_percentage?: number | null
+          latitude?: number | null
           leegstand_buffer_percentage?: number | null
           locatie: string
+          longitude?: number | null
           maandelijkse_huur?: number | null
           naam: string
           notaris_kosten?: number | null
@@ -574,6 +579,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           verzekering_jaarlijks?: number | null
+          volledig_adres?: string | null
           waardegroei_percentage?: number | null
           waardering?: number | null
           waarom_gekocht?: string | null
@@ -604,8 +610,10 @@ export type Database = {
           inrichting_kosten?: number | null
           is_pinned?: boolean | null
           kostenstijging_percentage?: number | null
+          latitude?: number | null
           leegstand_buffer_percentage?: number | null
           locatie?: string
+          longitude?: number | null
           maandelijkse_huur?: number | null
           naam?: string
           notaris_kosten?: number | null
@@ -629,6 +637,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           verzekering_jaarlijks?: number | null
+          volledig_adres?: string | null
           waardegroei_percentage?: number | null
           waardering?: number | null
           waarom_gekocht?: string | null
@@ -676,6 +685,103 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_features: {
+        Row: {
+          aanwezig: boolean
+          created_at: string
+          gepland_onderhoudsjaar: number | null
+          id: string
+          merk_type: string | null
+          naam: string
+          notities: string | null
+          onderhoudsbehoefte: string | null
+          onderhoudsstatus: string | null
+          property_id: string
+          updated_at: string
+        }
+        Insert: {
+          aanwezig?: boolean
+          created_at?: string
+          gepland_onderhoudsjaar?: number | null
+          id?: string
+          merk_type?: string | null
+          naam: string
+          notities?: string | null
+          onderhoudsbehoefte?: string | null
+          onderhoudsstatus?: string | null
+          property_id: string
+          updated_at?: string
+        }
+        Update: {
+          aanwezig?: boolean
+          created_at?: string
+          gepland_onderhoudsjaar?: number | null
+          id?: string
+          merk_type?: string | null
+          naam?: string
+          notities?: string | null
+          onderhoudsbehoefte?: string | null
+          onderhoudsstatus?: string | null
+          property_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_features_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_features: {
+        Row: {
+          created_at: string
+          gepland_onderhoudsjaar: number | null
+          id: string
+          merk_type: string | null
+          naam: string
+          notities: string | null
+          onderhoudsbehoefte: string | null
+          onderhoudsstatus: string | null
+          room_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          gepland_onderhoudsjaar?: number | null
+          id?: string
+          merk_type?: string | null
+          naam: string
+          notities?: string | null
+          onderhoudsbehoefte?: string | null
+          onderhoudsstatus?: string | null
+          room_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          gepland_onderhoudsjaar?: number | null
+          id?: string
+          merk_type?: string | null
+          naam?: string
+          notities?: string | null
+          onderhoudsbehoefte?: string | null
+          onderhoudsstatus?: string | null
+          room_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_features_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
             referencedColumns: ["id"]
           },
         ]
