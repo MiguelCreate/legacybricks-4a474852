@@ -7,7 +7,6 @@ import { StatCard } from "@/components/ui/StatCard";
 import { PropertyCard } from "@/components/ui/PropertyCard";
 import { QuickAction } from "@/components/ui/QuickAction";
 import { DailyMission } from "@/components/dashboard/DailyMission";
-import { StreakBanner } from "@/components/dashboard/StreakBanner";
 import { LegacyMantra } from "@/components/dashboard/LegacyMantra";
 import { CoPiloot } from "@/components/dashboard/CoPiloot";
 import { RentalIncomeChart } from "@/components/dashboard/RentalIncomeChart";
@@ -16,10 +15,10 @@ import { WelcomeOnboarding } from "@/components/dashboard/WelcomeOnboarding";
 import { ShortTermRentalOverview } from "@/components/dashboard/ShortTermRentalOverview";
 import { StilteModus } from "@/components/dashboard/StilteModus";
 import { VrijheidsDashboard } from "@/components/dashboard/VrijheidsDashboard";
-import { GamificationBanner } from "@/components/dashboard/GamificationBanner";
 import { AudioSamenvatting } from "@/components/dashboard/AudioSamenvatting";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { calculateGrossYield, calculatePropertyCashflow } from "@/lib/financialCalculations";
@@ -32,8 +31,6 @@ type Contract = Tables<"contracts">;
 type Profile = Tables<"profiles"> & {
   stilte_modus_aan?: boolean;
   vrijheidskosten_maand?: number;
-  erfgoed_level?: number;
-  totaal_badges?: any[];
 };
 
 const Dashboard = () => {
@@ -51,7 +48,6 @@ const Dashboard = () => {
   const [stilteModusAan, setStilteModusAan] = useState(false);
 
   useEffect(() => {
-    // Check if user has seen onboarding
     const hasSeenOnboarding = localStorage.getItem("vastgoedapp_onboarding_complete");
     if (!hasSeenOnboarding) {
       setShowOnboarding(true);
@@ -114,8 +110,6 @@ const Dashboard = () => {
   const totalPortfolioValue = properties.reduce((sum, p) => sum + Number(p.waardering || p.aankoopprijs), 0);
   const totalDebt = loans.reduce((sum, l) => sum + Number(l.restschuld || l.hoofdsom || 0), 0);
   const nettoVermogen = totalPortfolioValue - totalDebt;
-  
-  // Total monthly rental income from all active tenants
   const totalMonthlyRent = tenants.reduce((sum, t) => sum + Number(t.huurbedrag), 0);
 
   const calculateMonthlyCashflow = () => {
@@ -156,61 +150,6 @@ const Dashboard = () => {
     const daysUntilEnd = Math.ceil((new Date(c.einddatum).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     return daysUntilEnd <= 90 && daysUntilEnd >= 0;
   });
-
-  const stats = [
-    {
-      title: "Totale Portefeuille",
-      value: `€${totalPortfolioValue.toLocaleString("nl-NL")}`,
-      subtitle: `${properties.length} ${properties.length === 1 ? "pand" : "panden"}`,
-      icon: <Building2 className="w-5 h-5 text-primary" />,
-      tooltip: {
-        title: "Totale Portefeuillewaarde",
-        content: "Dit is de geschatte waarde van al je panden samen. Gebaseerd op je handmatig ingevoerde waarderingen of aankoopprijzen.",
-      },
-    },
-    {
-      title: "Huurinkomsten",
-      value: `€${totalMonthlyRent.toLocaleString("nl-NL")}`,
-      subtitle: `${tenants.length} ${tenants.length === 1 ? "huurder" : "huurders"}`,
-      icon: <Wallet className="w-5 h-5 text-success" />,
-      tooltip: {
-        title: "Totale Huurinkomsten",
-        content: "De totale maandelijkse huurinkomsten van alle actieve huurders in al je panden samen.",
-      },
-      variant: "success" as const,
-    },
-    {
-      title: "Netto Cashflow",
-      value: `€${monthlyCashflow.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`,
-      subtitle: "Na alle kosten",
-      icon: <Euro className="w-5 h-5 text-primary" />,
-      tooltip: {
-        title: "Wat is Cashflow?",
-        content: "Cashflow is wat je overhoudt nadat alle kosten (hypotheek, onderhoud, belasting, beheer, leegstandsbuffer) zijn betaald.",
-      },
-      variant: monthlyCashflow >= 0 ? "default" as const : "default" as const,
-    },
-    {
-      title: "Bezettingsgraad",
-      value: `${bezettingsgraad}%`,
-      subtitle: verhuurdeProperties.length === properties.filter(p => p.status !== "te_koop" && p.status !== "aankoop").length ? "Geen leegstand" : `${verhuurdeProperties.length} verhuurd`,
-      icon: <Users className="w-5 h-5 text-primary" />,
-      tooltip: {
-        title: "Bezettingsgraad",
-        content: "Het percentage van je verhuurbare panden dat momenteel verhuurd is.",
-      },
-    },
-    {
-      title: "Bruto Rendement",
-      value: `${gemiddeldRendement.toFixed(1)}%`,
-      subtitle: "Gemiddeld",
-      icon: <TrendingUp className="w-5 h-5 text-warning" />,
-      tooltip: {
-        title: "Bruto Rendement",
-        content: "Jaarlijkse huurinkomsten gedeeld door de aankoopprijs van je panden. Gemiddelde over alle panden.",
-      },
-    },
-  ];
 
   const topProperties = properties
     .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
@@ -254,189 +193,220 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto">
         <WelcomeHeader />
 
-        <div className="px-4 md:px-6 lg:px-8 space-y-6 pb-8">
-          {/* Stilte-Modus */}
+        <div className="px-4 md:px-6 lg:px-8 space-y-8 pb-8">
+          {/* Stilte-Modus Toggle */}
           <StilteModus 
             vrijheidMaanden={vrijheidMaanden}
             isEnabled={stilteModusAan}
             onToggle={setStilteModusAan}
           />
 
-          {/* Als Stilte-Modus aan is, toon alleen rust */}
           {stilteModusAan ? null : (
             <>
-          {/* Gamification Banner */}
-          <GamificationBanner
-            erfgoedLevel={(profile as any)?.erfgoed_level || 1}
-            totaalPanden={properties.length}
-            schuldenvrij={properties.filter(p => !loans.find(l => l.property_id === p.id && Number(l.restschuld) > 0)).length}
-            doelenBehaald={0}
-            badges={(profile as any)?.totaal_badges || []}
-          />
-
-          {/* Audio Samenvatting */}
-          <div className="flex justify-end">
-            <AudioSamenvatting
-              nettoVermogen={nettoVermogen}
-              maandelijkseCashflow={monthlyCashflow}
-              openActies={expiringContracts.length}
-            />
-          </div>
-
-          {/* Co-Piloot Section */}
-          {showCoPilot && (
-            <CoPiloot onSwitchToManual={() => setShowCoPilot(false)} />
-          )}
-
-          {/* Switch to Co-Piloot button when hidden */}
-          {!showCoPilot && (
-            <div className="flex justify-end">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setShowCoPilot(true)}
-                className="gap-2"
-              >
-                <Compass className="w-4 h-4" />
-                Gebruik Co-Piloot
-              </Button>
-            </div>
-          )}
-
-          {/* Contract Warning */}
-          {expiringContracts.length > 0 && (
-            <div className="p-4 rounded-xl bg-warning/10 border border-warning/30 animate-fade-in">
-              <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-warning" />
-                <div>
-                  <p className="font-medium text-foreground">
-                    {expiringContracts.length} {expiringContracts.length === 1 ? "contract verloopt" : "contracten verlopen"} binnen 90 dagen
-                  </p>
-                  <button 
-                    onClick={() => navigate("/contracten")}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Bekijk contracten →
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Streak Banner */}
-          <StreakBanner />
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            {stats.map((stat, index) => (
-              <StatCard
-                key={index}
-                {...stat}
-              />
-            ))}
-          </div>
-
-          {/* Quick Actions */}
-          <div className="animate-slide-up" style={{ animationDelay: "0.25s" }}>
-            <div className="flex items-center gap-2 mb-4">
-              <h2 className="font-semibold text-foreground">Snelle Acties</h2>
-              <InfoTooltip
-                title="Snelle Acties"
-                content="Voer veelvoorkomende taken snel uit zonder door menu's te navigeren."
-              />
-            </div>
-            <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
-              <QuickAction
-                icon={<Plus className="w-5 h-5" />}
-                label="Nieuw Pand"
-                variant="primary"
-                onClick={() => navigate("/panden")}
-              />
-              <QuickAction
-                icon={<Euro className="w-5 h-5" />}
-                label="Huur Ontvangen"
-                variant="success"
-                onClick={() => navigate("/financien")}
-              />
-              <QuickAction
-                icon={<Receipt className="w-5 h-5" />}
-                label="Kosten Toevoegen"
-                onClick={() => navigate("/financien")}
-              />
-              <QuickAction
-                icon={<AlertTriangle className="w-5 h-5" />}
-                label="Contracten"
-                onClick={() => navigate("/contracten")}
-              />
-            </div>
-          </div>
-
-          {/* Main Content Grid */}
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Properties Section */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Charts Grid */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <RentalIncomeChart />
-                <CashflowChart />
-              </div>
-
-              {/* Short-Term Rental Overview */}
-              <ShortTermRentalOverview properties={properties} />
-
-              <div className="space-y-4">
+              {/* ===================== SECTIE 1: OVERZICHT ===================== */}
+              <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h2 className="font-semibold text-foreground">Mijn Panden</h2>
-                    <InfoTooltip
-                      title="Panden Overzicht"
-                      content="Hier zie je je panden met hun huidige status en gezondheidsscore. Gepinde panden verschijnen eerst."
-                    />
-                  </div>
-                  <button 
-                    onClick={() => navigate("/panden")}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Bekijk alle →
-                  </button>
+                  <h2 className="text-lg font-semibold text-foreground">Overzicht</h2>
+                  <AudioSamenvatting
+                    nettoVermogen={nettoVermogen}
+                    maandelijkseCashflow={monthlyCashflow}
+                    openActies={expiringContracts.length}
+                  />
                 </div>
 
-                {topProperties.length === 0 ? (
-                  <div className="text-center py-12 bg-card rounded-xl border">
-                    <Building2 className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-4">Nog geen panden toegevoegd</p>
-                    <button 
-                      onClick={() => navigate("/panden")}
-                      className="text-primary hover:underline"
-                    >
-                      Voeg je eerste pand toe →
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {topProperties.map((property, index) => (
-                      <div key={property.id} style={{ animationDelay: `${0.3 + index * 0.1}s` }}>
-                        <PropertyCard {...property} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+                {/* Stats Grid - 5 columns */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                  <StatCard
+                    title="Portefeuillewaarde"
+                    value={`€${totalPortfolioValue.toLocaleString("nl-NL")}`}
+                    subtitle={`${properties.length} panden`}
+                    icon={<Building2 className="w-5 h-5 text-primary" />}
+                    tooltip={{
+                      title: "Totale Portefeuillewaarde",
+                      content: "De geschatte waarde van al je panden samen.",
+                    }}
+                  />
+                  <StatCard
+                    title="Netto Vermogen"
+                    value={`€${nettoVermogen.toLocaleString("nl-NL")}`}
+                    subtitle="Waarde - schulden"
+                    icon={<TrendingUp className="w-5 h-5 text-success" />}
+                    tooltip={{
+                      title: "Netto Vermogen",
+                      content: "Je totale portefeuillewaarde minus alle openstaande schulden.",
+                    }}
+                    variant="success"
+                  />
+                  <StatCard
+                    title="Huurinkomsten"
+                    value={`€${totalMonthlyRent.toLocaleString("nl-NL")}`}
+                    subtitle={`${tenants.length} huurders`}
+                    icon={<Wallet className="w-5 h-5 text-primary" />}
+                    tooltip={{
+                      title: "Maandelijkse Huurinkomsten",
+                      content: "Totale huurinkomsten van alle actieve huurders.",
+                    }}
+                  />
+                  <StatCard
+                    title="Netto Cashflow"
+                    value={`€${monthlyCashflow.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`}
+                    subtitle="Per maand"
+                    icon={<Euro className="w-5 h-5" />}
+                    tooltip={{
+                      title: "Netto Cashflow",
+                      content: "Wat je overhoudt na alle kosten (hypotheek, onderhoud, belasting, beheer).",
+                    }}
+                    variant={monthlyCashflow >= 0 ? "success" : "default"}
+                  />
+                  <StatCard
+                    title="Bruto Rendement"
+                    value={`${gemiddeldRendement.toFixed(1)}%`}
+                    subtitle="Gemiddeld"
+                    icon={<TrendingUp className="w-5 h-5 text-warning" />}
+                    tooltip={{
+                      title: "Bruto Rendement",
+                      content: "Jaarlijkse huurinkomsten gedeeld door aankoopprijs.",
+                    }}
+                  />
+                </div>
+              </section>
 
-            {/* Sidebar Content */}
-            <div className="space-y-6">
-              {/* Vrijheidsdashboard */}
-              <VrijheidsDashboard
-                nettoVermogen={nettoVermogen}
-                maandelijkseKosten={vrijheidskosten}
-                maandelijkseCashflow={monthlyCashflow}
-              />
-              <DailyMission />
-              <LegacyMantra />
-            </div>
-          </div>
-          </>
+              {/* ===================== SECTIE 2: ACTIES & MELDINGEN ===================== */}
+              {(expiringContracts.length > 0 || showCoPilot) && (
+                <section className="space-y-4">
+                  <h2 className="text-lg font-semibold text-foreground">Aandachtspunten</h2>
+                  
+                  {/* Contract Warnings */}
+                  {expiringContracts.length > 0 && (
+                    <div className="p-4 rounded-xl bg-warning/10 border border-warning/30">
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-5 h-5 text-warning" />
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {expiringContracts.length} {expiringContracts.length === 1 ? "contract verloopt" : "contracten verlopen"} binnen 90 dagen
+                          </p>
+                          <button 
+                            onClick={() => navigate("/contracten")}
+                            className="text-sm text-primary hover:underline"
+                          >
+                            Bekijk contracten →
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Co-Piloot */}
+                  {showCoPilot && (
+                    <CoPiloot onSwitchToManual={() => setShowCoPilot(false)} />
+                  )}
+
+                  {!showCoPilot && (
+                    <div className="flex justify-end">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setShowCoPilot(true)}
+                        className="gap-2"
+                      >
+                        <Compass className="w-4 h-4" />
+                        Gebruik Co-Piloot
+                      </Button>
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* ===================== SECTIE 3: SNELLE ACTIES ===================== */}
+              <section className="space-y-4">
+                <h2 className="text-lg font-semibold text-foreground">Snelle Acties</h2>
+                <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
+                  <QuickAction
+                    icon={<Plus className="w-5 h-5" />}
+                    label="Nieuw Pand"
+                    variant="primary"
+                    onClick={() => navigate("/panden")}
+                  />
+                  <QuickAction
+                    icon={<Euro className="w-5 h-5" />}
+                    label="Huur Ontvangen"
+                    variant="success"
+                    onClick={() => navigate("/financien")}
+                  />
+                  <QuickAction
+                    icon={<Receipt className="w-5 h-5" />}
+                    label="Kosten Toevoegen"
+                    onClick={() => navigate("/financien")}
+                  />
+                  <QuickAction
+                    icon={<AlertTriangle className="w-5 h-5" />}
+                    label="Contracten"
+                    onClick={() => navigate("/contracten")}
+                  />
+                </div>
+              </section>
+
+              {/* ===================== SECTIE 4: HOOFDCONTENT ===================== */}
+              <section className="grid lg:grid-cols-3 gap-6">
+                {/* Linker kolom: Panden & Charts */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Charts */}
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-semibold text-foreground">Financiële Overzichten</h2>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <RentalIncomeChart />
+                      <CashflowChart />
+                    </div>
+                  </div>
+
+                  {/* Short-Term Rental */}
+                  <ShortTermRentalOverview properties={properties} />
+
+                  {/* Panden Grid */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-semibold text-foreground">Mijn Panden</h2>
+                      <button 
+                        onClick={() => navigate("/panden")}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Bekijk alle →
+                      </button>
+                    </div>
+
+                    {topProperties.length === 0 ? (
+                      <Card>
+                        <CardContent className="text-center py-12">
+                          <Building2 className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+                          <p className="text-muted-foreground mb-4">Nog geen panden toegevoegd</p>
+                          <Button onClick={() => navigate("/panden")} variant="outline">
+                            Voeg je eerste pand toe
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {topProperties.map((property) => (
+                          <PropertyCard key={property.id} {...property} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Rechter kolom: Vrijheid & Focus */}
+                <div className="space-y-6">
+                  <h2 className="text-lg font-semibold text-foreground">Vrijheid & Focus</h2>
+                  <VrijheidsDashboard
+                    nettoVermogen={nettoVermogen}
+                    maandelijkseKosten={vrijheidskosten}
+                    maandelijkseCashflow={monthlyCashflow}
+                  />
+                  <DailyMission />
+                  <LegacyMantra />
+                </div>
+              </section>
+            </>
           )}
         </div>
       </div>
