@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink } from "lucide-react";
+import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink, Calendar, Clock, DoorOpen, BedDouble, Percent } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,12 @@ const statusConfig = {
   te_koop: { label: "Te Koop", color: "destructive" as const },
 };
 
+const verhuurTypeConfig = {
+  langdurig: { label: "Langdurig", icon: Clock, description: "Traditionele huurcontracten (6+ maanden)" },
+  korte_termijn: { label: "Short-term", icon: Calendar, description: "Airbnb, Booking.com, vakantieverhuur" },
+  kamerverhuur: { label: "Kamerverhuur", icon: DoorOpen, description: "Verhuur per kamer binnen een woning" },
+};
+
 const energyLabels = ["A_plus", "A", "B", "C", "D", "E", "F"] as const;
 
 const getHealthColor = (score: number | null) => {
@@ -63,7 +69,16 @@ const Panden = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
-  const [formData, setFormData] = useState<Partial<PropertyInsert> & { water_maandelijks?: number; gas_maandelijks?: number; elektriciteit_maandelijks?: number; condominium_maandelijks?: number; aantal_units?: number }>({
+  const [formData, setFormData] = useState<Partial<PropertyInsert> & { 
+    water_maandelijks?: number; 
+    gas_maandelijks?: number; 
+    elektriciteit_maandelijks?: number; 
+    condominium_maandelijks?: number; 
+    aantal_units?: number;
+    type_verhuur?: string;
+    st_gemiddelde_dagprijs?: number;
+    st_bezetting_percentage?: number;
+  }>({
     naam: "",
     locatie: "",
     status: "aankoop",
@@ -84,6 +99,9 @@ const Panden = () => {
     elektriciteit_maandelijks: 0,
     condominium_maandelijks: 0,
     aantal_units: 1,
+    type_verhuur: "langdurig",
+    st_gemiddelde_dagprijs: 0,
+    st_bezetting_percentage: 0,
   });
 
   useEffect(() => {
@@ -137,31 +155,34 @@ const Panden = () => {
 
     try {
       if (editingProperty) {
-        const { error } = await supabase
-          .from("properties")
-          .update({
-            naam: formData.naam,
-            locatie: formData.locatie,
-            status: formData.status,
-            aankoopprijs: formData.aankoopprijs,
-            oppervlakte_m2: formData.oppervlakte_m2,
-            energielabel: formData.energielabel,
-            waardering: formData.waardering,
-            waarom_gekocht: formData.waarom_gekocht,
-            google_drive_link: formData.google_drive_link,
-            maandelijkse_huur: formData.maandelijkse_huur,
-            risico_juridisch: formData.risico_juridisch,
-            risico_markt: formData.risico_markt,
-            risico_fiscaal: formData.risico_fiscaal,
-            risico_fysiek: formData.risico_fysiek,
-            risico_operationeel: formData.risico_operationeel,
-            water_maandelijks: formData.water_maandelijks,
-            gas_maandelijks: formData.gas_maandelijks,
-            elektriciteit_maandelijks: formData.elektriciteit_maandelijks,
-            condominium_maandelijks: formData.condominium_maandelijks,
-            aantal_units: formData.aantal_units || 1,
-          } as any)
-          .eq("id", editingProperty.id);
+          const { error } = await supabase
+            .from("properties")
+            .update({
+              naam: formData.naam,
+              locatie: formData.locatie,
+              status: formData.status,
+              aankoopprijs: formData.aankoopprijs,
+              oppervlakte_m2: formData.oppervlakte_m2,
+              energielabel: formData.energielabel,
+              waardering: formData.waardering,
+              waarom_gekocht: formData.waarom_gekocht,
+              google_drive_link: formData.google_drive_link,
+              maandelijkse_huur: formData.maandelijkse_huur,
+              risico_juridisch: formData.risico_juridisch,
+              risico_markt: formData.risico_markt,
+              risico_fiscaal: formData.risico_fiscaal,
+              risico_fysiek: formData.risico_fysiek,
+              risico_operationeel: formData.risico_operationeel,
+              water_maandelijks: formData.water_maandelijks,
+              gas_maandelijks: formData.gas_maandelijks,
+              elektriciteit_maandelijks: formData.elektriciteit_maandelijks,
+              condominium_maandelijks: formData.condominium_maandelijks,
+              aantal_units: formData.aantal_units || 1,
+              type_verhuur: formData.type_verhuur || "langdurig",
+              st_gemiddelde_dagprijs: formData.st_gemiddelde_dagprijs || 0,
+              st_bezetting_percentage: formData.st_bezetting_percentage || 0,
+            } as any)
+            .eq("id", editingProperty.id);
 
         if (error) throw error;
 
@@ -192,6 +213,9 @@ const Panden = () => {
           elektriciteit_maandelijks: formData.elektriciteit_maandelijks || 0,
           condominium_maandelijks: formData.condominium_maandelijks || 0,
           aantal_units: formData.aantal_units || 1,
+          type_verhuur: formData.type_verhuur || "langdurig",
+          st_gemiddelde_dagprijs: formData.st_gemiddelde_dagprijs || 0,
+          st_bezetting_percentage: formData.st_bezetting_percentage || 0,
         } as any);
 
         if (error) throw error;
@@ -237,6 +261,9 @@ const Panden = () => {
       elektriciteit_maandelijks: (property as any).elektriciteit_maandelijks || 0,
       condominium_maandelijks: (property as any).condominium_maandelijks || 0,
       aantal_units: (property as any).aantal_units || 1,
+      type_verhuur: property.type_verhuur || "langdurig",
+      st_gemiddelde_dagprijs: Number(property.st_gemiddelde_dagprijs) || 0,
+      st_bezetting_percentage: Number(property.st_bezetting_percentage) || 0,
     });
     setIsDialogOpen(true);
   };
@@ -339,10 +366,13 @@ const Panden = () => {
       risico_operationeel: 1,
       water_maandelijks: 0,
       gas_maandelijks: 0,
-      elektriciteit_maandelijks: 0,
-      condominium_maandelijks: 0,
-      aantal_units: 1,
-    });
+    elektriciteit_maandelijks: 0,
+    condominium_maandelijks: 0,
+    aantal_units: 1,
+    type_verhuur: "langdurig",
+    st_gemiddelde_dagprijs: 0,
+    st_bezetting_percentage: 0,
+  });
   };
 
   const getTenantsForProperty = (propertyId: string) => {
@@ -528,10 +558,20 @@ const Panden = () => {
                       >
                         {statusInfo.label}
                       </Badge>
-                      {(property as any).aantal_units > 1 && (
+                      {/* Verhuurtype badge */}
+                      {property.type_verhuur && verhuurTypeConfig[property.type_verhuur as keyof typeof verhuurTypeConfig] && (
+                        <Badge variant="outline" className="gap-1">
+                          {(() => {
+                            const Icon = verhuurTypeConfig[property.type_verhuur as keyof typeof verhuurTypeConfig].icon;
+                            return <Icon className="w-3 h-3" />;
+                          })()}
+                          {verhuurTypeConfig[property.type_verhuur as keyof typeof verhuurTypeConfig].label}
+                        </Badge>
+                      )}
+                      {property.aantal_units > 1 && (
                         <Badge variant="outline" className="gap-1">
                           <Layers className="w-3 h-3" />
-                          {(property as any).aantal_units} units
+                          {property.aantal_units} units
                         </Badge>
                       )}
                       <div
@@ -556,13 +596,43 @@ const Panden = () => {
                           </span>
                         </div>
                       )}
-                      {propertyTenants.length > 0 && (
+                      {/* Short-term rental info */}
+                      {property.type_verhuur === 'korte_termijn' && (
+                        <div className="pt-2 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-primary" />
+                              <span className="text-xs text-muted-foreground">Short-term verhuur</span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="flex items-center gap-1">
+                              <BedDouble className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-muted-foreground">€{Number(property.st_gemiddelde_dagprijs || 0)}/nacht</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Percent className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-muted-foreground">{Number(property.st_bezetting_percentage || 0)}% bezet</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between p-2 rounded-lg bg-success/10">
+                            <span className="text-xs text-muted-foreground">Est. maandelijks</span>
+                            <span className="font-semibold text-success">
+                              €{Math.round(Number(property.st_gemiddelde_dagprijs || 0) * 30 * (Number(property.st_bezetting_percentage || 0) / 100)).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Langdurige/kamerverhuur huurders info */}
+                      {property.type_verhuur !== 'korte_termijn' && propertyTenants.length > 0 && (
                         <div className="pt-2 space-y-2">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Users className="w-4 h-4 text-primary" />
                               <span className="text-xs text-muted-foreground">
                                 {propertyTenants.length} {propertyTenants.length === 1 ? 'huurder' : 'huurders'}
+                                {property.type_verhuur === 'kamerverhuur' && ' (kamers)'}
                               </span>
                             </div>
                             <div className="flex items-center gap-1">
@@ -576,9 +646,9 @@ const Panden = () => {
                             <div key={tenant.id} className="flex items-center justify-between text-sm pl-6">
                               <span className="text-foreground truncate">
                                 {tenant.naam}
-                                {(property as any).aantal_units > 1 && (
+                                {property.aantal_units > 1 && (
                                   <span className="text-muted-foreground ml-1">
-                                    (Unit {(tenant as any).unit_nummer || 1})
+                                    ({property.type_verhuur === 'kamerverhuur' ? 'Kamer' : 'Unit'} {tenant.unit_nummer || 1})
                                   </span>
                                 )}
                               </span>
@@ -675,10 +745,10 @@ const Panden = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="aantal_units">
-                  Aantal Units
+                  Aantal Units/Woningen
                   <InfoTooltip
                     title="Aantal Units"
-                    content="Voor flats of panden met meerdere kamers/appartementen. Standaard is 1 voor een enkelvoudig pand."
+                    content="Hoeveel aparte woningen of verhuurbare eenheden heeft dit pand? Bijv. een flat met 3 appartementen = 3 units."
                   />
                 </Label>
                 <Input
@@ -692,6 +762,116 @@ const Panden = () => {
                   placeholder="1"
                 />
               </div>
+
+              {/* Verhuurtype Sectie */}
+              <div className="col-span-2 pt-4 border-t">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="font-semibold text-foreground">Type Verhuur</h3>
+                  <InfoTooltip
+                    title="Verhuurtype"
+                    content="Kies het type verhuur dat van toepassing is. Dit bepaalt welke velden je invult en hoe inkomsten worden berekend."
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {Object.entries(verhuurTypeConfig).map(([key, config]) => {
+                    const Icon = config.icon;
+                    const isSelected = formData.type_verhuur === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, type_verhuur: key })}
+                        className={`p-3 rounded-lg border text-left transition-all ${
+                          isSelected 
+                            ? 'border-primary bg-primary/10 ring-2 ring-primary/20' 
+                            : 'border-border hover:border-primary/50 hover:bg-accent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <Icon className={`w-4 h-4 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <span className={`font-medium text-sm ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                            {config.label}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{config.description}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Short-term rental velden */}
+              {formData.type_verhuur === 'korte_termijn' && (
+                <div className="col-span-2 space-y-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    <h4 className="font-medium text-foreground">Short-Term Rental Gegevens</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="st_gemiddelde_dagprijs" className="flex items-center gap-2">
+                        <Euro className="w-4 h-4 text-success" />
+                        Gemiddelde Dagprijs (€)
+                      </Label>
+                      <Input
+                        id="st_gemiddelde_dagprijs"
+                        type="number"
+                        min="0"
+                        value={formData.st_gemiddelde_dagprijs || ""}
+                        onChange={(e) =>
+                          setFormData({ ...formData, st_gemiddelde_dagprijs: Number(e.target.value) })
+                        }
+                        placeholder="85"
+                      />
+                      <p className="text-xs text-muted-foreground">Gemiddelde prijs per nacht over het jaar</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="st_bezetting_percentage" className="flex items-center gap-2">
+                        <Percent className="w-4 h-4 text-warning" />
+                        Bezettingsgraad (%)
+                      </Label>
+                      <Input
+                        id="st_bezetting_percentage"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={formData.st_bezetting_percentage || ""}
+                        onChange={(e) =>
+                          setFormData({ ...formData, st_bezetting_percentage: Number(e.target.value) })
+                        }
+                        placeholder="70"
+                      />
+                      <p className="text-xs text-muted-foreground">% van de tijd dat het pand verhuurd is</p>
+                    </div>
+                  </div>
+                  {/* Geschatte maandelijkse inkomsten */}
+                  {formData.st_gemiddelde_dagprijs && formData.st_bezetting_percentage ? (
+                    <div className="p-3 rounded-lg bg-success/10 border border-success/20">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Geschatte maandelijkse inkomsten:</span>
+                        <span className="font-bold text-success">
+                          €{Math.round(formData.st_gemiddelde_dagprijs * 30 * (formData.st_bezetting_percentage / 100)).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+
+              {/* Kamerverhuur info */}
+              {formData.type_verhuur === 'kamerverhuur' && (
+                <div className="col-span-2 p-4 rounded-lg bg-accent/50 border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <DoorOpen className="w-4 h-4 text-primary" />
+                    <h4 className="font-medium text-foreground">Kamerverhuur</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Bij kamerverhuur kun je meerdere huurders toevoegen aan dezelfde woning. 
+                    Gebruik "Aantal Units" om aan te geven hoeveel kamers je verhuurt.
+                    Elke kamer kan aan een aparte huurder worden toegewezen via de Huurders pagina.
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="energielabel">Energielabel</Label>

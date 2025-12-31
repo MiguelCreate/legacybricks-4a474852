@@ -13,6 +13,7 @@ import { CoPiloot } from "@/components/dashboard/CoPiloot";
 import { RentalIncomeChart } from "@/components/dashboard/RentalIncomeChart";
 import { CashflowChart } from "@/components/dashboard/CashflowChart";
 import { WelcomeOnboarding } from "@/components/dashboard/WelcomeOnboarding";
+import { ShortTermRentalOverview } from "@/components/dashboard/ShortTermRentalOverview";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -334,6 +335,9 @@ const Dashboard = () => {
                 <RentalIncomeChart />
                 <CashflowChart />
               </div>
+
+              {/* Short-Term Rental Overview */}
+              <ShortTermRentalOverview properties={properties} />
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
