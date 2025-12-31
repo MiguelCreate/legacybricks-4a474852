@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers } from "lucide-react";
+import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -478,10 +478,17 @@ const Panden = () => {
                           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                             {property.naam}
                           </h3>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <a 
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.locatie)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <MapPin className="w-3 h-3" />
                             <span>{property.locatie}</span>
-                          </div>
+                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </a>
                         </div>
                       </div>
 
