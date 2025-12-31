@@ -52,22 +52,33 @@ interface CoPilotOption {
 }
 
 const coPilotOptions: CoPilotOption[] = [
-  // Panden (8 opties)
+  // Panden (12 opties)
   { id: "nieuw-pand", label: "Een nieuw pand toevoegen", category: "Panden", icon: <Building2 className="w-4 h-4" />, path: "/panden", description: "Voeg een nieuw vastgoedobject toe aan je portfolio." },
   { id: "pand-bekijken", label: "Mijn panden bekijken", category: "Panden", icon: <Home className="w-4 h-4" />, path: "/panden", description: "Bekijk al je panden en hun status." },
+  { id: "pand-details", label: "Pand details bekijken", category: "Panden", icon: <Building2 className="w-4 h-4" />, path: "/panden", description: "Bekijk alle details, kamers en huurders van een pand." },
+  { id: "kamers-beheren", label: "Kamers/units beheren", category: "Panden", icon: <Home className="w-4 h-4" />, path: "/panden", description: "Bekijk en beheer kamers en units per pand." },
   { id: "risico-analyseren", label: "Risico's van een pand analyseren", category: "Panden", icon: <Shield className="w-4 h-4" />, path: "/panden", description: "Bekijk en bewerk de risicokaart van je panden." },
   { id: "pand-archiveren", label: "Een pand archiveren of verkopen", category: "Panden", icon: <Building2 className="w-4 h-4" />, path: "/panden", description: "Markeer een pand als verkocht of gearchiveerd." },
-  { id: "onderhoud-melden", label: "Een onderhoudsactie melden", category: "Panden", icon: <Wrench className="w-4 h-4" />, path: "/financien", description: "Registreer onderhoud of reparaties aan een pand." },
+  { id: "onderhoud-pand", label: "Onderhoud per pand bekijken", category: "Panden", icon: <Wrench className="w-4 h-4" />, path: "/panden", description: "Bekijk het onderhoudsoverzicht met kenmerken en features." },
   { id: "nutskosten-bekijken", label: "Nutsvoorzieningen kosten bekijken", category: "Panden", icon: <Banknote className="w-4 h-4" />, path: "/panden", description: "Bekijk water, gas en elektriciteitskosten per pand." },
   { id: "documenten-openen", label: "Documenten van een pand openen", category: "Panden", icon: <FolderOpen className="w-4 h-4" />, path: "/panden", description: "Open de documentenkluis (Google Drive/OneDrive) van een pand." },
   { id: "energielabel-updaten", label: "Energielabel bijwerken", category: "Panden", icon: <FileCheck className="w-4 h-4" />, path: "/panden", description: "Werk het energielabel van een pand bij." },
+  { id: "vergelijkbare-panden", label: "Vergelijkbare panden beheren", category: "Panden", icon: <BarChart3 className="w-4 h-4" />, path: "/panden", description: "Voeg vergelijkbare panden toe voor waardebepaling." },
+  { id: "exit-strategie", label: "Exit strategie bekijken", category: "Panden", icon: <TrendingUp className="w-4 h-4" />, path: "/panden", description: "Bekijk advies voor verkoop of exit van een pand." },
   
-  // Huurders (5 opties)
+  // Huurders (6 opties)
   { id: "nieuwe-huurder", label: "Een nieuwe huurder toevoegen", category: "Huurders", icon: <Users className="w-4 h-4" />, path: "/huurders", description: "Registreer een nieuwe huurder voor een van je panden." },
   { id: "huurders-bekijken", label: "Mijn huurders bekijken", category: "Huurders", icon: <Users className="w-4 h-4" />, path: "/huurders", description: "Bekijk alle actieve huurders en hun gegevens." },
+  { id: "huurder-koppelen", label: "Huurder aan kamer koppelen", category: "Huurders", icon: <Home className="w-4 h-4" />, path: "/huurders", description: "Koppel een huurder aan een specifieke kamer of unit." },
   { id: "huurder-beoordelen", label: "Een huurder beoordelen", category: "Huurders", icon: <Users className="w-4 h-4" />, path: "/huurders", description: "Geef een betrouwbaarheidsscore aan een huurder." },
   { id: "huurder-contacteren", label: "Contact opnemen met huurder", category: "Huurders", icon: <Users className="w-4 h-4" />, path: "/huurders", description: "Bekijk contactgegevens van een huurder." },
   { id: "betalingshistorie", label: "Betalingshistorie van huurder bekijken", category: "Huurders", icon: <HandCoins className="w-4 h-4" />, path: "/financien", description: "Bekijk alle betalingen van een specifieke huurder." },
+  
+  // Aannemers (4 opties)
+  { id: "nieuwe-aannemer", label: "Een nieuwe aannemer toevoegen", category: "Aannemers", icon: <Wrench className="w-4 h-4" />, path: "/aannemers", description: "Registreer een aannemer of vakman in je adresboek." },
+  { id: "aannemers-bekijken", label: "Mijn aannemers bekijken", category: "Aannemers", icon: <Wrench className="w-4 h-4" />, path: "/aannemers", description: "Bekijk al je aannemers en hun contactgegevens." },
+  { id: "aannemer-koppelen", label: "Aannemer aan pand koppelen", category: "Aannemers", icon: <Building2 className="w-4 h-4" />, path: "/aannemers", description: "Koppel een aannemer aan een specifiek pand." },
+  { id: "aannemer-contacteren", label: "Contact opnemen met aannemer", category: "Aannemers", icon: <Wrench className="w-4 h-4" />, path: "/aannemers", description: "Bekijk contactgegevens van een aannemer." },
   
   // Contracten (5 opties)
   { id: "nieuw-contract", label: "Een nieuw contract aanmaken", category: "Contracten", icon: <FileText className="w-4 h-4" />, path: "/contracten", description: "Maak een huurcontract voor een pand." },
@@ -82,7 +93,7 @@ const coPilotOptions: CoPilotOption[] = [
   { id: "uitchecklijst-starten", label: "Een uitchecklijst starten", category: "Inchecklijsten", icon: <ClipboardCheck className="w-4 h-4" />, path: "/inchecklijsten", description: "Start een retour/uitcheck bij vertrek van huurder." },
   { id: "checklist-fotos", label: "Foto's van checklist bekijken", category: "Inchecklijsten", icon: <FolderOpen className="w-4 h-4" />, path: "/inchecklijsten", description: "Bekijk de foto's van een voltooide checklist." },
   
-  // Financiën (7 opties)
+  // Financiën (8 opties)
   { id: "huur-ontvangen", label: "Huur als ontvangen registreren", category: "Financiën", icon: <Euro className="w-4 h-4" />, path: "/financien", description: "Registreer een ontvangen huurbetaling." },
   { id: "kosten-toevoegen", label: "Kosten toevoegen", category: "Financiën", icon: <Receipt className="w-4 h-4" />, path: "/financien", description: "Voeg onderhoud, verzekering of andere kosten toe." },
   { id: "cashflow-bekijken", label: "Mijn cashflow bekijken", category: "Financiën", icon: <TrendingUp className="w-4 h-4" />, path: "/financien", description: "Bekijk je maandelijkse inkomsten en uitgaven." },
@@ -90,6 +101,15 @@ const coPilotOptions: CoPilotOption[] = [
   { id: "imi-berekenen", label: "IMI belasting berekenen", category: "Financiën", icon: <Landmark className="w-4 h-4" />, path: "/financien", description: "Bereken de jaarlijkse IMI (onroerendezaakbelasting)." },
   { id: "verzekering-bekijken", label: "Verzekeringen bekijken", category: "Financiën", icon: <Shield className="w-4 h-4" />, path: "/financien", description: "Bekijk de verzekeringen per pand." },
   { id: "rendement-berekenen", label: "Rendement berekenen", category: "Financiën", icon: <Percent className="w-4 h-4" />, path: "/financien", description: "Bereken bruto en netto rendement van je panden." },
+  { id: "financien-exporteren", label: "Financiën exporteren", category: "Financiën", icon: <FileText className="w-4 h-4" />, path: "/financien", description: "Exporteer financiële overzichten naar PDF of Excel." },
+  
+  // Rendementsanalysator (6 opties)
+  { id: "analysator-openen", label: "Rendementsanalysator openen", category: "Analysator", icon: <Calculator className="w-4 h-4" />, path: "/rendementsanalysator", description: "Open de geavanceerde rendementsanalyse tool." },
+  { id: "lab-modus", label: "Lab modus gebruiken", category: "Analysator", icon: <Calculator className="w-4 h-4" />, path: "/rendementsanalysator", description: "Simuleer wat-als scenario's in de lab modus." },
+  { id: "sensitivity-analyse", label: "Gevoeligheidsanalyse bekijken", category: "Analysator", icon: <BarChart3 className="w-4 h-4" />, path: "/rendementsanalysator", description: "Bekijk hoe parameters je rendement beïnvloeden." },
+  { id: "fiscaal-overzicht", label: "Fiscaal overzicht bekijken", category: "Analysator", icon: <Landmark className="w-4 h-4" />, path: "/rendementsanalysator", description: "Bekijk belastingen en fiscale impact per pand." },
+  { id: "cashflow-projectie", label: "Cashflow projectie bekijken", category: "Analysator", icon: <TrendingUp className="w-4 h-4" />, path: "/rendementsanalysator", description: "Bekijk meerjarige cashflow projecties." },
+  { id: "partner-overzicht", label: "Partner overzicht maken", category: "Analysator", icon: <Users className="w-4 h-4" />, path: "/rendementsanalysator", description: "Maak een versimpeld overzicht voor je partner." },
   
   // Vermogen & Rendement (5 opties)
   { id: "netto-vermogen", label: "Mijn netto vermogen bekijken", category: "Vermogen", icon: <Wallet className="w-4 h-4" />, path: "/netto-vermogen", description: "Bekijk je totale vermogen en schulden." },
@@ -118,10 +138,11 @@ const coPilotOptions: CoPilotOption[] = [
   { id: "mantra-instellen", label: "Erfgoed mantra instellen", category: "Legacy", icon: <Heart className="w-4 h-4" />, path: "/instellingen", description: "Stel je persoonlijke erfgoed mantra in." },
   { id: "familie-handleiding", label: "Familie handleiding per pand maken", category: "Legacy", icon: <FileText className="w-4 h-4" />, path: "/panden", description: "Maak instructies voor familieleden per pand." },
   
-  // Instellingen (3 opties)
+  // Instellingen (4 opties)
   { id: "profiel-bewerken", label: "Mijn profiel bewerken", category: "Instellingen", icon: <Settings className="w-4 h-4" />, path: "/instellingen", description: "Pas je naam, leeftijd en voorkeuren aan." },
   { id: "begeleiding-toggle", label: "Begeleide modus aan/uitzetten", category: "Instellingen", icon: <HelpCircle className="w-4 h-4" />, path: "/instellingen", description: "Schakel stapsgewijze begeleiding in of uit." },
   { id: "copiloot-instelling", label: "Co-Piloot standaard instellen", category: "Instellingen", icon: <Compass className="w-4 h-4" />, path: "/instellingen", description: "Kies of de Co-Piloot standaard getoond wordt." },
+  { id: "stilte-modus", label: "Stilte modus aan/uitzetten", category: "Instellingen", icon: <Settings className="w-4 h-4" />, path: "/instellingen", description: "Schakel de minimalistische stilte modus in of uit." },
 ];
 
 const categories = [...new Set(coPilotOptions.map(o => o.category))];
@@ -226,7 +247,7 @@ export const CoPiloot = ({ onSwitchToManual }: CoPilootProps) => {
       <div className="mt-6 pt-4 border-t border-primary/10">
         <p className="text-xs text-muted-foreground mb-2">Populaire keuzes vandaag:</p>
         <div className="flex flex-wrap gap-2">
-          {["huur-ontvangen", "netto-vermogen", "verlopen-contracten"].map((id) => {
+          {["huur-ontvangen", "netto-vermogen", "analysator-openen", "kamers-beheren"].map((id) => {
             const option = coPilotOptions.find(o => o.id === id);
             return option ? (
               <button
