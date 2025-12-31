@@ -79,6 +79,8 @@ export const HypotheekDialog = ({
     looptijd_jaren: 30,
     rente_type: "vast",
     startdatum: new Date().toISOString().split("T")[0],
+    useCalculated: true,
+    customMaandlast: 0,
   });
 
   // Calculate maandlast for advanced form
@@ -87,6 +89,11 @@ export const HypotheekDialog = ({
     advancedForm.rente_percentage,
     advancedForm.looptijd_jaren
   );
+
+  // Get the effective maandlast based on user choice
+  const effectiveMaandlast = advancedForm.useCalculated 
+    ? calculatedMaandlast 
+    : advancedForm.customMaandlast;
 
   // Reset forms when dialog opens/closes
   useEffect(() => {
@@ -101,6 +108,8 @@ export const HypotheekDialog = ({
         looptijd_jaren: 30,
         rente_type: "vast",
         startdatum: new Date().toISOString().split("T")[0],
+        useCalculated: true,
+        customMaandlast: 0,
       });
     }
   }, [open]);
@@ -128,6 +137,14 @@ export const HypotheekDialog = ({
           maandlast: Number(existingLoan.maandlast),
         });
       } else {
+        const calcMaandlast = calculateMonthlyPayment(
+          Number(existingLoan.hoofdsom) || 0,
+          Number(existingLoan.rente_percentage) || 0,
+          existingLoan.looptijd_jaren || 30
+        );
+        const storedMaandlast = Number(existingLoan.maandlast);
+        const isUsingCalculated = Math.abs(calcMaandlast - storedMaandlast) < 1;
+        
         setAdvancedForm({
           property_id: propertyId,
           hoofdsom: Number(existingLoan.hoofdsom) || 0,
@@ -135,6 +152,8 @@ export const HypotheekDialog = ({
           looptijd_jaren: existingLoan.looptijd_jaren || 30,
           rente_type: existingLoan.rente_type || "vast",
           startdatum: existingLoan.startdatum || new Date().toISOString().split("T")[0],
+          useCalculated: isUsingCalculated,
+          customMaandlast: isUsingCalculated ? 0 : storedMaandlast,
         });
       }
     } else {
@@ -198,7 +217,7 @@ export const HypotheekDialog = ({
     try {
       const loanData = {
         property_id: advancedForm.property_id,
-        maandlast: calculatedMaandlast,
+        maandlast: effectiveMaandlast,
         hypotheek_type: "gevorderd" as Enums<"loan_type">,
         hoofdsom: advancedForm.hoofdsom,
         rente_percentage: advancedForm.rente_percentage,
@@ -486,17 +505,65 @@ export const HypotheekDialog = ({
                 />
               </div>
 
-              {/* Calculated result */}
-              {advancedForm.hoofdsom > 0 && advancedForm.rente_percentage > 0 && (
-                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Berekende maandlast:</span>
-                    <span className="text-xl font-bold text-primary">
-                      €{calculatedMaandlast.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
+              {/* Maandlast choice */}
+              <div className="space-y-3">
+                <Label>Maandlast bepalen</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={advancedForm.useCalculated ? "default" : "outline"}
+                    size="sm"
+                    className={advancedForm.useCalculated ? "gradient-primary text-primary-foreground" : ""}
+                    onClick={() => setAdvancedForm({ ...advancedForm, useCalculated: true })}
+                  >
+                    <Calculator className="w-4 h-4 mr-2" />
+                    Berekend
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={!advancedForm.useCalculated ? "default" : "outline"}
+                    size="sm"
+                    className={!advancedForm.useCalculated ? "gradient-primary text-primary-foreground" : ""}
+                    onClick={() => setAdvancedForm({ ...advancedForm, useCalculated: false })}
+                  >
+                    <PenLine className="w-4 h-4 mr-2" />
+                    Handmatig
+                  </Button>
                 </div>
-              )}
+
+                {advancedForm.useCalculated ? (
+                  advancedForm.hoofdsom > 0 && advancedForm.rente_percentage > 0 && (
+                    <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Berekende maandlast:</span>
+                        <span className="text-xl font-bold text-primary">
+                          €{calculatedMaandlast.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <div className="space-y-2">
+                    <Label>Handmatige maandlast (€) *</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={advancedForm.customMaandlast || ""}
+                      onChange={(e) =>
+                        setAdvancedForm({ ...advancedForm, customMaandlast: Number(e.target.value) })
+                      }
+                      placeholder="bijv. 850"
+                      required={!advancedForm.useCalculated}
+                    />
+                    {calculatedMaandlast > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Berekende maandlast zou €{calculatedMaandlast.toLocaleString("nl-NL", { minimumFractionDigits: 2 })} zijn
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <div className="flex gap-3 pt-4">
                 {editingLoan && (
