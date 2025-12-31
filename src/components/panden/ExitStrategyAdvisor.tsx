@@ -214,23 +214,47 @@ export function ExitStrategyAdvisor({
                 <p className={`text-xl font-bold ${scenario.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatCurrency(scenario.totalReturn)}
                 </p>
-                <p className="text-xs text-muted-foreground mb-2">Totaal rendement</p>
+                <p className="text-xs text-muted-foreground mb-2 flex items-center justify-center gap-1">
+                  Totaal rendement
+                  <InfoTooltip 
+                    title="Totaal Rendement" 
+                    content="De som van je netto verkoopopbrengst plus alle opgebouwde cashflow over de jaren. Dit is wat je in totaal verdient met deze investering."
+                  />
+                </p>
                 
                 <div className="space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Netto exit:</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      Netto exit
+                      <InfoTooltip 
+                        title="Netto Exit" 
+                        content="Wat je overhoudt na verkoop: marktwaarde minus verkoopkosten (makelaar, notaris, belasting) en resterende hypotheekschuld."
+                      />
+                    </span>
                     <span className="font-medium">{formatCurrency(scenario.netProceeds)}</span>
                   </div>
                   {scenario.years > 0 && (
                     <>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Cashflow:</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          Cashflow
+                          <InfoTooltip 
+                            title="Cumulatieve Cashflow" 
+                            content="De optelsom van al je netto huurinkomsten over de jaren, na aftrek van kosten en hypotheeklasten. Dit is je 'zakgeld' uit de verhuur."
+                          />
+                        </span>
                         <span className={scenario.cumulativeCashflow >= 0 ? 'text-green-600' : 'text-red-600'}>
                           {formatCurrency(scenario.cumulativeCashflow)}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">IRR:</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          IRR
+                          <InfoTooltip 
+                            title="IRR (Internal Rate of Return)" 
+                            content="Je gemiddelde jaarlijkse rendement over de hele periode, rekening houdend met de tijdswaarde van geld. Vergelijk dit met beleggen in aandelen (7-10% per jaar) of sparen (1-3%)."
+                          />
+                        </span>
                         <span className="font-medium">{scenario.annualizedReturn}%</span>
                       </div>
                     </>
@@ -369,19 +393,43 @@ export function ExitStrategyAdvisor({
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div>
-              <span className="text-muted-foreground">Aankoopprijs:</span>
+              <span className="text-muted-foreground flex items-center gap-1">
+                Aankoopprijs
+                <InfoTooltip 
+                  title="Aankoopprijs" 
+                  content="Het bedrag dat je hebt betaald om dit pand te kopen, exclusief bijkomende kosten zoals notaris en overdrachtsbelasting."
+                />
+              </span>
               <p className="font-medium">{formatCurrency(purchasePrice)}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Huidige waarde:</span>
+              <span className="text-muted-foreground flex items-center gap-1">
+                Huidige waarde
+                <InfoTooltip 
+                  title="Huidige Marktwaarde" 
+                  content="De geschatte verkoopwaarde van het pand vandaag. Dit is gebaseerd op je eigen inschatting of een taxatie."
+                />
+              </span>
               <p className="font-medium text-green-600">{formatCurrency(currentMarketValue)}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Restschuld:</span>
+              <span className="text-muted-foreground flex items-center gap-1">
+                Restschuld
+                <InfoTooltip 
+                  title="Restschuld" 
+                  content="Het bedrag dat je nog moet aflossen aan de bank. Dit wordt afgetrokken van de verkoopopbrengst bij verkoop."
+                />
+              </span>
               <p className="font-medium text-red-600">{formatCurrency(remainingDebt)}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Equity:</span>
+              <span className="text-muted-foreground flex items-center gap-1">
+                Equity
+                <InfoTooltip 
+                  title="Equity (Eigen Vermogen)" 
+                  content="Het verschil tussen de waarde van je pand en je resterende hypotheekschuld. Dit is 'jouw deel' van het pand - wat je zou overhouden na verkoop en aflossing."
+                />
+              </span>
               <p className="font-medium text-primary">{formatCurrency(currentMarketValue - remainingDebt)}</p>
             </div>
           </div>

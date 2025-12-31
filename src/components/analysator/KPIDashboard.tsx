@@ -99,19 +99,37 @@ export function KPIDashboard({ analysis }: KPIDashboardProps) {
         {/* Investment Summary */}
         <div className="mt-4 pt-4 border-t border-border grid gap-4 sm:grid-cols-3">
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">Totale Investering</p>
+            <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+              Totale Investering
+              <InfoTooltip 
+                title="Totale Investering" 
+                content="Alles wat je investeert: aankoopprijs plus alle bijkomende kosten zoals notaris, overdrachtsbelasting, renovatie en inrichting."
+              />
+            </p>
             <p className="text-lg font-bold text-foreground">
               €{analysis.totalInvestment.toLocaleString("nl-NL")}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">Eigen Inleg</p>
+            <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+              Eigen Inleg
+              <InfoTooltip 
+                title="Eigen Inleg" 
+                content="Het bedrag dat je zelf moet inleggen, bestaande uit de aanbetaling plus alle kosten die niet door de hypotheek worden gedekt."
+              />
+            </p>
             <p className="text-lg font-bold text-foreground">
               €{analysis.ownCapital.toLocaleString("nl-NL")}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">Hypotheek</p>
+            <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+              Hypotheek
+              <InfoTooltip 
+                title="Hypotheekbedrag" 
+                content="Het bedrag dat je leent van de bank om het pand te kopen. Bij een LTV van 75% is dit 75% van de aankoopprijs."
+              />
+            </p>
             <p className="text-lg font-bold text-foreground">
               €{analysis.loanAmount.toLocaleString("nl-NL")}
             </p>
