@@ -574,6 +574,7 @@ export type Database = {
           notities: string | null
           property_id: string
           telefoon: string | null
+          unit_nummer: number
           updated_at: string
         }
         Insert: {
@@ -588,6 +589,7 @@ export type Database = {
           notities?: string | null
           property_id: string
           telefoon?: string | null
+          unit_nummer?: number
           updated_at?: string
         }
         Update: {
@@ -602,6 +604,7 @@ export type Database = {
           notities?: string | null
           property_id?: string
           telefoon?: string | null
+          unit_nummer?: number
           updated_at?: string
         }
         Relationships: [

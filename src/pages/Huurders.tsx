@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Plus, Search, Phone, Mail, Star, Euro, Calendar, Building2 } from "lucide-react";
+import { Users, Plus, Search, Phone, Mail, Star, Euro, Calendar, Building2, Layers } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,7 @@ const Huurders = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<Partial<TablesInsert<"tenants">>>({
+  const [formData, setFormData] = useState<Partial<TablesInsert<"tenants">> & { unit_nummer?: number }>({
     naam: "",
     email: "",
     telefoon: "",
@@ -46,6 +46,7 @@ const Huurders = () => {
     property_id: "",
     notities: "",
     beoordeling_betrouwbaarheid: null,
+    unit_nummer: 1,
   });
 
   useEffect(() => {
@@ -100,7 +101,8 @@ const Huurders = () => {
         betaaldag: formData.betaaldag || 1,
         notities: formData.notities,
         beoordeling_betrouwbaarheid: formData.beoordeling_betrouwbaarheid,
-      });
+        unit_nummer: formData.unit_nummer || 1,
+      } as any);
 
       if (error) throw error;
 
@@ -131,12 +133,20 @@ const Huurders = () => {
       property_id: "",
       notities: "",
       beoordeling_betrouwbaarheid: null,
+      unit_nummer: 1,
     });
   };
 
   const getPropertyName = (propertyId: string) => {
     return properties.find((p) => p.id === propertyId)?.naam || "Onbekend";
   };
+
+  const getPropertyUnits = (propertyId: string) => {
+    const property = properties.find((p) => p.id === propertyId);
+    return (property as any)?.aantal_units || 1;
+  };
+
+  const selectedPropertyUnits = formData.property_id ? getPropertyUnits(formData.property_id) : 1;
 
   const filteredTenants = tenants.filter((tenant) =>
     tenant.naam.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -259,7 +269,14 @@ const Huurders = () => {
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Building2 className="w-4 h-4" />
-                      <span>{getPropertyName(tenant.property_id)}</span>
+                      <span>
+                        {getPropertyName(tenant.property_id)}
+                        {getPropertyUnits(tenant.property_id) > 1 && (
+                          <span className="ml-1 text-primary">
+                            (Unit {(tenant as any).unit_nummer || 1})
+                          </span>
+                        )}
+                      </span>
                     </div>
                     {tenant.email && (
                       <div className="flex items-center gap-2 text-muted-foreground">
@@ -309,7 +326,7 @@ const Huurders = () => {
               <Label htmlFor="property_id">Pand *</Label>
               <Select
                 value={formData.property_id}
-                onValueChange={(value) => setFormData({ ...formData, property_id: value })}
+                onValueChange={(value) => setFormData({ ...formData, property_id: value, unit_nummer: 1 })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecteer een pand" />
@@ -318,11 +335,40 @@ const Huurders = () => {
                   {properties.map((property) => (
                     <SelectItem key={property.id} value={property.id}>
                       {property.naam} - {property.locatie}
+                      {(property as any).aantal_units > 1 && ` (${(property as any).aantal_units} units)`}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {selectedPropertyUnits > 1 && (
+              <div className="space-y-2">
+                <Label htmlFor="unit_nummer">
+                  Unit Nummer *
+                  <InfoTooltip
+                    title="Unit Nummer"
+                    content="Selecteer de specifieke unit binnen dit pand waar deze huurder woont."
+                  />
+                </Label>
+                <Select
+                  value={formData.unit_nummer?.toString() || "1"}
+                  onValueChange={(value) => setFormData({ ...formData, unit_nummer: Number(value) })}
+                >
+                  <SelectTrigger>
+                    <Layers className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Selecteer unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: selectedPropertyUnits }, (_, i) => i + 1).map((unitNum) => (
+                      <SelectItem key={unitNum} value={unitNum.toString()}>
+                        Unit {unitNum}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="naam">Naam *</Label>

@@ -345,8 +345,8 @@ const Panden = () => {
     });
   };
 
-  const getTenantForProperty = (propertyId: string) => {
-    return tenants.find((t) => t.property_id === propertyId);
+  const getTenantsForProperty = (propertyId: string) => {
+    return tenants.filter((t) => t.property_id === propertyId);
   };
 
   const filteredProperties = properties.filter((property) => {
@@ -454,7 +454,7 @@ const Panden = () => {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredProperties.map((property, index) => {
-                const tenant = getTenantForProperty(property.id);
+                const propertyTenants = getTenantsForProperty(property.id);
                 const statusInfo = statusConfig[property.status];
 
                 return (
@@ -549,15 +549,34 @@ const Panden = () => {
                           </span>
                         </div>
                       )}
-                      {tenant && (
-                        <div className="flex items-center gap-2 pt-2">
-                          <Users className="w-4 h-4 text-primary" />
-                          <div className="flex-1">
-                            <p className="text-xs text-muted-foreground">Huurder</p>
-                            <p className="font-medium text-sm text-foreground">
-                              {tenant.naam} • €{Number(tenant.huurbedrag).toLocaleString()}/mnd
-                            </p>
+                      {propertyTenants.length > 0 && (
+                        <div className="pt-2 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-primary" />
+                            <span className="text-xs text-muted-foreground">
+                              {propertyTenants.length} {propertyTenants.length === 1 ? 'huurder' : 'huurders'}
+                            </span>
                           </div>
+                          {propertyTenants.slice(0, 2).map((tenant) => (
+                            <div key={tenant.id} className="flex items-center justify-between text-sm pl-6">
+                              <span className="text-foreground truncate">
+                                {tenant.naam}
+                                {(property as any).aantal_units > 1 && (
+                                  <span className="text-muted-foreground ml-1">
+                                    (Unit {(tenant as any).unit_nummer || 1})
+                                  </span>
+                                )}
+                              </span>
+                              <span className="text-success font-medium">
+                                €{Number(tenant.huurbedrag).toLocaleString()}
+                              </span>
+                            </div>
+                          ))}
+                          {propertyTenants.length > 2 && (
+                            <p className="text-xs text-muted-foreground pl-6">
+                              +{propertyTenants.length - 2} meer
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
