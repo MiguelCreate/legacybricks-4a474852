@@ -10,6 +10,7 @@ import { DailyMission } from "@/components/dashboard/DailyMission";
 import { StreakBanner } from "@/components/dashboard/StreakBanner";
 import { LegacyMantra } from "@/components/dashboard/LegacyMantra";
 import { CoPiloot } from "@/components/dashboard/CoPiloot";
+import { WelcomeOnboarding } from "@/components/dashboard/WelcomeOnboarding";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,15 @@ const Dashboard = () => {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [useCoPilot, setUseCoPilot] = useState<boolean | null>(null);
   const [showCoPilot, setShowCoPilot] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    // Check if user has seen onboarding
+    const hasSeenOnboarding = localStorage.getItem("vastgoedapp_onboarding_complete");
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -204,6 +214,9 @@ const Dashboard = () => {
 
   return (
     <AppLayout>
+      {showOnboarding && (
+        <WelcomeOnboarding onComplete={() => setShowOnboarding(false)} />
+      )}
       <div className="max-w-7xl mx-auto">
         <WelcomeHeader />
 
