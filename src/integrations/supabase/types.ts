@@ -434,6 +434,7 @@ export type Database = {
           aankoopdatum: string | null
           aankoopprijs: number
           aantal_units: number
+          analyse_status: Database["public"]["Enums"]["analyse_status"] | null
           beheerkosten_percentage: number | null
           condominium_maandelijks: number | null
           created_at: string
@@ -444,12 +445,16 @@ export type Database = {
           familie_handleiding: string | null
           gas_maandelijks: number | null
           gearchiveerd: boolean | null
+          gerelateerd_doel_id: string | null
           gezondheidsscore: number | null
           google_drive_link: string | null
+          huurgroei_percentage: number | null
           id: string
           imi_percentage: number | null
           imt_betaald: number | null
+          inrichting_kosten: number | null
           is_pinned: boolean | null
+          kostenstijging_percentage: number | null
           leegstand_buffer_percentage: number | null
           locatie: string
           maandelijkse_huur: number | null
@@ -457,18 +462,25 @@ export type Database = {
           notaris_kosten: number | null
           onderhoud_jaarlijks: number | null
           oppervlakte_m2: number | null
+          renovatie_kosten: number | null
           risico_fiscaal: number | null
           risico_fysiek: number | null
           risico_juridisch: number | null
           risico_markt: number | null
           risico_operationeel: number | null
+          st_bezetting_percentage: number | null
+          st_gemiddelde_dagprijs: number | null
           status: Database["public"]["Enums"]["property_status"]
           subsidie_bedrag: number | null
           subsidie_naam: string | null
+          tijdsframe_analyse:
+            | Database["public"]["Enums"]["tijdsframe_analyse"]
+            | null
           type_verhuur: string | null
           updated_at: string
           user_id: string
           verzekering_jaarlijks: number | null
+          waardegroei_percentage: number | null
           waardering: number | null
           waarom_gekocht: string | null
           water_maandelijks: number | null
@@ -477,6 +489,7 @@ export type Database = {
           aankoopdatum?: string | null
           aankoopprijs: number
           aantal_units?: number
+          analyse_status?: Database["public"]["Enums"]["analyse_status"] | null
           beheerkosten_percentage?: number | null
           condominium_maandelijks?: number | null
           created_at?: string
@@ -487,12 +500,16 @@ export type Database = {
           familie_handleiding?: string | null
           gas_maandelijks?: number | null
           gearchiveerd?: boolean | null
+          gerelateerd_doel_id?: string | null
           gezondheidsscore?: number | null
           google_drive_link?: string | null
+          huurgroei_percentage?: number | null
           id?: string
           imi_percentage?: number | null
           imt_betaald?: number | null
+          inrichting_kosten?: number | null
           is_pinned?: boolean | null
+          kostenstijging_percentage?: number | null
           leegstand_buffer_percentage?: number | null
           locatie: string
           maandelijkse_huur?: number | null
@@ -500,18 +517,25 @@ export type Database = {
           notaris_kosten?: number | null
           onderhoud_jaarlijks?: number | null
           oppervlakte_m2?: number | null
+          renovatie_kosten?: number | null
           risico_fiscaal?: number | null
           risico_fysiek?: number | null
           risico_juridisch?: number | null
           risico_markt?: number | null
           risico_operationeel?: number | null
+          st_bezetting_percentage?: number | null
+          st_gemiddelde_dagprijs?: number | null
           status?: Database["public"]["Enums"]["property_status"]
           subsidie_bedrag?: number | null
           subsidie_naam?: string | null
+          tijdsframe_analyse?:
+            | Database["public"]["Enums"]["tijdsframe_analyse"]
+            | null
           type_verhuur?: string | null
           updated_at?: string
           user_id: string
           verzekering_jaarlijks?: number | null
+          waardegroei_percentage?: number | null
           waardering?: number | null
           waarom_gekocht?: string | null
           water_maandelijks?: number | null
@@ -520,6 +544,7 @@ export type Database = {
           aankoopdatum?: string | null
           aankoopprijs?: number
           aantal_units?: number
+          analyse_status?: Database["public"]["Enums"]["analyse_status"] | null
           beheerkosten_percentage?: number | null
           condominium_maandelijks?: number | null
           created_at?: string
@@ -530,12 +555,16 @@ export type Database = {
           familie_handleiding?: string | null
           gas_maandelijks?: number | null
           gearchiveerd?: boolean | null
+          gerelateerd_doel_id?: string | null
           gezondheidsscore?: number | null
           google_drive_link?: string | null
+          huurgroei_percentage?: number | null
           id?: string
           imi_percentage?: number | null
           imt_betaald?: number | null
+          inrichting_kosten?: number | null
           is_pinned?: boolean | null
+          kostenstijging_percentage?: number | null
           leegstand_buffer_percentage?: number | null
           locatie?: string
           maandelijkse_huur?: number | null
@@ -543,23 +572,38 @@ export type Database = {
           notaris_kosten?: number | null
           onderhoud_jaarlijks?: number | null
           oppervlakte_m2?: number | null
+          renovatie_kosten?: number | null
           risico_fiscaal?: number | null
           risico_fysiek?: number | null
           risico_juridisch?: number | null
           risico_markt?: number | null
           risico_operationeel?: number | null
+          st_bezetting_percentage?: number | null
+          st_gemiddelde_dagprijs?: number | null
           status?: Database["public"]["Enums"]["property_status"]
           subsidie_bedrag?: number | null
           subsidie_naam?: string | null
+          tijdsframe_analyse?:
+            | Database["public"]["Enums"]["tijdsframe_analyse"]
+            | null
           type_verhuur?: string | null
           updated_at?: string
           user_id?: string
           verzekering_jaarlijks?: number | null
+          waardegroei_percentage?: number | null
           waardering?: number | null
           waarom_gekocht?: string | null
           water_maandelijks?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "properties_gerelateerd_doel_id_fkey"
+            columns: ["gerelateerd_doel_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tenants: {
         Row: {
@@ -625,6 +669,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      analyse_status: "concept" | "potentieel" | "actief"
       checklist_type: "incheck" | "retour"
       contract_type: "langdurig" | "kort" | "airbnb" | "koop"
       energy_label: "A_plus" | "A" | "B" | "C" | "D" | "E" | "F"
@@ -639,6 +684,7 @@ export type Database = {
       loan_type: "eenvoudig" | "gevorderd"
       note_category: "onderhoud" | "energie" | "noodgeval" | "overig"
       property_status: "aankoop" | "renovatie" | "verhuur" | "te_koop"
+      tijdsframe_analyse: "5j" | "10j" | "15j" | "30j"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -766,6 +812,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      analyse_status: ["concept", "potentieel", "actief"],
       checklist_type: ["incheck", "retour"],
       contract_type: ["langdurig", "kort", "airbnb", "koop"],
       energy_label: ["A_plus", "A", "B", "C", "D", "E", "F"],
@@ -781,6 +828,7 @@ export const Constants = {
       loan_type: ["eenvoudig", "gevorderd"],
       note_category: ["onderhoud", "energie", "noodgeval", "overig"],
       property_status: ["aankoop", "renovatie", "verhuur", "te_koop"],
+      tijdsframe_analyse: ["5j", "10j", "15j", "30j"],
     },
   },
 } as const
