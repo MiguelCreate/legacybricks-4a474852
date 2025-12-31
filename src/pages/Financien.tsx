@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Euro, TrendingUp, TrendingDown, Plus, Receipt, PiggyBank, BarChart3, Trash2, Landmark, Building2, Pencil, Calendar, Percent } from "lucide-react";
+import { ExportMenu, ExportData } from "@/components/ui/ExportMenu";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatCard } from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
@@ -275,6 +276,86 @@ const Financien = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <ExportMenu
+                data={{
+                  title: "Financieel Overzicht",
+                  sections: [
+                    {
+                      title: "Maandelijks Overzicht",
+                      explanation: "Dit zijn de belangrijkste financiële cijfers van onze vastgoedportefeuille per maand.",
+                      items: [
+                        {
+                          label: "Huurinkomsten",
+                          value: `€${totalMonthlyRent.toLocaleString("nl-NL")}`,
+                          explanation: "Het totale bedrag aan huur dat we elke maand ontvangen van al onze huurders."
+                        },
+                        {
+                          label: "Hypotheeklasten",
+                          value: `€${totalMonthlyLoanPayments.toLocaleString("nl-NL")}`,
+                          explanation: "Wat we maandelijks betalen aan de bank voor onze hypotheken."
+                        },
+                        {
+                          label: "Overige Kosten (deze maand)",
+                          value: `€${monthlyExpenses.toLocaleString("nl-NL")}`,
+                          explanation: "Extra kosten zoals onderhoud, verzekeringen en belastingen."
+                        },
+                        {
+                          label: "Netto Cashflow",
+                          value: `€${netCashflow.toLocaleString("nl-NL")}`,
+                          explanation: "Wat we elke maand overhouden na alle kosten. Dit is puur passief inkomen!"
+                        },
+                      ]
+                    },
+                    {
+                      title: "Rendement & Waarde",
+                      explanation: "Deze cijfers laten zien hoe goed onze investering presteert.",
+                      items: [
+                        {
+                          label: "Portefeuillewaarde",
+                          value: `€${portfolioValue.toLocaleString("nl-NL")}`,
+                          explanation: "De totale geschatte waarde van al onze panden samen."
+                        },
+                        {
+                          label: "Bruto Rendement",
+                          value: `${grossYield.toFixed(1)}%`,
+                          explanation: "Het percentage dat we jaarlijks verdienen. Vergelijk dit met een spaarrekening (<1%)!"
+                        },
+                        {
+                          label: "Jaarlijkse Huurinkomsten",
+                          value: `€${(totalMonthlyRent * 12).toLocaleString("nl-NL")}`,
+                          explanation: "Totale huurinkomsten per jaar (12 maanden)."
+                        },
+                      ]
+                    },
+                    {
+                      title: "Hypotheken",
+                      explanation: "Overzicht van onze financieringen.",
+                      items: loans.map(loan => {
+                        const property = properties.find(p => p.id === loan.property_id);
+                        return {
+                          label: property?.naam || "Pand",
+                          value: `€${Number(loan.maandlast).toLocaleString("nl-NL")}/mnd`,
+                          explanation: `Hoofdsom: €${Number(loan.hoofdsom || 0).toLocaleString("nl-NL")}, Rente: ${loan.rente_percentage || 0}%`
+                        };
+                      })
+                    },
+                    {
+                      title: "Recente Kosten",
+                      explanation: "De laatste geregistreerde uitgaven voor onderhoud en beheer.",
+                      items: expenses.slice(0, 10).map(expense => {
+                        const property = properties.find(p => p.id === expense.property_id);
+                        const category = expenseCategories.find(c => c.value === expense.categorie);
+                        return {
+                          label: `${category?.label || expense.categorie} - ${property?.naam || "Pand"}`,
+                          value: `€${Number(expense.bedrag).toLocaleString("nl-NL")}`,
+                          explanation: expense.beschrijving || `Datum: ${new Date(expense.datum).toLocaleDateString("nl-NL")}`
+                        };
+                      })
+                    }
+                  ]
+                }}
+                filename="financien_overzicht"
+              />
               <Button
                 variant="outline"
                 onClick={() => setIsHypotheekDialogOpen(true)}
