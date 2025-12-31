@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { TooltipToggle } from "@/components/ui/TooltipToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { 
@@ -169,18 +170,22 @@ export function ExitStrategyAdvisor({
 
   return (
     <Card className="shadow-card">
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <DoorOpen className="h-4 w-4 text-primary" />
-          Exit Strategie Adviseur
-          <InfoTooltip 
-            title="Exit Strategie" 
-            content="Vergelijk scenario's: verkopen vandaag vs. behouden voor X jaar. Objectief advies op basis van rendementen."
-          />
-        </CardTitle>
-        <CardDescription>
-          Objectief beslissen: verkopen of behouden?
-        </CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div>
+          <CardTitle className="text-base flex items-center gap-2">
+            <DoorOpen className="h-4 w-4 text-primary" />
+            Exit Strategie Adviseur
+            <InfoTooltip 
+              title="Exit Strategie" 
+              content="Vergelijk scenario's: verkopen vandaag vs. behouden voor X jaar. Objectief advies op basis van rendementen."
+              sectionId="exit-strategy"
+            />
+          </CardTitle>
+          <CardDescription>
+            Objectief beslissen: verkopen of behouden?
+          </CardDescription>
+        </div>
+        <TooltipToggle sectionId="exit-strategy" />
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Scenario Comparison */}
@@ -219,6 +224,7 @@ export function ExitStrategyAdvisor({
                   <InfoTooltip 
                     title="Totaal Rendement" 
                     content="De som van je netto verkoopopbrengst plus alle opgebouwde cashflow over de jaren. Dit is wat je in totaal verdient met deze investering."
+                    sectionId="exit-strategy"
                   />
                 </p>
                 
@@ -229,6 +235,7 @@ export function ExitStrategyAdvisor({
                       <InfoTooltip 
                         title="Netto Exit" 
                         content="Wat je overhoudt na verkoop: marktwaarde minus verkoopkosten (makelaar, notaris, belasting) en resterende hypotheekschuld."
+                        sectionId="exit-strategy"
                       />
                     </span>
                     <span className="font-medium">{formatCurrency(scenario.netProceeds)}</span>
@@ -241,6 +248,7 @@ export function ExitStrategyAdvisor({
                           <InfoTooltip 
                             title="Cumulatieve Cashflow" 
                             content="De optelsom van al je netto huurinkomsten over de jaren, na aftrek van kosten en hypotheeklasten. Dit is je 'zakgeld' uit de verhuur."
+                            sectionId="exit-strategy"
                           />
                         </span>
                         <span className={scenario.cumulativeCashflow >= 0 ? 'text-green-600' : 'text-red-600'}>
@@ -253,6 +261,7 @@ export function ExitStrategyAdvisor({
                           <InfoTooltip 
                             title="IRR (Internal Rate of Return)" 
                             content="Je gemiddelde jaarlijkse rendement over de hele periode, rekening houdend met de tijdswaarde van geld. Vergelijk dit met beleggen in aandelen (7-10% per jaar) of sparen (1-3%)."
+                            sectionId="exit-strategy"
                           />
                         </span>
                         <span className="font-medium">{scenario.annualizedReturn}%</span>
@@ -370,6 +379,7 @@ export function ExitStrategyAdvisor({
                 <InfoTooltip 
                   title="Plusvalia (Capital Gains)" 
                   content="Belasting op de meerwaarde bij verkoop. In Portugal meestal 28% voor niet-residenten."
+                  sectionId="exit-strategy"
                 />
               </Label>
               <Input
@@ -398,6 +408,7 @@ export function ExitStrategyAdvisor({
                 <InfoTooltip 
                   title="Aankoopprijs" 
                   content="Het bedrag dat je hebt betaald om dit pand te kopen, exclusief bijkomende kosten zoals notaris en overdrachtsbelasting."
+                  sectionId="exit-strategy"
                 />
               </span>
               <p className="font-medium">{formatCurrency(purchasePrice)}</p>
@@ -408,6 +419,7 @@ export function ExitStrategyAdvisor({
                 <InfoTooltip 
                   title="Huidige Marktwaarde" 
                   content="De geschatte verkoopwaarde van het pand vandaag. Dit is gebaseerd op je eigen inschatting of een taxatie."
+                  sectionId="exit-strategy"
                 />
               </span>
               <p className="font-medium text-green-600">{formatCurrency(currentMarketValue)}</p>
@@ -418,6 +430,7 @@ export function ExitStrategyAdvisor({
                 <InfoTooltip 
                   title="Restschuld" 
                   content="Het bedrag dat je nog moet aflossen aan de bank. Dit wordt afgetrokken van de verkoopopbrengst bij verkoop."
+                  sectionId="exit-strategy"
                 />
               </span>
               <p className="font-medium text-red-600">{formatCurrency(remainingDebt)}</p>
@@ -428,6 +441,7 @@ export function ExitStrategyAdvisor({
                 <InfoTooltip 
                   title="Equity (Eigen Vermogen)" 
                   content="Het verschil tussen de waarde van je pand en je resterende hypotheekschuld. Dit is 'jouw deel' van het pand - wat je zou overhouden na verkoop en aflossing."
+                  sectionId="exit-strategy"
                 />
               </span>
               <p className="font-medium text-primary">{formatCurrency(currentMarketValue - remainingDebt)}</p>

@@ -4,14 +4,23 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTooltipVisibility } from "@/hooks/useTooltipVisibility";
 
 interface InfoTooltipProps {
   title: string;
   content: string;
   className?: string;
+  sectionId?: string; // Optional section ID for local override
 }
 
-export const InfoTooltip = ({ title, content, className = "" }: InfoTooltipProps) => {
+export const InfoTooltip = ({ title, content, className = "", sectionId }: InfoTooltipProps) => {
+  const { shouldShowTooltips } = useTooltipVisibility();
+
+  // Don't render if tooltips are disabled for this section
+  if (!shouldShowTooltips(sectionId)) {
+    return null;
+  }
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>

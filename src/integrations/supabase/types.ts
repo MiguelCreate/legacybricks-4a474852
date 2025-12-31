@@ -475,6 +475,7 @@ export type Database = {
           overige_inkomsten: number | null
           pensioen_maandelijks: number | null
           spaargeld: number | null
+          toon_uitleg: boolean | null
           updated_at: string
           user_id: string
         }
@@ -494,6 +495,7 @@ export type Database = {
           overige_inkomsten?: number | null
           pensioen_maandelijks?: number | null
           spaargeld?: number | null
+          toon_uitleg?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -513,6 +515,7 @@ export type Database = {
           overige_inkomsten?: number | null
           pensioen_maandelijks?: number | null
           spaargeld?: number | null
+          toon_uitleg?: boolean | null
           updated_at?: string
           user_id?: string
         }

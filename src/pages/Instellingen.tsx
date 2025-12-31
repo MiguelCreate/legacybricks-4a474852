@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, User, Bell, Shield, Moon, Sun, LogOut, HelpCircle, Save, Compass } from "lucide-react";
+import { Settings, User, Bell, Shield, Moon, Sun, LogOut, HelpCircle, Save, Compass, Info } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTooltipVisibility } from "@/hooks/useTooltipVisibility";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -16,6 +17,7 @@ type Profile = Tables<"profiles">;
 
 const Instellingen = () => {
   const { user, signOut } = useAuth();
+  const { globalTooltipsEnabled, setGlobalTooltipsEnabled } = useTooltipVisibility();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -338,6 +340,22 @@ const Instellingen = () => {
                   </p>
                 </div>
                 <Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4" />
+                    <Label>Toon Uitleg ℹ️</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Toon uitleg-iconen bij financiële begrippen
+                  </p>
+                </div>
+                <Switch
+                  checked={globalTooltipsEnabled}
+                  onCheckedChange={setGlobalTooltipsEnabled}
+                />
               </div>
             </div>
           </section>

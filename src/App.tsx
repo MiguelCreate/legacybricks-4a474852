@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { TooltipVisibilityProvider } from "@/hooks/useTooltipVisibility";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -28,31 +29,33 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/panden" element={<ProtectedRoute><Panden /></ProtectedRoute>} />
-            <Route path="/panden/:id" element={<ProtectedRoute><PandDetail /></ProtectedRoute>} />
-            <Route path="/huurders" element={<ProtectedRoute><Huurders /></ProtectedRoute>} />
-            <Route path="/financien" element={<ProtectedRoute><Financien /></ProtectedRoute>} />
-            <Route path="/doelen" element={<ProtectedRoute><Doelen /></ProtectedRoute>} />
-            <Route path="/sneeuwbal" element={<ProtectedRoute><Sneeuwbal /></ProtectedRoute>} />
-            <Route path="/vermogen" element={<ProtectedRoute><NettoVermogen /></ProtectedRoute>} />
-            <Route path="/pensioen" element={<ProtectedRoute><Pensioen /></ProtectedRoute>} />
-            <Route path="/contracten" element={<ProtectedRoute><Contracten /></ProtectedRoute>} />
-            <Route path="/legacy" element={<ProtectedRoute><Legacy /></ProtectedRoute>} />
-            <Route path="/inchecklijsten" element={<ProtectedRoute><Inchecklijsten /></ProtectedRoute>} />
-            <Route path="/analysator" element={<ProtectedRoute><Rendementsanalysator /></ProtectedRoute>} />
-            <Route path="/aannemers" element={<ProtectedRoute><Aannemers /></ProtectedRoute>} />
-            <Route path="/instellingen" element={<ProtectedRoute><Instellingen /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <TooltipVisibilityProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/panden" element={<ProtectedRoute><Panden /></ProtectedRoute>} />
+              <Route path="/panden/:id" element={<ProtectedRoute><PandDetail /></ProtectedRoute>} />
+              <Route path="/huurders" element={<ProtectedRoute><Huurders /></ProtectedRoute>} />
+              <Route path="/financien" element={<ProtectedRoute><Financien /></ProtectedRoute>} />
+              <Route path="/doelen" element={<ProtectedRoute><Doelen /></ProtectedRoute>} />
+              <Route path="/sneeuwbal" element={<ProtectedRoute><Sneeuwbal /></ProtectedRoute>} />
+              <Route path="/vermogen" element={<ProtectedRoute><NettoVermogen /></ProtectedRoute>} />
+              <Route path="/pensioen" element={<ProtectedRoute><Pensioen /></ProtectedRoute>} />
+              <Route path="/contracten" element={<ProtectedRoute><Contracten /></ProtectedRoute>} />
+              <Route path="/legacy" element={<ProtectedRoute><Legacy /></ProtectedRoute>} />
+              <Route path="/inchecklijsten" element={<ProtectedRoute><Inchecklijsten /></ProtectedRoute>} />
+              <Route path="/analysator" element={<ProtectedRoute><Rendementsanalysator /></ProtectedRoute>} />
+              <Route path="/aannemers" element={<ProtectedRoute><Aannemers /></ProtectedRoute>} />
+              <Route path="/instellingen" element={<ProtectedRoute><Instellingen /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </TooltipVisibilityProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
