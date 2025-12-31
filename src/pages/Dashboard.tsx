@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Building2, Users, Euro, TrendingUp, Plus, Receipt, AlertTriangle, FileText, Compass } from "lucide-react";
+import { Building2, Users, Euro, TrendingUp, Plus, Receipt, AlertTriangle, FileText, Compass, Wallet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
@@ -97,6 +97,9 @@ const Dashboard = () => {
   // Calculate statistics
   const totalPortfolioValue = properties.reduce((sum, p) => sum + Number(p.waardering || p.aankoopprijs), 0);
   
+  // Total monthly rental income from all active tenants
+  const totalMonthlyRent = tenants.reduce((sum, t) => sum + Number(t.huurbedrag), 0);
+
   const calculateMonthlyCashflow = () => {
     return properties.reduce((sum, property) => {
       const loan = loans.find((l) => l.property_id === property.id);
@@ -146,15 +149,26 @@ const Dashboard = () => {
       },
     },
     {
-      title: "Maandelijkse Cashflow",
+      title: "Huurinkomsten",
+      value: `€${totalMonthlyRent.toLocaleString("nl-NL")}`,
+      subtitle: `${tenants.length} ${tenants.length === 1 ? "huurder" : "huurders"}`,
+      icon: <Wallet className="w-5 h-5 text-success" />,
+      tooltip: {
+        title: "Totale Huurinkomsten",
+        content: "De totale maandelijkse huurinkomsten van alle actieve huurders in al je panden samen.",
+      },
+      variant: "success" as const,
+    },
+    {
+      title: "Netto Cashflow",
       value: `€${monthlyCashflow.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`,
-      subtitle: "Netto na kosten",
-      icon: <Euro className="w-5 h-5 text-success" />,
+      subtitle: "Na alle kosten",
+      icon: <Euro className="w-5 h-5 text-primary" />,
       tooltip: {
         title: "Wat is Cashflow?",
         content: "Cashflow is wat je overhoudt nadat alle kosten (hypotheek, onderhoud, belasting, beheer, leegstandsbuffer) zijn betaald.",
       },
-      variant: monthlyCashflow >= 0 ? "success" as const : "default" as const,
+      variant: monthlyCashflow >= 0 ? "default" as const : "default" as const,
     },
     {
       title: "Bezettingsgraad",
@@ -265,7 +279,7 @@ const Dashboard = () => {
           <StreakBanner />
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {stats.map((stat, index) => (
               <StatCard
                 key={index}
