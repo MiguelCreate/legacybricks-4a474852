@@ -20,7 +20,17 @@ import {
   Scale,
   Shield,
   Calendar,
-  BarChart3
+  BarChart3,
+  Wrench,
+  Bell,
+  FileCheck,
+  Landmark,
+  Percent,
+  HelpCircle,
+  Settings,
+  FolderOpen,
+  Banknote,
+  HandCoins
 } from "lucide-react";
 import {
   Select,
@@ -42,50 +52,76 @@ interface CoPilotOption {
 }
 
 const coPilotOptions: CoPilotOption[] = [
-  // Panden
+  // Panden (8 opties)
   { id: "nieuw-pand", label: "Een nieuw pand toevoegen", category: "Panden", icon: <Building2 className="w-4 h-4" />, path: "/panden", description: "Voeg een nieuw vastgoedobject toe aan je portfolio." },
   { id: "pand-bekijken", label: "Mijn panden bekijken", category: "Panden", icon: <Home className="w-4 h-4" />, path: "/panden", description: "Bekijk al je panden en hun status." },
   { id: "risico-analyseren", label: "Risico's van een pand analyseren", category: "Panden", icon: <Shield className="w-4 h-4" />, path: "/panden", description: "Bekijk en bewerk de risicokaart van je panden." },
   { id: "pand-archiveren", label: "Een pand archiveren of verkopen", category: "Panden", icon: <Building2 className="w-4 h-4" />, path: "/panden", description: "Markeer een pand als verkocht of gearchiveerd." },
+  { id: "onderhoud-melden", label: "Een onderhoudsactie melden", category: "Panden", icon: <Wrench className="w-4 h-4" />, path: "/financien", description: "Registreer onderhoud of reparaties aan een pand." },
+  { id: "nutskosten-bekijken", label: "Nutsvoorzieningen kosten bekijken", category: "Panden", icon: <Banknote className="w-4 h-4" />, path: "/panden", description: "Bekijk water, gas en elektriciteitskosten per pand." },
+  { id: "documenten-openen", label: "Documenten van een pand openen", category: "Panden", icon: <FolderOpen className="w-4 h-4" />, path: "/panden", description: "Open de documentenkluis (Google Drive/OneDrive) van een pand." },
+  { id: "energielabel-updaten", label: "Energielabel bijwerken", category: "Panden", icon: <FileCheck className="w-4 h-4" />, path: "/panden", description: "Werk het energielabel van een pand bij." },
   
-  // Huurders
+  // Huurders (5 opties)
   { id: "nieuwe-huurder", label: "Een nieuwe huurder toevoegen", category: "Huurders", icon: <Users className="w-4 h-4" />, path: "/huurders", description: "Registreer een nieuwe huurder voor een van je panden." },
   { id: "huurders-bekijken", label: "Mijn huurders bekijken", category: "Huurders", icon: <Users className="w-4 h-4" />, path: "/huurders", description: "Bekijk alle actieve huurders en hun gegevens." },
   { id: "huurder-beoordelen", label: "Een huurder beoordelen", category: "Huurders", icon: <Users className="w-4 h-4" />, path: "/huurders", description: "Geef een betrouwbaarheidsscore aan een huurder." },
+  { id: "huurder-contacteren", label: "Contact opnemen met huurder", category: "Huurders", icon: <Users className="w-4 h-4" />, path: "/huurders", description: "Bekijk contactgegevens van een huurder." },
+  { id: "betalingshistorie", label: "Betalingshistorie van huurder bekijken", category: "Huurders", icon: <HandCoins className="w-4 h-4" />, path: "/financien", description: "Bekijk alle betalingen van een specifieke huurder." },
   
-  // Contracten
+  // Contracten (5 opties)
   { id: "nieuw-contract", label: "Een nieuw contract aanmaken", category: "Contracten", icon: <FileText className="w-4 h-4" />, path: "/contracten", description: "Maak een huurcontract voor een pand." },
   { id: "verlopen-contracten", label: "Zien welke contracten bijna verlopen", category: "Contracten", icon: <AlertTriangle className="w-4 h-4" />, path: "/contracten", description: "Bekijk contracten die binnen 90 dagen aflopen." },
-  { id: "herinnering-instellen", label: "Contract herinnering instellen", category: "Contracten", icon: <Calendar className="w-4 h-4" />, path: "/contracten", description: "Stel herinneringen in voor contractverlengingen." },
+  { id: "herinnering-instellen", label: "Contract herinnering instellen", category: "Contracten", icon: <Bell className="w-4 h-4" />, path: "/contracten", description: "Stel herinneringen in voor contractverlengingen." },
+  { id: "contract-verlengen", label: "Een contract verlengen", category: "Contracten", icon: <Calendar className="w-4 h-4" />, path: "/contracten", description: "Verleng een bestaand huurcontract." },
+  { id: "contract-exporteren", label: "Contract naar agenda exporteren", category: "Contracten", icon: <Calendar className="w-4 h-4" />, path: "/contracten", description: "Exporteer contract data naar Google Calendar." },
   
-  // Inchecklijsten
+  // Inchecklijsten (4 opties)
   { id: "inchecklijst-starten", label: "Een inchecklijst starten", category: "Inchecklijsten", icon: <ClipboardCheck className="w-4 h-4" />, path: "/inchecklijsten", description: "Start een in- of uitchecklijst met foto's en handtekening." },
   { id: "checklists-bekijken", label: "Voltooide checklists bekijken", category: "Inchecklijsten", icon: <ClipboardCheck className="w-4 h-4" />, path: "/inchecklijsten", description: "Bekijk eerder ingevulde in- en uitchecklists." },
+  { id: "uitchecklijst-starten", label: "Een uitchecklijst starten", category: "Inchecklijsten", icon: <ClipboardCheck className="w-4 h-4" />, path: "/inchecklijsten", description: "Start een retour/uitcheck bij vertrek van huurder." },
+  { id: "checklist-fotos", label: "Foto's van checklist bekijken", category: "Inchecklijsten", icon: <FolderOpen className="w-4 h-4" />, path: "/inchecklijsten", description: "Bekijk de foto's van een voltooide checklist." },
   
-  // Financiën
+  // Financiën (7 opties)
   { id: "huur-ontvangen", label: "Huur als ontvangen registreren", category: "Financiën", icon: <Euro className="w-4 h-4" />, path: "/financien", description: "Registreer een ontvangen huurbetaling." },
   { id: "kosten-toevoegen", label: "Kosten toevoegen", category: "Financiën", icon: <Receipt className="w-4 h-4" />, path: "/financien", description: "Voeg onderhoud, verzekering of andere kosten toe." },
   { id: "cashflow-bekijken", label: "Mijn cashflow bekijken", category: "Financiën", icon: <TrendingUp className="w-4 h-4" />, path: "/financien", description: "Bekijk je maandelijkse inkomsten en uitgaven." },
   { id: "hypotheek-toevoegen", label: "Een hypotheek/lening toevoegen", category: "Financiën", icon: <Scale className="w-4 h-4" />, path: "/financien", description: "Voeg een lening toe aan een pand." },
+  { id: "imi-berekenen", label: "IMI belasting berekenen", category: "Financiën", icon: <Landmark className="w-4 h-4" />, path: "/financien", description: "Bereken de jaarlijkse IMI (onroerendezaakbelasting)." },
+  { id: "verzekering-bekijken", label: "Verzekeringen bekijken", category: "Financiën", icon: <Shield className="w-4 h-4" />, path: "/financien", description: "Bekijk de verzekeringen per pand." },
+  { id: "rendement-berekenen", label: "Rendement berekenen", category: "Financiën", icon: <Percent className="w-4 h-4" />, path: "/financien", description: "Bereken bruto en netto rendement van je panden." },
   
-  // Vermogen & Rendement
+  // Vermogen & Rendement (5 opties)
   { id: "netto-vermogen", label: "Mijn netto vermogen bekijken", category: "Vermogen", icon: <Wallet className="w-4 h-4" />, path: "/netto-vermogen", description: "Bekijk je totale vermogen en schulden." },
   { id: "sneeuwbal", label: "Berekenen wanneer ik schuldenvrij ben", category: "Vermogen", icon: <Calculator className="w-4 h-4" />, path: "/sneeuwbal", description: "Simuleer het sneeuwbaleffect voor je leningen." },
   { id: "rendement-analyseren", label: "Rendement per pand analyseren", category: "Vermogen", icon: <BarChart3 className="w-4 h-4" />, path: "/panden", description: "Bekijk bruto en netto rendement per pand." },
+  { id: "vermogen-groei", label: "Vermogensgroei simuleren", category: "Vermogen", icon: <TrendingUp className="w-4 h-4" />, path: "/netto-vermogen", description: "Bekijk hoe je vermogen groeit over tijd." },
+  { id: "schuld-ratio", label: "Schuld-ratio bekijken", category: "Vermogen", icon: <Scale className="w-4 h-4" />, path: "/netto-vermogen", description: "Analyseer je schuld ten opzichte van bezittingen." },
   
-  // Doelen
+  // Doelen (4 opties)
   { id: "doel-instellen", label: "Een doel instellen (bijv. vakantie)", category: "Doelen", icon: <Target className="w-4 h-4" />, path: "/doelen", description: "Stel een financieel doel in en koppel het aan een pand." },
   { id: "doelen-bekijken", label: "Mijn doelen bekijken", category: "Doelen", icon: <Target className="w-4 h-4" />, path: "/doelen", description: "Bekijk je voortgang naar je financiële doelen." },
+  { id: "doel-voortgang", label: "Voortgang naar doel bijwerken", category: "Doelen", icon: <Target className="w-4 h-4" />, path: "/doelen", description: "Werk de voortgang van een doel bij." },
+  { id: "doel-koppelen", label: "Doel aan pand koppelen", category: "Doelen", icon: <Target className="w-4 h-4" />, path: "/doelen", description: "Koppel een doel aan een specifiek pand als bron." },
   
-  // Pensioen
+  // Pensioen (4 opties)
   { id: "pensioengat", label: "Mijn pensioengat analyseren", category: "Pensioen", icon: <PiggyBank className="w-4 h-4" />, path: "/pensioen", description: "Bereken hoeveel inkomen je nog nodig hebt voor pensioen." },
   { id: "pensioen-plan", label: "Pensioenplan bekijken", category: "Pensioen", icon: <PiggyBank className="w-4 h-4" />, path: "/pensioen", description: "Bekijk je volledige pensioenplanning." },
+  { id: "aow-invoeren", label: "AOW en pensioengegevens invoeren", category: "Pensioen", icon: <Landmark className="w-4 h-4" />, path: "/instellingen", description: "Voer je verwachte AOW en pensioeninkomsten in." },
+  { id: "pensioen-simulatie", label: "Pensioen scenario simuleren", category: "Pensioen", icon: <Calculator className="w-4 h-4" />, path: "/pensioen", description: "Simuleer verschillende pensioenscenario's." },
   
-  // Legacy
+  // Legacy (6 opties)
   { id: "erfgoed-waarden", label: "Mijn erfgoedwaarden bekijken", category: "Legacy", icon: <Heart className="w-4 h-4" />, path: "/legacy", description: "Bekijk je waardenverklaring en legacy planning." },
   { id: "familie-rollen", label: "Familierollen beheren", category: "Legacy", icon: <Users className="w-4 h-4" />, path: "/legacy", description: "Wijs rollen toe aan familieleden voor je vastgoed." },
   { id: "erfopvolging", label: "Erfopvolging plannen", category: "Legacy", icon: <Heart className="w-4 h-4" />, path: "/legacy", description: "Plan hoe je vastgoed wordt overgedragen." },
   { id: "fiscale-deadlines", label: "Fiscale deadlines bekijken", category: "Legacy", icon: <Calendar className="w-4 h-4" />, path: "/legacy", description: "Bekijk belangrijke belastingdeadlines." },
+  { id: "mantra-instellen", label: "Erfgoed mantra instellen", category: "Legacy", icon: <Heart className="w-4 h-4" />, path: "/instellingen", description: "Stel je persoonlijke erfgoed mantra in." },
+  { id: "familie-handleiding", label: "Familie handleiding per pand maken", category: "Legacy", icon: <FileText className="w-4 h-4" />, path: "/panden", description: "Maak instructies voor familieleden per pand." },
+  
+  // Instellingen (3 opties)
+  { id: "profiel-bewerken", label: "Mijn profiel bewerken", category: "Instellingen", icon: <Settings className="w-4 h-4" />, path: "/instellingen", description: "Pas je naam, leeftijd en voorkeuren aan." },
+  { id: "begeleiding-toggle", label: "Begeleide modus aan/uitzetten", category: "Instellingen", icon: <HelpCircle className="w-4 h-4" />, path: "/instellingen", description: "Schakel stapsgewijze begeleiding in of uit." },
+  { id: "copiloot-instelling", label: "Co-Piloot standaard instellen", category: "Instellingen", icon: <Compass className="w-4 h-4" />, path: "/instellingen", description: "Kies of de Co-Piloot standaard getoond wordt." },
 ];
 
 const categories = [...new Set(coPilotOptions.map(o => o.category))];
