@@ -1,11 +1,23 @@
-import { Home, Building2, Users, Wallet, Settings } from "lucide-react";
+import { Home, Building2, Wallet, FileText, MoreHorizontal, Users, Target, Heart, Settings } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navItems = [
   { icon: Home, label: "Dashboard", path: "/" },
   { icon: Building2, label: "Panden", path: "/panden" },
-  { icon: Users, label: "Huurders", path: "/huurders" },
   { icon: Wallet, label: "Financiën", path: "/financien" },
+  { icon: FileText, label: "Contracten", path: "/contracten" },
+];
+
+const moreItems = [
+  { icon: Users, label: "Huurders", path: "/huurders" },
+  { icon: Target, label: "Doelen", path: "/doelen" },
+  { icon: Heart, label: "Legacy", path: "/legacy" },
   { icon: Settings, label: "Instellingen", path: "/instellingen" },
 ];
 
@@ -30,11 +42,31 @@ export const BottomNav = () => {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Icon className={`w-5 h-5 ${isActive ? "animate-bounce-soft" : ""}`} />
+              <Icon className="w-5 h-5" />
               <span className="text-[10px] font-medium">{item.label}</span>
             </button>
           );
         })}
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-muted-foreground hover:text-foreground">
+              <MoreHorizontal className="w-5 h-5" />
+              <span className="text-[10px] font-medium">Meer</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="glass-strong mb-2">
+            {moreItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <DropdownMenuItem key={item.path} onClick={() => navigate(item.path)}>
+                  <Icon className="w-4 h-4 mr-2" />
+                  {item.label}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </nav>
   );

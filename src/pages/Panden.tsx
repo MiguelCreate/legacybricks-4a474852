@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, X } from "lucide-react";
+import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { RisicoKaart } from "@/components/panden/RisicoKaart";
 import {
   Dialog,
   DialogContent,
@@ -72,6 +73,12 @@ const Panden = () => {
     waardering: null,
     waarom_gekocht: "",
     google_drive_link: "",
+    maandelijkse_huur: 0,
+    risico_juridisch: 1,
+    risico_markt: 1,
+    risico_fiscaal: 1,
+    risico_fysiek: 1,
+    risico_operationeel: 1,
   });
 
   useEffect(() => {
@@ -137,6 +144,12 @@ const Panden = () => {
             waardering: formData.waardering,
             waarom_gekocht: formData.waarom_gekocht,
             google_drive_link: formData.google_drive_link,
+            maandelijkse_huur: formData.maandelijkse_huur,
+            risico_juridisch: formData.risico_juridisch,
+            risico_markt: formData.risico_markt,
+            risico_fiscaal: formData.risico_fiscaal,
+            risico_fysiek: formData.risico_fysiek,
+            risico_operationeel: formData.risico_operationeel,
           })
           .eq("id", editingProperty.id);
 
@@ -158,6 +171,12 @@ const Panden = () => {
           waardering: formData.waardering,
           waarom_gekocht: formData.waarom_gekocht,
           google_drive_link: formData.google_drive_link,
+          maandelijkse_huur: formData.maandelijkse_huur || 0,
+          risico_juridisch: formData.risico_juridisch || 1,
+          risico_markt: formData.risico_markt || 1,
+          risico_fiscaal: formData.risico_fiscaal || 1,
+          risico_fysiek: formData.risico_fysiek || 1,
+          risico_operationeel: formData.risico_operationeel || 1,
         });
 
         if (error) throw error;
@@ -192,6 +211,12 @@ const Panden = () => {
       waardering: property.waardering ? Number(property.waardering) : null,
       waarom_gekocht: property.waarom_gekocht || "",
       google_drive_link: property.google_drive_link || "",
+      maandelijkse_huur: Number(property.maandelijkse_huur) || 0,
+      risico_juridisch: property.risico_juridisch || 1,
+      risico_markt: property.risico_markt || 1,
+      risico_fiscaal: property.risico_fiscaal || 1,
+      risico_fysiek: property.risico_fysiek || 1,
+      risico_operationeel: property.risico_operationeel || 1,
     });
     setIsDialogOpen(true);
   };
@@ -286,6 +311,12 @@ const Panden = () => {
       waardering: null,
       waarom_gekocht: "",
       google_drive_link: "",
+      maandelijkse_huur: 0,
+      risico_juridisch: 1,
+      risico_markt: 1,
+      risico_fiscaal: 1,
+      risico_fysiek: 1,
+      risico_operationeel: 1,
     });
   };
 
@@ -657,6 +688,26 @@ const Panden = () => {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="maandelijkse_huur">
+                  Maandelijkse Huur (€)
+                  <InfoTooltip
+                    title="Maandelijkse Huur"
+                    content="De maandelijkse huurinkomsten van dit pand. Wordt gebruikt voor cashflow en rendementsberekeningen."
+                  />
+                </Label>
+                <Input
+                  id="maandelijkse_huur"
+                  type="number"
+                  min="0"
+                  value={formData.maandelijkse_huur || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, maandelijkse_huur: Number(e.target.value) })
+                  }
+                  placeholder="1200"
+                />
+              </div>
+
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="google_drive_link">Google Drive Link</Label>
                 <Input
@@ -686,6 +737,18 @@ const Panden = () => {
                   }
                   placeholder="Strategische ligging nabij het centrum, goed huurrendement..."
                   rows={3}
+                />
+              </div>
+
+              {/* Risicokaart */}
+              <div className="col-span-2 pt-4 border-t">
+                <RisicoKaart
+                  juridisch={formData.risico_juridisch || 1}
+                  markt={formData.risico_markt || 1}
+                  fiscaal={formData.risico_fiscaal || 1}
+                  fysiek={formData.risico_fysiek || 1}
+                  operationeel={formData.risico_operationeel || 1}
+                  onChange={(field, value) => setFormData({ ...formData, [`risico_${field}`]: value })}
                 />
               </div>
             </div>
