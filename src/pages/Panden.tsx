@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink, Calendar, Clock, DoorOpen, BedDouble, Percent } from "lucide-react";
+import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink, Calendar, Clock, DoorOpen, BedDouble, Percent, Sparkles } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { RisicoKaart } from "@/components/panden/RisicoKaart";
+import { PropertyAdviceDialog } from "@/components/panden/PropertyAdviceDialog";
 import {
   Dialog,
   DialogContent,
@@ -69,6 +70,8 @@ const Panden = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [adviceProperty, setAdviceProperty] = useState<Property | null>(null);
+  const [isAdviceDialogOpen, setIsAdviceDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<PropertyInsert> & { 
     water_maandelijks?: number; 
     gas_maandelijks?: number; 
@@ -529,6 +532,16 @@ const Panden = () => {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="glass-strong">
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setAdviceProperty(property);
+                              setIsAdviceDialogOpen(true);
+                            }}
+                            className="text-primary"
+                          >
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            AI Advies
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEdit(property)}>
                             <Pencil className="w-4 h-4 mr-2" />
                             Bewerken
@@ -1117,6 +1130,13 @@ const Panden = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Property Advice Dialog */}
+      <PropertyAdviceDialog
+        property={adviceProperty}
+        open={isAdviceDialogOpen}
+        onOpenChange={setIsAdviceDialogOpen}
+      />
     </AppLayout>
   );
 };
