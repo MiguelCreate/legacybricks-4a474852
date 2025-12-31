@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   TrendingDown, Zap, ArrowRight, Building2, Euro, 
   Calendar, Play, BarChart3, Clock, CheckCircle2 
@@ -25,6 +25,7 @@ import {
   type SnowballProperty,
   type SnowballResult 
 } from "@/lib/financialCalculations";
+import { SnowballImpactVisualization } from "@/components/sneeuwbal/SnowballImpactVisualization";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Property = Tables<"properties">;
@@ -43,6 +44,10 @@ const Sneeuwbal = () => {
   const [extraPayment, setExtraPayment] = useState(0);
   const [results, setResults] = useState<SnowballResult[]>([]);
   const [hasSimulated, setHasSimulated] = useState(false);
+
+  const handleExtraPaymentChange = useCallback((amount: number) => {
+    setExtraPayment(amount);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -258,6 +263,14 @@ const Sneeuwbal = () => {
               </div>
             </div>
           </div>
+
+          {/* Extra Inleg Component */}
+          <SnowballImpactVisualization
+            baseResults={results}
+            totalDebt={totalDebt}
+            totalSurplus={totalSurplus}
+            onExtraPaymentChange={handleExtraPaymentChange}
+          />
 
           {/* Results */}
           {hasSimulated && (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Building2, MapPin, Euro, Pencil, TrendingUp, Home, DoorOpen, BarChart3 } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Euro, Pencil, TrendingUp, Home, DoorOpen, BarChart3, Palette } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { ExitStrategyAdvisor } from "@/components/panden/ExitStrategyAdvisor";
 import { RoomManager } from "@/components/panden/RoomManager";
 import { PropertyFeaturesManager } from "@/components/panden/PropertyFeaturesManager";
 import { RisicoKaart } from "@/components/panden/RisicoKaart";
+import { PandAlsKunstwerk } from "@/components/panden/PandAlsKunstwerk";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -258,6 +259,10 @@ const PandDetail = () => {
                 <BarChart3 className="w-4 h-4" />
                 Risicoprofiel
               </TabsTrigger>
+              <TabsTrigger value="kunstwerk" className="gap-2">
+                <Palette className="w-4 h-4" />
+                Kunstwerk
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="marktwaarde" className="mt-0">
@@ -301,6 +306,23 @@ const PandDetail = () => {
                 fysiek={property.risico_fysiek || 1}
                 operationeel={property.risico_operationeel || 1}
                 readonly
+              />
+            </TabsContent>
+
+            <TabsContent value="kunstwerk" className="mt-0">
+              <PandAlsKunstwerk
+                propertyId={property.id}
+                propertyName={property.naam}
+                locatie={property.locatie}
+                aankoopprijs={Number(property.aankoopprijs)}
+                huidigeWaarde={Number(property.waardering || property.aankoopprijs)}
+                maandelijksHuur={Number(property.maandelijkse_huur || 0)}
+                rendement={property.maandelijkse_huur && property.aankoopprijs 
+                  ? (Number(property.maandelijkse_huur) * 12 / Number(property.aankoopprijs)) * 100 
+                  : undefined}
+                persoonlijkeQuote={property.persoonlijke_quote || undefined}
+                fotoUrl={property.foto_url || undefined}
+                onUpdate={fetchProperty}
               />
             </TabsContent>
           </Tabs>
