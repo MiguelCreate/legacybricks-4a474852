@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Euro, TrendingUp, TrendingDown, Plus, Receipt, PiggyBank, BarChart3 } from "lucide-react";
+import { Euro, TrendingUp, TrendingDown, Plus, Receipt, PiggyBank, BarChart3, Trash2 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatCard } from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -54,6 +64,7 @@ const Financien = () => {
 
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
 
   const [paymentForm, setPaymentForm] = useState({
     tenant_id: "",
@@ -205,6 +216,29 @@ const Financien = () => {
         beschrijving: "",
         herhalend: false,
       });
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: "Fout",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteExpense = async () => {
+    if (!expenseToDelete) return;
+
+    try {
+      const { error } = await supabase.from("expenses").delete().eq("id", expenseToDelete);
+      if (error) throw error;
+
+      toast({
+        title: "Kosten verwijderd",
+        description: "De kosten zijn succesvol verwijderd.",
+      });
+
+      setExpenseToDelete(null);
       fetchData();
     } catch (error: any) {
       toast({
@@ -367,7 +401,7 @@ const Financien = () => {
                     return (
                       <div
                         key={expense.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+                        className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 group"
                       >
                         <div>
                           <p className="font-medium text-foreground">
@@ -377,10 +411,18 @@ const Financien = () => {
                             {property?.naam} • {new Date(expense.datum).toLocaleDateString("nl-NL")}
                           </p>
                         </div>
-                        <div className="text-right">
+                        <div className="flex items-center gap-3">
                           <p className="font-semibold text-destructive">
                             -€{Number(expense.bedrag).toLocaleString()}
                           </p>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                            onClick={() => setExpenseToDelete(expense.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     );
@@ -588,6 +630,24 @@ const Financien = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Expense Confirmation */}
+      <AlertDialog open={!!expenseToDelete} onOpenChange={(open) => !open && setExpenseToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Kosten verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Weet je zeker dat je deze kosten wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteExpense} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Verwijderen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 };
