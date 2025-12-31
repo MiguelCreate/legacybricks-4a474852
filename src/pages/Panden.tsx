@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home } from "lucide-react";
+import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,7 +63,7 @@ const Panden = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
-  const [formData, setFormData] = useState<Partial<PropertyInsert> & { water_maandelijks?: number; gas_maandelijks?: number; elektriciteit_maandelijks?: number; condominium_maandelijks?: number }>({
+  const [formData, setFormData] = useState<Partial<PropertyInsert> & { water_maandelijks?: number; gas_maandelijks?: number; elektriciteit_maandelijks?: number; condominium_maandelijks?: number; aantal_units?: number }>({
     naam: "",
     locatie: "",
     status: "aankoop",
@@ -83,6 +83,7 @@ const Panden = () => {
     gas_maandelijks: 0,
     elektriciteit_maandelijks: 0,
     condominium_maandelijks: 0,
+    aantal_units: 1,
   });
 
   useEffect(() => {
@@ -158,6 +159,7 @@ const Panden = () => {
             gas_maandelijks: formData.gas_maandelijks,
             elektriciteit_maandelijks: formData.elektriciteit_maandelijks,
             condominium_maandelijks: formData.condominium_maandelijks,
+            aantal_units: formData.aantal_units || 1,
           } as any)
           .eq("id", editingProperty.id);
 
@@ -189,6 +191,7 @@ const Panden = () => {
           gas_maandelijks: formData.gas_maandelijks || 0,
           elektriciteit_maandelijks: formData.elektriciteit_maandelijks || 0,
           condominium_maandelijks: formData.condominium_maandelijks || 0,
+          aantal_units: formData.aantal_units || 1,
         } as any);
 
         if (error) throw error;
@@ -233,6 +236,7 @@ const Panden = () => {
       gas_maandelijks: (property as any).gas_maandelijks || 0,
       elektriciteit_maandelijks: (property as any).elektriciteit_maandelijks || 0,
       condominium_maandelijks: (property as any).condominium_maandelijks || 0,
+      aantal_units: (property as any).aantal_units || 1,
     });
     setIsDialogOpen(true);
   };
@@ -337,6 +341,7 @@ const Panden = () => {
       gas_maandelijks: 0,
       elektriciteit_maandelijks: 0,
       condominium_maandelijks: 0,
+      aantal_units: 1,
     });
   };
 
@@ -510,12 +515,18 @@ const Panden = () => {
                       </DropdownMenu>
                     </div>
 
-                    <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center gap-2 mb-4 flex-wrap">
                       <Badge
                         variant={statusInfo.color === "success" ? "success" : statusInfo.color === "warning" ? "warning" : "secondary"}
                       >
                         {statusInfo.label}
                       </Badge>
+                      {(property as any).aantal_units > 1 && (
+                        <Badge variant="outline" className="gap-1">
+                          <Layers className="w-3 h-3" />
+                          {(property as any).aantal_units} units
+                        </Badge>
+                      )}
                       <div
                         className={`px-2 py-1 rounded-md text-xs font-semibold ${getHealthColor(property.gezondheidsscore)}`}
                       >
@@ -626,6 +637,26 @@ const Panden = () => {
                     <SelectItem value="te_koop">Te Koop</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="aantal_units">
+                  Aantal Units
+                  <InfoTooltip
+                    title="Aantal Units"
+                    content="Voor flats of panden met meerdere kamers/appartementen. Standaard is 1 voor een enkelvoudig pand."
+                  />
+                </Label>
+                <Input
+                  id="aantal_units"
+                  type="number"
+                  min="1"
+                  value={formData.aantal_units || 1}
+                  onChange={(e) =>
+                    setFormData({ ...formData, aantal_units: Number(e.target.value) || 1 })
+                  }
+                  placeholder="1"
+                />
               </div>
 
               <div className="space-y-2">

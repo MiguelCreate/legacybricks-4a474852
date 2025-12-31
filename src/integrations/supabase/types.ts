@@ -433,6 +433,7 @@ export type Database = {
         Row: {
           aankoopdatum: string | null
           aankoopprijs: number
+          aantal_units: number
           beheerkosten_percentage: number | null
           condominium_maandelijks: number | null
           created_at: string
@@ -475,6 +476,7 @@ export type Database = {
         Insert: {
           aankoopdatum?: string | null
           aankoopprijs: number
+          aantal_units?: number
           beheerkosten_percentage?: number | null
           condominium_maandelijks?: number | null
           created_at?: string
@@ -517,6 +519,7 @@ export type Database = {
         Update: {
           aankoopdatum?: string | null
           aankoopprijs?: number
+          aantal_units?: number
           beheerkosten_percentage?: number | null
           condominium_maandelijks?: number | null
           created_at?: string
