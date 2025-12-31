@@ -40,6 +40,7 @@ interface Tenant {
   id: string;
   naam: string;
   huurbedrag: number;
+  room_id: string | null;
 }
 
 interface RoomManagerProps {
@@ -67,9 +68,18 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
 
   const fetchData = async () => {
     try {
+      // Fetch rooms with their linked tenant info via actieve_huurder_id
       const [roomsRes, tenantsRes] = await Promise.all([
-        supabase.from("rooms").select("*").eq("property_id", propertyId).order("naam"),
-        supabase.from("tenants").select("id, naam, huurbedrag").eq("property_id", propertyId),
+        supabase
+          .from("rooms")
+          .select("*")
+          .eq("property_id", propertyId)
+          .order("naam"),
+        supabase
+          .from("tenants")
+          .select("id, naam, huurbedrag, room_id")
+          .eq("property_id", propertyId)
+          .eq("actief", true),
       ]);
 
       if (roomsRes.error) throw roomsRes.error;
@@ -151,15 +161,24 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
     });
   };
 
-  const getTenantName = (tenantId: string | null) => {
-    if (!tenantId) return null;
-    const tenant = tenants.find((t) => t.id === tenantId);
-    return tenant?.naam || null;
+  const getTenantName = (room: Room) => {
+    // Check actieve_huurder_id on room first
+    if (room.actieve_huurder_id) {
+      const tenant = tenants.find((t) => t.id === room.actieve_huurder_id);
+      return tenant?.naam || null;
+    }
+    // Also check if any tenant has this room_id
+    const tenantByRoom = tenants.find((t) => t.room_id === room.id);
+    return tenantByRoom?.naam || null;
+  };
+  
+  const isRoomOccupied = (room: Room) => {
+    return room.actieve_huurder_id || tenants.some((t) => t.room_id === room.id);
   };
 
   const totalM2 = rooms.reduce((sum, r) => sum + (r.oppervlakte_m2 || 0), 0);
   const totalRent = rooms.reduce((sum, r) => sum + r.huurprijs, 0);
-  const occupiedRooms = rooms.filter((r) => r.actieve_huurder_id).length;
+  const occupiedRooms = rooms.filter((r) => isRoomOccupied(r)).length;
 
   if (loading) {
     return <div className="animate-pulse h-32 bg-muted rounded-lg" />;
@@ -217,7 +236,8 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
       ) : (
         <div className="grid gap-2">
           {rooms.map((room) => {
-            const tenantName = getTenantName(room.actieve_huurder_id);
+            const tenantName = getTenantName(room);
+            const occupied = isRoomOccupied(room);
             const [isOpen, setIsOpen] = useState(false);
             
             return (
