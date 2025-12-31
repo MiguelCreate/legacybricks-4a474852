@@ -1,1 +1,4 @@
 project_id = "zmwgtpbtizllwuutripu"
+
+[functions.generate-property-advice]
+verify_jwt = false
