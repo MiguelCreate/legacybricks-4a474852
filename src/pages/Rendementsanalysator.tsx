@@ -39,6 +39,7 @@ import { KPIDashboard } from "@/components/analysator/KPIDashboard";
 import { CashflowTable } from "@/components/analysator/CashflowTable";
 import { ExitAnalysisCard } from "@/components/analysator/ExitAnalysisCard";
 import { PartnerOverview } from "@/components/analysator/PartnerOverview";
+import { SnowballImpact } from "@/components/analysator/SnowballImpact";
 
 type TimeFrame = "5j" | "10j" | "15j" | "30j";
 
@@ -553,6 +554,15 @@ export default function Rendementsanalysator() {
                   exitAnalysis={analysis.exitAnalysis}
                   years={timeframeYears[activeTimeframe]}
                   ownCapital={analysis.ownCapital}
+                />
+                
+                {/* Snowball Effect */}
+                <SnowballImpact
+                  newPropertyDebt={analysis.loanAmount}
+                  newPropertyMonthlyPayment={analysis.yearlyCashflows[0]?.debtService / 12 || 0}
+                  newPropertyNetCashflow={analysis.yearlyCashflows[0]?.netCashflow / 12 || 0}
+                  newPropertyInterestRate={inputs.interestRate}
+                  newPropertyName={propertyName || "Nieuw Pand"}
                 />
                 
                 {/* Goal Linking */}
