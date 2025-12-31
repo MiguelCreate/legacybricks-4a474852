@@ -468,78 +468,109 @@ const Financien = () => {
                 Nog geen hypotheken geregistreerd
               </p>
             ) : (
-              <div className="space-y-3">
-                {loans.map((loan) => {
-                  const property = properties.find((p) => p.id === loan.property_id);
-                  const isAdvanced = loan.hypotheek_type === "gevorderd";
-                  
-                  return (
-                    <div
-                      key={loan.id}
-                      className="p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Building2 className="w-5 h-5 text-primary" />
+              <div className="space-y-4">
+                {/* Group loans by property */}
+                {properties
+                  .filter((p) => loans.some((l) => l.property_id === p.id))
+                  .map((property) => {
+                    const propertyLoans = loans.filter((l) => l.property_id === property.id);
+                    const propertyTotalMaandlast = propertyLoans.reduce(
+                      (sum, l) => sum + Number(l.maandlast),
+                      0
+                    );
+                    const propertyTotalRestschuld = propertyLoans.reduce(
+                      (sum, l) => sum + Number(l.restschuld || l.hoofdsom || 0),
+                      0
+                    );
+                    
+                    return (
+                      <div
+                        key={property.id}
+                        className="rounded-lg border bg-secondary/30 overflow-hidden"
+                      >
+                        {/* Property Header */}
+                        <div className="p-4 bg-secondary/50 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <Building2 className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-foreground">{property.naam}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {propertyLoans.length} hypotheekdeel{propertyLoans.length > 1 ? 'en' : ''}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-foreground">
-                              {property?.naam || "Onbekend pand"}
+                          <div className="text-right">
+                            <p className="font-semibold text-foreground">
+                              €{propertyTotalMaandlast.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
+                              <span className="text-sm font-normal text-muted-foreground">/mnd</span>
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              {isAdvanced ? "Gevorderd" : "Eenvoudig"}
-                            </p>
+                            {propertyTotalRestschuld > 0 && (
+                              <p className="text-xs text-muted-foreground">
+                                Restschuld: €{propertyTotalRestschuld.toLocaleString("nl-NL")}
+                              </p>
+                            )}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-foreground">
-                            €{Number(loan.maandlast).toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
-                            <span className="text-sm font-normal text-muted-foreground">/mnd</span>
-                          </p>
+                        
+                        {/* Loan Parts */}
+                        <div className="divide-y divide-border/50">
+                          {propertyLoans.map((loan, index) => {
+                            const isAdvanced = loan.hypotheek_type === "gevorderd";
+                            
+                            return (
+                              <div key={loan.id} className="p-4">
+                                <div className="flex items-start justify-between gap-4 mb-2">
+                                  <div>
+                                    <p className="font-medium text-foreground text-sm">
+                                      Deel {index + 1}
+                                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                                        ({isAdvanced ? "Gevorderd" : "Eenvoudig"})
+                                      </span>
+                                    </p>
+                                  </div>
+                                  <p className="font-medium text-foreground">
+                                    €{Number(loan.maandlast).toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
+                                    <span className="text-xs font-normal text-muted-foreground">/mnd</span>
+                                  </p>
+                                </div>
+                                
+                                {isAdvanced && (
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                    <div>
+                                      <p className="text-muted-foreground text-xs">Hoofdsom</p>
+                                      <p className="font-medium">€{Number(loan.hoofdsom || 0).toLocaleString("nl-NL")}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-muted-foreground text-xs">Rente</p>
+                                      <p className="font-medium">
+                                        {Number(loan.rente_percentage || 0).toFixed(2)}% 
+                                        <span className="text-xs text-muted-foreground ml-1">
+                                          {loan.rente_type === "vast" ? "(vast)" : "(var.)"}
+                                        </span>
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-muted-foreground text-xs">Looptijd</p>
+                                      <p className="font-medium">{loan.looptijd_jaren || 0} jaar</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-muted-foreground text-xs">Restschuld</p>
+                                      <p className="font-medium">€{Number(loan.restschuld || loan.hoofdsom || 0).toLocaleString("nl-NL")}</p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                      
-                      {isAdvanced && (
-                        <div className="mt-3 pt-3 border-t border-border/50 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Euro className="w-4 h-4 text-muted-foreground" />
-                            <div>
-                              <p className="text-muted-foreground text-xs">Hoofdsom</p>
-                              <p className="font-medium">€{Number(loan.hoofdsom || 0).toLocaleString("nl-NL")}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Percent className="w-4 h-4 text-muted-foreground" />
-                            <div>
-                              <p className="text-muted-foreground text-xs">Rente</p>
-                              <p className="font-medium">{Number(loan.rente_percentage || 0).toFixed(2)}% {loan.rente_type}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-muted-foreground" />
-                            <div>
-                              <p className="text-muted-foreground text-xs">Looptijd</p>
-                              <p className="font-medium">{loan.looptijd_jaren || 0} jaar</p>
-                            </div>
-                          </div>
-                          {loan.restschuld && (
-                            <div className="flex items-center gap-2">
-                              <TrendingDown className="w-4 h-4 text-muted-foreground" />
-                              <div>
-                                <p className="text-muted-foreground text-xs">Restschuld</p>
-                                <p className="font-medium">€{Number(loan.restschuld).toLocaleString("nl-NL")}</p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                    );
+                  })}
                 
                 {/* Totaal */}
-                <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                <div className="pt-4 border-t border-border flex items-center justify-between">
                   <p className="font-medium text-muted-foreground">Totaal maandlasten</p>
                   <p className="text-lg font-bold text-foreground">
                     €{totalMonthlyLoanPayments.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
