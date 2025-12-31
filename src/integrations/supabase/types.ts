@@ -61,6 +61,56 @@ export type Database = {
           },
         ]
       }
+      comparable_properties: {
+        Row: {
+          adres: string
+          afstand_meter: number | null
+          created_at: string
+          id: string
+          notities: string | null
+          oppervlakte_m2: number
+          prijs_per_m2: number | null
+          property_id: string
+          status: string | null
+          updated_at: string
+          vraagprijs: number
+        }
+        Insert: {
+          adres: string
+          afstand_meter?: number | null
+          created_at?: string
+          id?: string
+          notities?: string | null
+          oppervlakte_m2: number
+          prijs_per_m2?: number | null
+          property_id: string
+          status?: string | null
+          updated_at?: string
+          vraagprijs: number
+        }
+        Update: {
+          adres?: string
+          afstand_meter?: number | null
+          created_at?: string
+          id?: string
+          notities?: string | null
+          oppervlakte_m2?: number
+          prijs_per_m2?: number | null
+          property_id?: string
+          status?: string | null
+          updated_at?: string
+          vraagprijs?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comparable_properties_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contractors: {
         Row: {
           bedrijfsnaam: string

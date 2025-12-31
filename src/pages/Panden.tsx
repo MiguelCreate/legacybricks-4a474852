@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink, Calendar, Clock, DoorOpen, BedDouble, Percent, Sparkles, Map, Wrench } from "lucide-react";
+import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink, Calendar, Clock, DoorOpen, BedDouble, Percent, Sparkles, Map, Wrench, Eye, ArrowLeft } from "lucide-react";
 import { PropertyMap } from "@/components/panden/PropertyMap";
 import { RoomManager } from "@/components/panden/RoomManager";
 import { PropertyFeaturesManager } from "@/components/panden/PropertyFeaturesManager";
 import { MaintenanceOverview } from "@/components/panden/MaintenanceOverview";
+import { ComparablePropertiesManager } from "@/components/panden/ComparablePropertiesManager";
+import { ExitStrategyAdvisor } from "@/components/panden/ExitStrategyAdvisor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
