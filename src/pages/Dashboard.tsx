@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Building2, Users, Euro, TrendingUp, Plus, Receipt, AlertTriangle, FileText, Compass, Wallet } from "lucide-react";
+import { ExportMenu, ExportData } from "@/components/ui/ExportMenu";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
@@ -7,7 +8,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { PropertyCard } from "@/components/ui/PropertyCard";
 import { QuickAction } from "@/components/ui/QuickAction";
 import { DailyMission } from "@/components/dashboard/DailyMission";
-import { LegacyMantra } from "@/components/dashboard/LegacyMantra";
+
 import { CoPiloot } from "@/components/dashboard/CoPiloot";
 import { RentalIncomeChart } from "@/components/dashboard/RentalIncomeChart";
 import { CashflowChart } from "@/components/dashboard/CashflowChart";
@@ -207,11 +208,89 @@ const Dashboard = () => {
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-foreground">Overzicht</h2>
-                  <AudioSamenvatting
-                    nettoVermogen={nettoVermogen}
-                    maandelijkseCashflow={monthlyCashflow}
-                    openActies={expiringContracts.length}
-                  />
+                  <div className="flex items-center gap-2">
+                    <ExportMenu 
+                      data={{
+                        title: "Portfolio Overzicht",
+                        sections: [
+                          {
+                            title: "Kerngegevens",
+                            explanation: "Dit zijn de belangrijkste cijfers van onze vastgoedportefeuille. Ze laten zien hoeveel we bezitten en verdienen.",
+                            items: [
+                              { 
+                                label: "Totale Portefeuillewaarde", 
+                                value: `€${totalPortfolioValue.toLocaleString("nl-NL")}`,
+                                explanation: "De geschatte marktwaarde van al onze panden samen. Dit is wat we zouden ontvangen als we alles verkopen."
+                              },
+                              { 
+                                label: "Openstaande Schuld", 
+                                value: `€${totalDebt.toLocaleString("nl-NL")}`,
+                                explanation: "Het bedrag dat we nog moeten aflossen op onze hypotheken."
+                              },
+                              { 
+                                label: "Netto Vermogen", 
+                                value: `€${nettoVermogen.toLocaleString("nl-NL")}`,
+                                explanation: "Dit is wat we echt bezitten: de waarde van de panden minus wat we nog moeten betalen. Dit groeit elk jaar!"
+                              },
+                              { 
+                                label: "Aantal Panden", 
+                                value: properties.length,
+                                explanation: "Het totaal aantal vastgoedobjecten in onze portefeuille."
+                              },
+                            ]
+                          },
+                          {
+                            title: "Inkomsten & Cashflow",
+                            explanation: "Dit laat zien hoeveel geld er maandelijks binnenkomt en wat we overhouden.",
+                            items: [
+                              { 
+                                label: "Maandelijkse Huurinkomsten", 
+                                value: `€${totalMonthlyRent.toLocaleString("nl-NL")}`,
+                                explanation: "Het totale bedrag aan huur dat we elke maand ontvangen van onze huurders."
+                              },
+                              { 
+                                label: "Netto Cashflow", 
+                                value: `€${monthlyCashflow.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`,
+                                explanation: "Wat we elke maand overhouden nadat alle kosten zijn betaald (hypotheek, onderhoud, verzekeringen). Dit is puur passief inkomen!"
+                              },
+                              { 
+                                label: "Bruto Rendement", 
+                                value: `${gemiddeldRendement.toFixed(1)}%`,
+                                explanation: "Het percentage dat we jaarlijks verdienen op onze investering. Vergelijk dit met sparen op een bankrekening (vaak <1%)."
+                              },
+                              { 
+                                label: "Aantal Huurders", 
+                                value: tenants.length,
+                                explanation: "Het totaal aantal actieve huurders in al onze panden."
+                              },
+                            ]
+                          },
+                          {
+                            title: "Bezetting & Status",
+                            explanation: "Een gezonde portefeuille heeft een hoge bezettingsgraad en weinig leegstand.",
+                            items: [
+                              { 
+                                label: "Bezettingsgraad", 
+                                value: `${bezettingsgraad}%`,
+                                explanation: "Het percentage van onze verhuurbare panden dat daadwerkelijk verhuurd is. 100% = geen leegstand."
+                              },
+                              { 
+                                label: "Panden in Verhuur", 
+                                value: verhuurdeProperties.length,
+                                explanation: "Het aantal panden dat momenteel actief verhuurd wordt."
+                              },
+                            ]
+                          }
+                        ]
+                      }}
+                      filename="portfolio_overzicht"
+                    />
+                    <AudioSamenvatting
+                      nettoVermogen={nettoVermogen}
+                      maandelijkseCashflow={monthlyCashflow}
+                      openActies={expiringContracts.length}
+                    />
+                  </div>
                 </div>
 
                 {/* Stats Grid - 5 columns */}
@@ -403,7 +482,6 @@ const Dashboard = () => {
                     maandelijkseCashflow={monthlyCashflow}
                   />
                   <DailyMission />
-                  <LegacyMantra />
                 </div>
               </section>
             </>
