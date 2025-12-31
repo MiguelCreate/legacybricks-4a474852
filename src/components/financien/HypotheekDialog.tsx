@@ -36,6 +36,7 @@ interface HypotheekDialogProps {
   properties: Property[];
   loans: Loan[];
   onSuccess: () => void;
+  initialPropertyId?: string;
 }
 
 // Calculate monthly payment using annuity formula
@@ -90,6 +91,7 @@ export const HypotheekDialog = ({
   properties,
   loans,
   onSuccess,
+  initialPropertyId,
 }: HypotheekDialogProps) => {
   const { toast } = useToast();
   const [hypotheekType, setHypotheekType] = useState<Enums<"loan_type">>("eenvoudig");
@@ -106,7 +108,7 @@ export const HypotheekDialog = ({
   // Advanced form state - supports multiple parts
   const [loanParts, setLoanParts] = useState<LoanPartForm[]>([emptyLoanPart()]);
 
-  // Reset forms when dialog opens/closes
+  // Reset forms when dialog opens/closes or set initial property
   useEffect(() => {
     if (!open) {
       setHypotheekType("eenvoudig");
@@ -114,8 +116,13 @@ export const HypotheekDialog = ({
       setSimpleForm({ property_id: "", maandlast: 0, existingLoanId: null });
       setLoanParts([emptyLoanPart()]);
       setExpandedParts(new Set([0]));
+    } else if (initialPropertyId) {
+      // Pre-select the property and switch to advanced mode for editing
+      setSelectedPropertyId(initialPropertyId);
+      setSimpleForm((prev) => ({ ...prev, property_id: initialPropertyId }));
+      setHypotheekType("gevorderd");
     }
-  }, [open]);
+  }, [open, initialPropertyId]);
 
   // Load existing loans when property is selected
   useEffect(() => {

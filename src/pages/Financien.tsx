@@ -67,6 +67,7 @@ const Financien = () => {
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
   const [isHypotheekDialogOpen, setIsHypotheekDialogOpen] = useState(false);
+  const [editPropertyId, setEditPropertyId] = useState<string | undefined>(undefined);
 
   const [paymentForm, setPaymentForm] = useState({
     tenant_id: "",
@@ -501,16 +502,29 @@ const Financien = () => {
                               </p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-foreground">
-                              €{propertyTotalMaandlast.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
-                              <span className="text-sm font-normal text-muted-foreground">/mnd</span>
-                            </p>
-                            {propertyTotalRestschuld > 0 && (
-                              <p className="text-xs text-muted-foreground">
-                                Restschuld: €{propertyTotalRestschuld.toLocaleString("nl-NL")}
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <p className="font-semibold text-foreground">
+                                €{propertyTotalMaandlast.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
+                                <span className="text-sm font-normal text-muted-foreground">/mnd</span>
                               </p>
-                            )}
+                              {propertyTotalRestschuld > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                  Restschuld: €{propertyTotalRestschuld.toLocaleString("nl-NL")}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditPropertyId(property.id);
+                                setIsHypotheekDialogOpen(true);
+                              }}
+                              className="h-8 w-8"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                         
@@ -801,10 +815,14 @@ const Financien = () => {
       {/* Hypotheek Dialog */}
       <HypotheekDialog
         open={isHypotheekDialogOpen}
-        onOpenChange={setIsHypotheekDialogOpen}
+        onOpenChange={(open) => {
+          setIsHypotheekDialogOpen(open);
+          if (!open) setEditPropertyId(undefined);
+        }}
         properties={properties}
         loans={loans}
         onSuccess={fetchData}
+        initialPropertyId={editPropertyId}
       />
     </AppLayout>
   );
