@@ -17,6 +17,7 @@ import NettoVermogen from "./pages/NettoVermogen";
 import Pensioen from "./pages/Pensioen";
 import Contracten from "./pages/Contracten";
 import Legacy from "./pages/Legacy";
+import Inchecklijsten from "./pages/Inchecklijsten";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/pensioen" element={<ProtectedRoute><Pensioen /></ProtectedRoute>} />
             <Route path="/contracten" element={<ProtectedRoute><Contracten /></ProtectedRoute>} />
             <Route path="/legacy" element={<ProtectedRoute><Legacy /></ProtectedRoute>} />
+            <Route path="/inchecklijsten" element={<ProtectedRoute><Inchecklijsten /></ProtectedRoute>} />
             <Route path="/instellingen" element={<ProtectedRoute><Instellingen /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
