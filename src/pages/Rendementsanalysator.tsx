@@ -89,6 +89,113 @@ const sectionExplanations: Record<string, { title: string; description: string }
   },
 };
 
+// InputField component - defined outside to prevent re-creation on each render
+const InputField = ({ 
+  label, 
+  value, 
+  onChange, 
+  tooltip,
+  prefix,
+  suffix,
+  hint,
+}: { 
+  label: string; 
+  value: number; 
+  onChange: (val: number) => void;
+  tooltip?: string;
+  prefix?: string;
+  suffix?: string;
+  hint?: string;
+}) => (
+  <div className="space-y-1.5">
+    <div className="flex items-center gap-1">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      {tooltip && <InfoTooltip title={label} content={tooltip} />}
+    </div>
+    <div className="relative">
+      {prefix && (
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+          {prefix}
+        </span>
+      )}
+      <Input
+        type="number"
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+        className={`h-9 text-sm ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-12' : ''}`}
+      />
+      {suffix && (
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+          {suffix}
+        </span>
+      )}
+    </div>
+    {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+  </div>
+);
+
+// InputSection component - defined outside to prevent re-creation on each render
+const InputSection = ({ 
+  title, 
+  sectionKey, 
+  icon: Icon,
+  children,
+  stepNumber,
+  expandedSections,
+  toggleSection,
+}: { 
+  title: string; 
+  sectionKey: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+  stepNumber: number;
+  expandedSections: Record<string, boolean>;
+  toggleSection: (key: string) => void;
+}) => {
+  const explanation = sectionExplanations[sectionKey];
+  const isActive = expandedSections[sectionKey];
+  
+  return (
+    <Card className={`shadow-card transition-all ${isActive ? 'ring-2 ring-primary/20' : ''}`}>
+      <CardHeader 
+        className="cursor-pointer py-3"
+        onClick={() => toggleSection(sectionKey)}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+              isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            }`}>
+              {stepNumber}
+            </div>
+            <Icon className={`h-4 w-4 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          </div>
+          {isActive ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </div>
+        {!isActive && explanation && (
+          <p className="text-xs text-muted-foreground mt-1 ml-8">{explanation.description}</p>
+        )}
+      </CardHeader>
+      {isActive && (
+        <CardContent className="pt-0 pb-4">
+          {explanation && (
+            <div className="bg-accent/50 rounded-lg p-3 mb-4">
+              <p className="text-sm text-foreground font-medium">{explanation.title}</p>
+              <p className="text-xs text-muted-foreground mt-1">{explanation.description}</p>
+            </div>
+          )}
+          {children}
+        </CardContent>
+      )}
+    </Card>
+  );
+};
+
 export default function Rendementsanalysator() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -272,106 +379,7 @@ export default function Rendementsanalysator() {
   
   const riskAssessment = analysis ? getRiskAssessment(analysis) : null;
   
-  const InputSection = ({ 
-    title, 
-    sectionKey, 
-    icon: Icon,
-    children,
-    stepNumber
-  }: { 
-    title: string; 
-    sectionKey: keyof typeof expandedSections;
-    icon: React.ElementType;
-    children: React.ReactNode;
-    stepNumber: number;
-  }) => {
-    const explanation = sectionExplanations[sectionKey];
-    const isActive = expandedSections[sectionKey];
-    
-    return (
-      <Card className={`shadow-card transition-all ${isActive ? 'ring-2 ring-primary/20' : ''}`}>
-        <CardHeader 
-          className="cursor-pointer py-3"
-          onClick={() => toggleSection(sectionKey)}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-              }`}>
-                {stepNumber}
-              </div>
-              <Icon className={`h-4 w-4 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-              <CardTitle className="text-sm font-medium">{title}</CardTitle>
-            </div>
-            {isActive ? (
-              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            )}
-          </div>
-          {!isActive && explanation && (
-            <p className="text-xs text-muted-foreground mt-1 ml-8">{explanation.description}</p>
-          )}
-        </CardHeader>
-        {isActive && (
-          <CardContent className="pt-0 pb-4">
-            {explanation && (
-              <div className="bg-accent/50 rounded-lg p-3 mb-4">
-                <p className="text-sm text-foreground font-medium">{explanation.title}</p>
-                <p className="text-xs text-muted-foreground mt-1">{explanation.description}</p>
-              </div>
-            )}
-            {children}
-          </CardContent>
-        )}
-      </Card>
-    );
-  };
-  
-  const InputField = ({ 
-    label, 
-    value, 
-    onChange, 
-    tooltip,
-    prefix,
-    suffix,
-    hint,
-  }: { 
-    label: string; 
-    value: number; 
-    onChange: (val: number) => void;
-    tooltip?: string;
-    prefix?: string;
-    suffix?: string;
-    hint?: string;
-  }) => (
-    <div className="space-y-1.5">
-      <div className="flex items-center gap-1">
-        <Label className="text-xs text-muted-foreground">{label}</Label>
-        {tooltip && <InfoTooltip title={label} content={tooltip} />}
-      </div>
-      <div className="relative">
-        {prefix && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-            {prefix}
-          </span>
-        )}
-        <Input
-          type="number"
-          value={value}
-          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-          className={`h-9 text-sm ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-12' : ''}`}
-        />
-        {suffix && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-            {suffix}
-          </span>
-        )}
-      </div>
-      {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
-    </div>
-  );
+  // InputSection and InputField are now defined outside the component
 
   return (
     <AppLayout>
@@ -455,7 +463,7 @@ export default function Rendementsanalysator() {
               {/* Input Column */}
               <div className="space-y-4 lg:col-span-1">
                 {/* Purchase Section */}
-                <InputSection title="Aankoop" sectionKey="purchase" icon={Building2} stepNumber={1}>
+                <InputSection title="Aankoop" sectionKey="purchase" icon={Building2} stepNumber={1} expandedSections={expandedSections} toggleSection={toggleSection}>
               <div className="grid gap-3">
                 <InputField
                   label="Aankoopprijs"
@@ -497,7 +505,7 @@ export default function Rendementsanalysator() {
             </InputSection>
             
             {/* Mortgage Section */}
-            <InputSection title="Hypotheek" sectionKey="mortgage" icon={PiggyBank} stepNumber={2}>
+            <InputSection title="Hypotheek" sectionKey="mortgage" icon={PiggyBank} stepNumber={2} expandedSections={expandedSections} toggleSection={toggleSection}>
               <div className="grid gap-3">
                 <InputField
                   label="LTV (Loan-to-Value)"
@@ -525,7 +533,7 @@ export default function Rendementsanalysator() {
             </InputSection>
             
             {/* Rental Section */}
-            <InputSection title="Verhuur" sectionKey="rental" icon={Euro} stepNumber={3}>
+            <InputSection title="Verhuur" sectionKey="rental" icon={Euro} stepNumber={3} expandedSections={expandedSections} toggleSection={toggleSection}>
               <div className="grid gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Type verhuur</Label>
@@ -581,7 +589,7 @@ export default function Rendementsanalysator() {
             </InputSection>
             
             {/* OPEX Section */}
-            <InputSection title="Exploitatiekosten" sectionKey="opex" icon={Percent} stepNumber={4}>
+            <InputSection title="Exploitatiekosten" sectionKey="opex" icon={Percent} stepNumber={4} expandedSections={expandedSections} toggleSection={toggleSection}>
               <div className="grid gap-3">
                 <InputField
                   label="Beheerkosten"
@@ -632,7 +640,7 @@ export default function Rendementsanalysator() {
             </InputSection>
             
             {/* Assumptions Section */}
-            <InputSection title="Aannames" sectionKey="assumptions" icon={TrendingUp} stepNumber={5}>
+            <InputSection title="Aannames" sectionKey="assumptions" icon={TrendingUp} stepNumber={5} expandedSections={expandedSections} toggleSection={toggleSection}>
               <div className="grid gap-3">
                 <InputField
                   label="Huurgroei"
