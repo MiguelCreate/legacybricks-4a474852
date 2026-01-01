@@ -143,24 +143,47 @@ const Pensioen = () => {
     return Math.max(0, grossRentalIncome - totalMonthlyLoanPayments - totalMonthlyExpenses - totalPropertyCosts);
   }, [tenants, loans, recurringExpenses, properties]);
 
+  // Official retirement age in the Netherlands (67 years + 3 months)
+  const OFFICIAL_RETIREMENT_AGE = 67.25; // 67 years and 3 months
+
   // Calculations
   const currentAge = Number(profile.huidige_leeftijd || 40);
-  const retirementAge = Number(profile.gewenste_pensioenleeftijd || 67);
-  const yearsToRetirement = Math.max(0, retirementAge - currentAge);
+  const desiredRetirementAge = Number(profile.gewenste_pensioenleeftijd || 55); // When user wants to stop working
   const desiredIncome = Number(profile.gewenst_maandinkomen || 3000);
   const aow = Number(profile.aow_maandelijks || 1400);
   const pension = Number(profile.pensioen_maandelijks || 0);
   const otherIncome = Number(profile.overige_inkomsten || 0);
-  const rentalIncome = netRentalIncome; // Now uses net instead of gross
+  const rentalIncome = netRentalIncome;
 
-  const pensionGap = calculatePensionGap(desiredIncome, aow, pension, otherIncome, rentalIncome);
-  const inflationAdjustedGap = adjustForInflation(pensionGap, yearsToRetirement);
-  const inflationAdjustedDesired = adjustForInflation(desiredIncome, yearsToRetirement);
+  // Years calculations
+  const yearsToDesiredRetirement = Math.max(0, desiredRetirementAge - currentAge);
+  const yearsToOfficialRetirement = Math.max(0, OFFICIAL_RETIREMENT_AGE - currentAge);
   
-  const expectedIncome = aow + pension + otherIncome + rentalIncome;
-  const coveragePercent = desiredIncome > 0 ? (expectedIncome / desiredIncome) * 100 : 0;
+  // Pre-retirement phase: from desired retirement age until official retirement age (67+3m)
+  // During this phase: NO AOW, NO pension - only rental income + other income
+  const yearsInPreRetirementPhase = Math.max(0, OFFICIAL_RETIREMENT_AGE - Math.max(currentAge, desiredRetirementAge));
+  
+  // Income during pre-retirement phase (before 67+3m)
+  const incomePreRetirement = rentalIncome + otherIncome;
+  const gapPreRetirement = Math.max(0, desiredIncome - incomePreRetirement);
+  
+  // Total savings needed to bridge the pre-retirement phase
+  const monthsInPreRetirementPhase = Math.round(yearsInPreRetirementPhase * 12);
+  const totalSavingsNeeded = gapPreRetirement * monthsInPreRetirementPhase;
+  const inflationAdjustedSavingsNeeded = adjustForInflation(totalSavingsNeeded, yearsToDesiredRetirement);
+  
+  // Post-retirement phase: after official retirement age (67+3m)
+  // During this phase: AOW + pension + rental income + other income
+  const incomePostRetirement = aow + pension + rentalIncome + otherIncome;
+  const gapPostRetirement = Math.max(0, desiredIncome - incomePostRetirement);
+  const inflationAdjustedGapPost = adjustForInflation(gapPostRetirement, yearsToOfficialRetirement);
+  
+  // Coverage percentages
+  const coveragePreRetirement = desiredIncome > 0 ? (incomePreRetirement / desiredIncome) * 100 : 0;
+  const coveragePostRetirement = desiredIncome > 0 ? (incomePostRetirement / desiredIncome) * 100 : 0;
 
-  const yearsToFreedom = calculateYearsToFreedom(pensionGap, rentalIncome);
+  // Years to financial freedom (based on pre-retirement income since that's the bottleneck)
+  const yearsToFreedom = calculateYearsToFreedom(gapPreRetirement, rentalIncome);
   const freedomYear = new Date().getFullYear() + yearsToFreedom;
   const freedomAge = currentAge + yearsToFreedom;
 
@@ -193,75 +216,133 @@ const Pensioen = () => {
         </header>
 
         <div className="px-4 md:px-6 lg:px-8 pb-8 space-y-6">
-          {/* Hero Stats */}
+          {/* Phase explanation */}
+          <div className="p-4 bg-muted/50 rounded-lg border">
+            <p className="text-sm text-muted-foreground">
+              <strong>Let op:</strong> AOW en pensioen gaan pas in vanaf de pensioengerechtigde leeftijd van <strong>67 jaar en 3 maanden</strong>. 
+              Hieronder zie je wat je nodig hebt om eerder te stoppen met werken én hoe je situatie eruitziet na je pensioenleeftijd.
+            </p>
+          </div>
+
+          {/* Hero Stats - Two phase comparison */}
           <div className="grid md:grid-cols-2 gap-4">
+            {/* Pre-retirement phase card */}
             <div className={`p-6 rounded-xl border shadow-card ${
-              pensionGap <= 0 ? "bg-success/10 border-success/20" : "bg-warning/10 border-warning/20"
+              gapPreRetirement <= 0 ? "bg-success/10 border-success/20" : "bg-warning/10 border-warning/20"
             }`}>
               <div className="flex items-center gap-2 mb-2">
-                {pensionGap <= 0 ? (
+                {gapPreRetirement <= 0 ? (
                   <CheckCircle2 className="w-5 h-5 text-success" />
                 ) : (
                   <AlertCircle className="w-5 h-5 text-warning" />
                 )}
-                <span className="text-sm font-medium text-muted-foreground">Pensioengat</span>
+                <span className="text-sm font-medium text-muted-foreground">Vóór Pensioenleeftijd</span>
                 <InfoTooltip
-                  title="Pensioengat"
-                  content="Het verschil tussen je gewenste inkomen en je verwachte inkomen bij pensioen. Negatief betekent dat je genoeg hebt!"
+                  title="Vóór 67 jaar en 3 maanden"
+                  content="In deze fase ontvang je nog GEEN AOW of pensioen. Je moet leven van huurinkomsten en eventuele overige inkomsten, of je spaargeld aanspreken."
                 />
               </div>
-              <p className={`text-3xl font-bold ${pensionGap <= 0 ? "text-success" : "text-warning"}`}>
-                {pensionGap <= 0 ? "Geen gat!" : `€${pensionGap.toLocaleString()}/mnd`}
+              <p className={`text-2xl font-bold ${gapPreRetirement <= 0 ? "text-success" : "text-warning"}`}>
+                {gapPreRetirement <= 0 ? "Gedekt!" : `€${Math.round(gapPreRetirement).toLocaleString()}/mnd tekort`}
               </p>
-              {yearsToRetirement > 0 && pensionGap > 0 && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Inflatie-aangepast (2,5%/jaar): €{Math.round(inflationAdjustedGap).toLocaleString()}/mnd
-                </p>
-              )}
+              <p className="text-sm text-muted-foreground mt-2">
+                Inkomen: €{Math.round(incomePreRetirement).toLocaleString()}/mnd (geen AOW/pensioen)
+              </p>
+              <Progress value={Math.min(100, coveragePreRetirement)} className="h-2 mt-3" />
+              <p className="text-xs text-muted-foreground mt-1">{Math.round(coveragePreRetirement)}% van gewenst inkomen</p>
             </div>
 
-            <div className="p-6 bg-card rounded-xl border shadow-card">
+            {/* Post-retirement phase card */}
+            <div className={`p-6 rounded-xl border shadow-card ${
+              gapPostRetirement <= 0 ? "bg-success/10 border-success/20" : "bg-primary/10 border-primary/20"
+            }`}>
               <div className="flex items-center gap-2 mb-2">
-                <Sunset className="w-5 h-5 text-primary" />
-                <span className="text-sm font-medium text-muted-foreground">Financiële Vrijheid</span>
+                {gapPostRetirement <= 0 ? (
+                  <CheckCircle2 className="w-5 h-5 text-success" />
+                ) : (
+                  <Target className="w-5 h-5 text-primary" />
+                )}
+                <span className="text-sm font-medium text-muted-foreground">Na Pensioenleeftijd</span>
                 <InfoTooltip
-                  title="Financiële Vrijheid"
-                  content="Het moment waarop je passieve inkomsten je gewenste levensstijl dekken, ongeacht je leeftijd."
+                  title="Na 67 jaar en 3 maanden"
+                  content="Vanaf deze leeftijd ontvang je AOW en eventueel opgebouwd pensioen, bovenop je andere inkomsten."
                 />
               </div>
-              {yearsToFreedom === Infinity || yearsToFreedom > 50 ? (
-                <p className="text-lg font-medium text-muted-foreground">
-                  Nog niet bereikbaar met huidige inkomsten
-                </p>
-              ) : yearsToFreedom === 0 ? (
-                <p className="text-3xl font-bold text-success">Nu al vrij!</p>
-              ) : (
-                <>
-                  <p className="text-3xl font-bold text-foreground">
-                    {freedomYear} (leeftijd {freedomAge})
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Nog {yearsToFreedom} jaar bij huidige groei
-                  </p>
-                </>
-              )}
+              <p className={`text-2xl font-bold ${gapPostRetirement <= 0 ? "text-success" : "text-primary"}`}>
+                {gapPostRetirement <= 0 ? "Gedekt!" : `€${Math.round(gapPostRetirement).toLocaleString()}/mnd tekort`}
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Inkomen: €{Math.round(incomePostRetirement).toLocaleString()}/mnd (incl. AOW/pensioen)
+              </p>
+              <Progress value={Math.min(100, coveragePostRetirement)} className="h-2 mt-3" />
+              <p className="text-xs text-muted-foreground mt-1">{Math.round(coveragePostRetirement)}% van gewenst inkomen</p>
             </div>
           </div>
 
-          {/* Income Coverage */}
+          {/* Savings needed to bridge the gap */}
+          {yearsInPreRetirementPhase > 0 && gapPreRetirement > 0 && (
+            <div className="p-6 bg-card rounded-xl border shadow-card border-warning/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Wallet className="w-5 h-5 text-warning" />
+                <h2 className="font-semibold text-foreground">Benodigde Spaarpot om Eerder te Stoppen</h2>
+                <InfoTooltip
+                  title="Overbruggingskapitaal"
+                  content={`Dit is het bedrag dat je nu zou moeten sparen om de periode van ${Math.round(yearsInPreRetirementPhase * 10) / 10} jaar tussen je gewenste pensioenleeftijd (${desiredRetirementAge}) en de officiële pensioenleeftijd (67j3m) te overbruggen.`}
+                />
+              </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">Maandelijks tekort</p>
+                  <p className="text-xl font-bold text-warning">€{Math.round(gapPreRetirement).toLocaleString()}</p>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">Overbruggingsperiode</p>
+                  <p className="text-xl font-bold text-foreground">{Math.round(yearsInPreRetirementPhase * 10) / 10} jaar</p>
+                  <p className="text-xs text-muted-foreground">({monthsInPreRetirementPhase} maanden)</p>
+                </div>
+                <div className="text-center p-4 bg-warning/10 rounded-lg border border-warning/20">
+                  <p className="text-sm text-muted-foreground mb-1">Totaal nodig</p>
+                  <p className="text-xl font-bold text-warning">€{Math.round(totalSavingsNeeded).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Inflatie-gecorrigeerd: €{Math.round(inflationAdjustedSavingsNeeded).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              {yearsToDesiredRetirement > 0 && (
+                <p className="text-sm text-muted-foreground mt-4 text-center">
+                  Je hebt nog <strong>{Math.round(yearsToDesiredRetirement)} jaar</strong> om dit bedrag te sparen. 
+                  Dat is <strong>€{Math.round(totalSavingsNeeded / (yearsToDesiredRetirement * 12)).toLocaleString()}/maand</strong>.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Financial Freedom */}
           <div className="p-6 bg-card rounded-xl border shadow-card">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-foreground flex items-center gap-2">
-                <Target className="w-5 h-5 text-primary" />
-                Inkomensdekking
-              </h2>
-              <span className="text-2xl font-bold text-primary">{Math.round(coveragePercent)}%</span>
+            <div className="flex items-center gap-2 mb-2">
+              <Sunset className="w-5 h-5 text-primary" />
+              <span className="font-semibold text-foreground">Financiële Vrijheid</span>
+              <InfoTooltip
+                title="Financiële Vrijheid"
+                content="Het moment waarop je passieve inkomsten (zonder AOW/pensioen) je gewenste levensstijl volledig dekken."
+              />
             </div>
-            <Progress value={Math.min(100, coveragePercent)} className="h-4 mb-4" />
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Verwacht: €{expectedIncome.toLocaleString()}/mnd</span>
-              <span>Gewenst: €{desiredIncome.toLocaleString()}/mnd</span>
-            </div>
+            {yearsToFreedom === Infinity || yearsToFreedom > 50 ? (
+              <p className="text-lg font-medium text-muted-foreground">
+                Nog niet bereikbaar met huidige passieve inkomsten
+              </p>
+            ) : yearsToFreedom === 0 ? (
+              <p className="text-3xl font-bold text-success">Nu al vrij!</p>
+            ) : (
+              <>
+                <p className="text-3xl font-bold text-foreground">
+                  {freedomYear} (leeftijd {freedomAge})
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Nog {yearsToFreedom} jaar bij huidige groei van passief inkomen
+                </p>
+              </>
+            )}
           </div>
 
           {/* Income Breakdown */}
@@ -333,19 +414,20 @@ const Pensioen = () => {
 
                 <div className="space-y-2">
                   <Label>
-                    Gewenste pensioenleeftijd
+                    Wanneer wil je stoppen met werken?
                     <InfoTooltip
-                      title="Pensioenleeftijd"
-                      content="De leeftijd waarop je wilt stoppen met werken. Hoe eerder, hoe meer je moet sparen."
+                      title="Gewenste Stopwerk-leeftijd"
+                      content="De leeftijd waarop je wilt stoppen met werken. Dit kan vóór de officiële pensioenleeftijd (67j3m) zijn, maar dan moet je zelf overbruggen tot AOW/pensioen ingaat."
                     />
                   </Label>
                   <Input
                     type="number"
-                    min="40"
+                    min="30"
                     max="80"
                     value={profile.gewenste_pensioenleeftijd || ""}
                     onChange={(e) => setProfile({ ...profile, gewenste_pensioenleeftijd: Number(e.target.value) })}
                   />
+                  <p className="text-xs text-muted-foreground">Officiële pensioenleeftijd: 67 jaar en 3 maanden</p>
                 </div>
 
                 <div className="space-y-2">
