@@ -48,6 +48,7 @@ import { GuidedTour, getStepForSection } from "@/components/analysator/GuidedTou
 import { VisualCharts } from "@/components/analysator/VisualCharts";
 import { AnalysatorModeToggle } from "@/components/analysator/AnalysatorModeToggle";
 import { BeginnerAnalysatorView } from "@/components/analysator/BeginnerAnalysatorView";
+import { SavedPropertiesPanel } from "@/components/analysator/SavedPropertiesPanel";
 
 type TimeFrame = "5j" | "10j" | "15j" | "30j";
 
@@ -329,6 +330,20 @@ export default function Rendementsanalysator() {
     // Update tour step when expanding a section
     const step = getStepForSection(section);
     if (step > 1) setTourStep(step);
+  };
+
+  const handleLoadProperty = (loadedInputs: Partial<AnalysisInputs>, name: string, location: string) => {
+    setInputs(prev => ({ ...prev, ...loadedInputs }));
+    setPropertyName(name);
+    setPropertyLocation(location);
+    // Expand all sections to show loaded data
+    setExpandedSections({
+      purchase: true,
+      mortgage: true,
+      rental: true,
+      opex: true,
+      assumptions: true,
+    });
   };
   
   const handleSaveAsProperty = async () => {
@@ -718,6 +733,9 @@ export default function Rendementsanalysator() {
                 />
               </div>
             </InputSection>
+
+            {/* Saved Properties Panel */}
+            <SavedPropertiesPanel onLoadProperty={handleLoadProperty} />
           </div>
           
           {/* Results Column */}
