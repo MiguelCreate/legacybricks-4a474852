@@ -22,6 +22,7 @@ import Legacy from "./pages/Legacy";
 import Inchecklijsten from "./pages/Inchecklijsten";
 import Rendementsanalysator from "./pages/Rendementsanalysator";
 import Aannemers from "./pages/Aannemers";
+import VvEOverzicht from "./pages/VvEOverzicht";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/inchecklijsten" element={<ProtectedRoute><Inchecklijsten /></ProtectedRoute>} />
               <Route path="/analysator" element={<ProtectedRoute><Rendementsanalysator /></ProtectedRoute>} />
               <Route path="/aannemers" element={<ProtectedRoute><Aannemers /></ProtectedRoute>} />
+              <Route path="/vve" element={<ProtectedRoute><VvEOverzicht /></ProtectedRoute>} />
               <Route path="/instellingen" element={<ProtectedRoute><Instellingen /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
