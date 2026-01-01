@@ -511,7 +511,7 @@ const Financien = () => {
                   <CollapsibleTrigger className="w-full p-4 sm:p-5 flex items-center justify-between hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-2">
                       {isPaymentsOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-                      <h2 className="font-semibold text-foreground">Recente Betalingen</h2>
+                      <h2 className="font-semibold text-foreground">Recente Geld Ontvangsten</h2>
                     </div>
                     <span className="text-sm text-muted-foreground">
                       €{monthlyPaymentsReceived.toLocaleString()} deze maand
