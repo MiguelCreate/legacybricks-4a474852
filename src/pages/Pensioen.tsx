@@ -324,22 +324,35 @@ const Pensioen = () => {
               <span className="font-semibold text-foreground">Financiële Vrijheid</span>
               <InfoTooltip
                 title="Financiële Vrijheid"
-                content="Het moment waarop je passieve inkomsten (zonder AOW/pensioen) je gewenste levensstijl volledig dekken."
+                content="Het moment waarop je passieve inkomsten (huurinkomsten + overige inkomsten, zonder AOW/pensioen) je gewenste maandinkomen volledig dekken. Je kunt dan stoppen met werken zonder afhankelijk te zijn van AOW of pensioen."
               />
             </div>
-            {yearsToFreedom === Infinity || yearsToFreedom > 50 ? (
+            {desiredIncome === 0 ? (
+              <p className="text-lg font-medium text-muted-foreground">
+                Vul een gewenst maandinkomen in om dit te berekenen
+              </p>
+            ) : incomePreRetirement === 0 ? (
+              <p className="text-lg font-medium text-muted-foreground">
+                Nog geen passief inkomen - voeg huurders of overige inkomsten toe
+              </p>
+            ) : yearsToFreedom === Infinity || yearsToFreedom > 50 ? (
               <p className="text-lg font-medium text-muted-foreground">
                 Nog niet bereikbaar met huidige passieve inkomsten
               </p>
             ) : yearsToFreedom === 0 ? (
-              <p className="text-3xl font-bold text-success">Nu al vrij!</p>
+              <>
+                <p className="text-3xl font-bold text-success">Nu al vrij!</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Je passief inkomen (€{Math.round(incomePreRetirement).toLocaleString()}/mnd) dekt je gewenste inkomen (€{desiredIncome.toLocaleString()}/mnd)
+                </p>
+              </>
             ) : (
               <>
                 <p className="text-3xl font-bold text-foreground">
                   {freedomYear} (leeftijd {freedomAge})
                 </p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Nog {yearsToFreedom} jaar bij huidige groei van passief inkomen
+                  Nog {yearsToFreedom} jaar bij 0,5% maandelijkse groei van passief inkomen
                 </p>
               </>
             )}
