@@ -153,6 +153,7 @@ export type Database = {
       contracts: {
         Row: {
           created_at: string
+          document_link: string | null
           einddatum: string
           herinnering_ingesteld: boolean
           id: string
@@ -164,6 +165,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          document_link?: string | null
           einddatum: string
           herinnering_ingesteld?: boolean
           id?: string
@@ -175,6 +177,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          document_link?: string | null
           einddatum?: string
           herinnering_ingesteld?: boolean
           id?: string

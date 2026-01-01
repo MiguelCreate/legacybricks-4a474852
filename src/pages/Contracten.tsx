@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FileText, Plus, Search, Calendar, Bell, Building2, User, MoreVertical, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { FileText, Plus, Search, Calendar, Bell, Building2, User, MoreVertical, Pencil, Trash2, ExternalLink, Link } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +61,7 @@ const Contracten = () => {
     startdatum: "",
     einddatum: "",
     herinnering_ingesteld: true,
+    document_link: "",
   });
 
   useEffect(() => {
@@ -107,6 +108,7 @@ const Contracten = () => {
         startdatum: formData.startdatum,
         einddatum: formData.einddatum,
         herinnering_ingesteld: formData.herinnering_ingesteld,
+        document_link: formData.document_link || null,
       };
 
       if (editingContract) {
@@ -153,6 +155,7 @@ const Contracten = () => {
       startdatum: contract.startdatum,
       einddatum: contract.einddatum,
       herinnering_ingesteld: contract.herinnering_ingesteld,
+      document_link: (contract as any).document_link || "",
     });
     setIsDialogOpen(true);
   };
@@ -192,6 +195,7 @@ const Contracten = () => {
       startdatum: "",
       einddatum: "",
       herinnering_ingesteld: true,
+      document_link: "",
     });
   };
 
@@ -381,6 +385,17 @@ const Contracten = () => {
                         <Badge variant={expiryStatus.color}>
                           {expiryStatus.label}
                         </Badge>
+                        {(contract as any).document_link && (
+                          <a
+                            href={(contract as any).document_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 rounded-lg hover:bg-accent transition-colors"
+                            title="Contract document openen"
+                          >
+                            <Link className="w-4 h-4 text-primary" />
+                          </a>
+                        )}
                         {contract.herinnering_ingesteld && (
                           <a
                             href={generateICalLink(contract)}
@@ -517,6 +532,25 @@ const Contracten = () => {
                     value={formData.einddatum}
                     onChange={(e) => setFormData({ ...formData, einddatum: e.target.value })}
                     required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label>Document link (optioneel)</Label>
+                  <InfoTooltip
+                    title="Document link"
+                    content="Voeg een link toe naar het contract bestand op Google Drive, OneDrive, Dropbox of een andere online locatie."
+                  />
+                </div>
+                <div className="relative">
+                  <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    value={formData.document_link}
+                    onChange={(e) => setFormData({ ...formData, document_link: e.target.value })}
+                    placeholder="https://drive.google.com/... of https://onedrive.com/..."
+                    className="pl-10"
                   />
                 </div>
               </div>
