@@ -15,6 +15,7 @@ import {
   calculateDebtToAssetRatio,
   adjustForInflation 
 } from "@/lib/financialCalculations";
+import { AssetsManager } from "@/components/vermogen/AssetsManager";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Property = Tables<"properties">;
@@ -316,6 +317,16 @@ const NettoVermogen = () => {
               })}
             </div>
           </div>
+
+          {/* Assets Manager */}
+          <AssetsManager />
+        </div>
+      </div>
+    </AppLayout>
+  );
+};
+
+export default NettoVermogen;
         </div>
       </div>
     </AppLayout>

@@ -17,6 +17,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { BeneficiariesManager } from "@/components/legacy/BeneficiariesManager";
 import type { Tables } from "@/integrations/supabase/types";
 
 type LegacySettings = Tables<"legacy_settings">;
@@ -370,6 +371,9 @@ const Legacy = () => {
               />
             </CardContent>
           </Card>
+
+          {/* Begunstigden Manager */}
+          <BeneficiariesManager />
 
           {/* Save Button */}
           <Button

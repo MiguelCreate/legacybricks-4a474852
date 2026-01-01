@@ -39,6 +39,7 @@ import type { Tables, TablesInsert, Enums } from "@/integrations/supabase/types"
 import { HypotheekDialog } from "@/components/financien/HypotheekDialog";
 import { FinancienModeToggle } from "@/components/financien/FinancienModeToggle";
 import { BeginnerFinancienView } from "@/components/financien/BeginnerFinancienView";
+import { RecurringExpensesManager } from "@/components/financien/RecurringExpensesManager";
 
 type Expense = Tables<"expenses">;
 type Payment = Tables<"payments">;
@@ -574,6 +575,9 @@ const Financien = () => {
               )}
             </div>
           </div>
+
+          {/* Recurring Expenses */}
+          <RecurringExpensesManager properties={properties} onUpdate={fetchData} />
 
           {/* Hypotheek Overzicht */}
           <div className="bg-card rounded-xl border shadow-card p-5">

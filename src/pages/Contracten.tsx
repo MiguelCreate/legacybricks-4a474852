@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FileText, Plus, Search, Calendar, Bell, Building2, User, MoreVertical, Pencil, Trash2, ExternalLink, Link } from "lucide-react";
+import { FileText, Plus, Search, Calendar, Bell, Building2, User, MoreVertical, Pencil, Trash2, ExternalLink, Link, Euro, Percent, Download } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +54,7 @@ const Contracten = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     property_id: "",
     tenant_id: "",
     type: "langdurig" as Contract["type"],
@@ -62,6 +62,9 @@ const Contracten = () => {
     einddatum: "",
     herinnering_ingesteld: true,
     document_link: "",
+    huurprijs: 0,
+    indexatie_percentage: 2,
+    waarborgsom: 0,
   });
 
   useEffect(() => {
@@ -101,7 +104,7 @@ const Contracten = () => {
     e.preventDefault();
 
     try {
-      const contractData = {
+const contractData = {
         property_id: formData.property_id,
         tenant_id: formData.tenant_id || null,
         type: formData.type,
@@ -109,6 +112,9 @@ const Contracten = () => {
         einddatum: formData.einddatum,
         herinnering_ingesteld: formData.herinnering_ingesteld,
         document_link: formData.document_link || null,
+        huurprijs: formData.huurprijs || null,
+        indexatie_percentage: formData.indexatie_percentage || null,
+        waarborgsom: formData.waarborgsom || null,
       };
 
       if (editingContract) {
@@ -148,14 +154,17 @@ const Contracten = () => {
 
   const handleEdit = (contract: Contract) => {
     setEditingContract(contract);
-    setFormData({
+setFormData({
       property_id: contract.property_id,
       tenant_id: contract.tenant_id || "",
       type: contract.type,
       startdatum: contract.startdatum,
       einddatum: contract.einddatum,
       herinnering_ingesteld: contract.herinnering_ingesteld,
-      document_link: (contract as any).document_link || "",
+      document_link: contract.document_link || "",
+      huurprijs: Number(contract.huurprijs) || 0,
+      indexatie_percentage: Number(contract.indexatie_percentage) || 2,
+      waarborgsom: Number(contract.waarborgsom) || 0,
     });
     setIsDialogOpen(true);
   };
@@ -186,7 +195,7 @@ const Contracten = () => {
     }
   };
 
-  const resetForm = () => {
+const resetForm = () => {
     setEditingContract(null);
     setFormData({
       property_id: "",
@@ -196,7 +205,49 @@ const Contracten = () => {
       einddatum: "",
       herinnering_ingesteld: true,
       document_link: "",
+      huurprijs: 0,
+      indexatie_percentage: 2,
+      waarborgsom: 0,
     });
+  };
+
+  const generateICSFile = (contract: Contract) => {
+    const property = properties.find((p) => p.id === contract.property_id);
+    const endDate = new Date(contract.einddatum);
+    const reminderDate = addMonths(endDate, -1);
+    
+    const formatICSDate = (date: Date) => {
+      return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    };
+    
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Vastgoed Dashboard//Contract Reminder//NL
+BEGIN:VEVENT
+UID:${contract.id}@vastgoed-dashboard
+DTSTAMP:${formatICSDate(new Date())}
+DTSTART:${formatICSDate(reminderDate)}
+DTEND:${formatICSDate(reminderDate)}
+SUMMARY:Contract verloopt: ${property?.naam || "Pand"}
+DESCRIPTION:Contract voor ${property?.naam} verloopt op ${format(endDate, "d MMMM yyyy", { locale: nl })}. Huurprijs: €${contract.huurprijs || 0}/maand.
+LOCATION:${property?.locatie || ""}
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Contract herinnering
+TRIGGER:-P7D
+END:VALARM
+END:VEVENT
+END:VCALENDAR`;
+    
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `contract-${property?.naam?.replace(/\s+/g, "-") || "pand"}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const getPropertyName = (propertyId: string) => {
@@ -369,6 +420,12 @@ const Contracten = () => {
                                 <span>{tenantName}</span>
                               </div>
                             )}
+                            {contract.huurprijs && Number(contract.huurprijs) > 0 && (
+                              <div className="flex items-center gap-1">
+                                <Euro className="w-3 h-3" />
+                                <span>€{Number(contract.huurprijs).toLocaleString()}/mnd</span>
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
@@ -377,6 +434,12 @@ const Contracten = () => {
                                 {format(new Date(contract.startdatum), "d MMM yyyy", { locale: nl })} - {format(new Date(contract.einddatum), "d MMM yyyy", { locale: nl })}
                               </span>
                             </div>
+                            {contract.indexatie_percentage && Number(contract.indexatie_percentage) > 0 && (
+                              <div className="flex items-center gap-1">
+                                <Percent className="w-3 h-3" />
+                                <span>{Number(contract.indexatie_percentage)}% indexatie</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -397,15 +460,24 @@ const Contracten = () => {
                           </a>
                         )}
                         {contract.herinnering_ingesteld && (
-                          <a
-                            href={generateICalLink(contract)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 rounded-lg hover:bg-accent transition-colors"
-                            title="Toevoegen aan Google Calendar"
-                          >
-                            <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                          </a>
+                          <>
+                            <a
+                              href={generateICalLink(contract)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-lg hover:bg-accent transition-colors"
+                              title="Toevoegen aan Google Calendar"
+                            >
+                              <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                            </a>
+                            <button
+                              onClick={() => generateICSFile(contract)}
+                              className="p-2 rounded-lg hover:bg-accent transition-colors"
+                              title="Download .ics bestand"
+                            >
+                              <Download className="w-4 h-4 text-muted-foreground" />
+                            </button>
+                          </>
                         )}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -533,6 +605,68 @@ const Contracten = () => {
                     onChange={(e) => setFormData({ ...formData, einddatum: e.target.value })}
                     required
                   />
+                </div>
+              </div>
+
+              {/* Financiële velden */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label>Huurprijs</Label>
+                    <InfoTooltip
+                      title="Huurprijs"
+                      content="Maandelijkse huurprijs zoals vastgelegd in het contract."
+                    />
+                  </div>
+                  <div className="relative">
+                    <Euro className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="number"
+                      value={formData.huurprijs || ""}
+                      onChange={(e) => setFormData({ ...formData, huurprijs: Number(e.target.value) })}
+                      placeholder="0"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label>Indexatie %</Label>
+                    <InfoTooltip
+                      title="Indexatie"
+                      content="Jaarlijkse huurverhoging percentage (bijv. 2% per jaar)."
+                    />
+                  </div>
+                  <div className="relative">
+                    <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={formData.indexatie_percentage || ""}
+                      onChange={(e) => setFormData({ ...formData, indexatie_percentage: Number(e.target.value) })}
+                      placeholder="2"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label>Waarborgsom</Label>
+                    <InfoTooltip
+                      title="Waarborgsom"
+                      content="Borg/depositum betaald door de huurder."
+                    />
+                  </div>
+                  <div className="relative">
+                    <Euro className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="number"
+                      value={formData.waarborgsom || ""}
+                      onChange={(e) => setFormData({ ...formData, waarborgsom: Number(e.target.value) })}
+                      placeholder="0"
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
               </div>
 
