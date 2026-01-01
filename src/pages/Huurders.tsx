@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Plus, Search, Phone, Mail, Star, Euro, Calendar, Building2, Layers, ExternalLink, DoorOpen, Send, Shield } from "lucide-react";
+import { Users, Plus, Search, Phone, Mail, Star, Euro, Calendar, Building2, Layers, ExternalLink, DoorOpen, Send, Shield, Pencil, MoreVertical, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +47,7 @@ const Huurders = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [formData, setFormData] = useState<Partial<TablesInsert<"tenants">> & { unit_nummer?: number; borg?: number }>({
     naam: "",
     email: "",
@@ -52,6 +59,7 @@ const Huurders = () => {
     beoordeling_betrouwbaarheid: null,
     unit_nummer: 1,
     borg: 0,
+    actief: true,
   });
 
   useEffect(() => {
@@ -100,7 +108,7 @@ const Huurders = () => {
     }
 
     try {
-      const { error } = await supabase.from("tenants").insert({
+      const tenantData = {
         property_id: formData.property_id,
         naam: formData.naam || "",
         email: formData.email,
@@ -111,14 +119,31 @@ const Huurders = () => {
         beoordeling_betrouwbaarheid: formData.beoordeling_betrouwbaarheid,
         unit_nummer: formData.unit_nummer || 1,
         borg: formData.borg || 0,
-      } as any);
+        actief: formData.actief !== false,
+      };
 
-      if (error) throw error;
+      if (editingTenant) {
+        const { error } = await supabase
+          .from("tenants")
+          .update(tenantData as any)
+          .eq("id", editingTenant.id);
 
-      toast({
-        title: "Huurder toegevoegd",
-        description: `${formData.naam} is succesvol toegevoegd.`,
-      });
+        if (error) throw error;
+
+        toast({
+          title: "Huurder bijgewerkt",
+          description: `${formData.naam} is succesvol bijgewerkt.`,
+        });
+      } else {
+        const { error } = await supabase.from("tenants").insert(tenantData as any);
+
+        if (error) throw error;
+
+        toast({
+          title: "Huurder toegevoegd",
+          description: `${formData.naam} is succesvol toegevoegd.`,
+        });
+      }
 
       setIsDialogOpen(false);
       resetForm();
@@ -132,7 +157,39 @@ const Huurders = () => {
     }
   };
 
+  const handleEdit = (tenant: Tenant) => {
+    setEditingTenant(tenant);
+    setFormData({
+      naam: tenant.naam,
+      email: tenant.email || "",
+      telefoon: tenant.telefoon || "",
+      huurbedrag: Number(tenant.huurbedrag),
+      betaaldag: tenant.betaaldag,
+      property_id: tenant.property_id,
+      notities: tenant.notities || "",
+      beoordeling_betrouwbaarheid: tenant.beoordeling_betrouwbaarheid,
+      unit_nummer: tenant.unit_nummer,
+      borg: Number((tenant as any).borg) || 0,
+      actief: tenant.actief,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (tenant: Tenant) => {
+    if (!confirm(`Weet je zeker dat je "${tenant.naam}" wilt verwijderen?`)) return;
+
+    try {
+      const { error } = await supabase.from("tenants").delete().eq("id", tenant.id);
+      if (error) throw error;
+      toast({ title: "Huurder verwijderd" });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Fout", description: error.message, variant: "destructive" });
+    }
+  };
+
   const resetForm = () => {
+    setEditingTenant(null);
     setFormData({
       naam: "",
       email: "",
@@ -144,6 +201,7 @@ const Huurders = () => {
       beoordeling_betrouwbaarheid: null,
       unit_nummer: 1,
       borg: 0,
+      actief: true,
     });
   };
 
@@ -303,9 +361,31 @@ const Huurders = () => {
                         {renderStars(tenant.beoordeling_betrouwbaarheid)}
                       </div>
                     </div>
-                    <Badge variant={tenant.actief ? "success" : "secondary"}>
-                      {tenant.actief ? "Actief" : "Inactief"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={tenant.actief ? "success" : "secondary"}>
+                        {tenant.actief ? "Actief" : "Inactief"}
+                      </Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 rounded-lg hover:bg-accent">
+                            <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(tenant)}>
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Bewerken
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(tenant)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Verwijderen
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
 
                   <div className="space-y-2 text-sm">
@@ -392,13 +472,13 @@ const Huurders = () => {
         </div>
       </div>
 
-      {/* Add Tenant Dialog */}
+      {/* Add/Edit Tenant Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Nieuwe Huurder Toevoegen</DialogTitle>
+            <DialogTitle>{editingTenant ? "Huurder Bewerken" : "Nieuwe Huurder Toevoegen"}</DialogTitle>
             <DialogDescription>
-              Registreer een nieuwe huurder voor een van je panden
+              {editingTenant ? "Pas de gegevens van deze huurder aan" : "Registreer een nieuwe huurder voor een van je panden"}
             </DialogDescription>
           </DialogHeader>
 

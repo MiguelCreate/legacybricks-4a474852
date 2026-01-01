@@ -100,6 +100,9 @@ const Aannemers = () => {
     email: "",
     telefoon: "",
     notities: "",
+    heeft_contract: false,
+    contract_type: "" as string,
+    contract_document_link: "",
   });
 
   useEffect(() => {
@@ -153,7 +156,10 @@ const Aannemers = () => {
             email: formData.email || null,
             telefoon: formData.telefoon || null,
             notities: formData.notities || null,
-          })
+            heeft_contract: formData.heeft_contract,
+            contract_type: formData.contract_type || null,
+            contract_document_link: formData.contract_document_link || null,
+          } as any)
           .eq("id", editingContractor.id);
 
         if (error) throw error;
@@ -167,7 +173,10 @@ const Aannemers = () => {
           email: formData.email || null,
           telefoon: formData.telefoon || null,
           notities: formData.notities || null,
-        });
+          heeft_contract: formData.heeft_contract,
+          contract_type: formData.contract_type || null,
+          contract_document_link: formData.contract_document_link || null,
+        } as any);
 
         if (error) throw error;
         toast({ title: "Aannemer toegevoegd" });
@@ -207,6 +216,9 @@ const Aannemers = () => {
       email: contractor.email || "",
       telefoon: contractor.telefoon || "",
       notities: contractor.notities || "",
+      heeft_contract: (contractor as any).heeft_contract || false,
+      contract_type: (contractor as any).contract_type || "",
+      contract_document_link: (contractor as any).contract_document_link || "",
     });
     setIsDialogOpen(true);
   };
@@ -257,6 +269,9 @@ const Aannemers = () => {
       email: "",
       telefoon: "",
       notities: "",
+      heeft_contract: false,
+      contract_type: "",
+      contract_document_link: "",
     });
   };
 
@@ -562,8 +577,51 @@ const Aannemers = () => {
                 id="notities"
                 value={formData.notities}
                 onChange={(e) => setFormData({ ...formData, notities: e.target.value })}
-                rows={3}
+                rows={2}
               />
+            </div>
+
+            {/* Contract velden */}
+            <div className="p-4 rounded-lg border bg-muted/30 space-y-4">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="heeft_contract"
+                  checked={formData.heeft_contract}
+                  onCheckedChange={(checked) => setFormData({ ...formData, heeft_contract: !!checked })}
+                />
+                <Label htmlFor="heeft_contract" className="font-medium">Heeft contract</Label>
+              </div>
+
+              {formData.heeft_contract && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Contract type</Label>
+                    <Select
+                      value={formData.contract_type}
+                      onValueChange={(v) => setFormData({ ...formData, contract_type: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecteer type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="onderhoud">Onderhoudscontract</SelectItem>
+                        <SelectItem value="all_in">All-in contract</SelectItem>
+                        <SelectItem value="ad_hoc">Ad-hoc / Op afroep</SelectItem>
+                        <SelectItem value="project">Projectcontract</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contract_document_link">Contract document link</Label>
+                    <Input
+                      id="contract_document_link"
+                      value={formData.contract_document_link}
+                      onChange={(e) => setFormData({ ...formData, contract_document_link: e.target.value })}
+                      placeholder="https://drive.google.com/..."
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="flex gap-3 pt-4">

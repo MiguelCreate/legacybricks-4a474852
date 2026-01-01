@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      assets: {
+        Row: {
+          aankoop_datum: string | null
+          aankoop_waarde: number | null
+          created_at: string
+          huidige_waarde: number
+          id: string
+          land: string | null
+          naam: string
+          notities: string | null
+          rendement_percentage: number | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aankoop_datum?: string | null
+          aankoop_waarde?: number | null
+          created_at?: string
+          huidige_waarde?: number
+          id?: string
+          land?: string | null
+          naam: string
+          notities?: string | null
+          rendement_percentage?: number | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aankoop_datum?: string | null
+          aankoop_waarde?: number | null
+          created_at?: string
+          huidige_waarde?: number
+          id?: string
+          land?: string | null
+          naam?: string
+          notities?: string | null
+          rendement_percentage?: number | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      beneficiaries: {
+        Row: {
+          created_at: string
+          geboorte_datum: string | null
+          id: string
+          naam: string
+          notities: string | null
+          percentage_erfenis: number | null
+          relatie: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          geboorte_datum?: string | null
+          id?: string
+          naam: string
+          notities?: string | null
+          percentage_erfenis?: number | null
+          relatie: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          geboorte_datum?: string | null
+          id?: string
+          naam?: string
+          notities?: string | null
+          percentage_erfenis?: number | null
+          relatie?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       checklists: {
         Row: {
           created_at: string
@@ -115,8 +196,11 @@ export type Database = {
         Row: {
           bedrijfsnaam: string
           contactpersoon: string | null
+          contract_document_link: string | null
+          contract_type: string | null
           created_at: string
           email: string | null
+          heeft_contract: boolean | null
           id: string
           notities: string | null
           telefoon: string | null
@@ -127,8 +211,11 @@ export type Database = {
         Insert: {
           bedrijfsnaam: string
           contactpersoon?: string | null
+          contract_document_link?: string | null
+          contract_type?: string | null
           created_at?: string
           email?: string | null
+          heeft_contract?: boolean | null
           id?: string
           notities?: string | null
           telefoon?: string | null
@@ -139,8 +226,11 @@ export type Database = {
         Update: {
           bedrijfsnaam?: string
           contactpersoon?: string | null
+          contract_document_link?: string | null
+          contract_type?: string | null
           created_at?: string
           email?: string | null
+          heeft_contract?: boolean | null
           id?: string
           notities?: string | null
           telefoon?: string | null
@@ -155,37 +245,52 @@ export type Database = {
           created_at: string
           document_link: string | null
           einddatum: string
+          herinnering_dagen: number | null
           herinnering_ingesteld: boolean
+          huurprijs: number | null
           id: string
+          indexatie_percentage: number | null
           property_id: string
+          room_id: string | null
           startdatum: string
           tenant_id: string | null
           type: Database["public"]["Enums"]["contract_type"]
           updated_at: string
+          waarborgsom: number | null
         }
         Insert: {
           created_at?: string
           document_link?: string | null
           einddatum: string
+          herinnering_dagen?: number | null
           herinnering_ingesteld?: boolean
+          huurprijs?: number | null
           id?: string
+          indexatie_percentage?: number | null
           property_id: string
+          room_id?: string | null
           startdatum: string
           tenant_id?: string | null
           type: Database["public"]["Enums"]["contract_type"]
           updated_at?: string
+          waarborgsom?: number | null
         }
         Update: {
           created_at?: string
           document_link?: string | null
           einddatum?: string
+          herinnering_dagen?: number | null
           herinnering_ingesteld?: boolean
+          huurprijs?: number | null
           id?: string
+          indexatie_percentage?: number | null
           property_id?: string
+          room_id?: string | null
           startdatum?: string
           tenant_id?: string | null
           type?: Database["public"]["Enums"]["contract_type"]
           updated_at?: string
+          waarborgsom?: number | null
         }
         Relationships: [
           {
@@ -193,6 +298,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
             referencedColumns: ["id"]
           },
           {
@@ -597,6 +709,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          id: string
+          message: string | null
+          read: boolean | null
+          related_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          read?: boolean | null
+          related_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          read?: boolean | null
+          related_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {
@@ -1063,6 +1211,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "property_features_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recurring_expenses: {
+        Row: {
+          bankrekening: string | null
+          bedrag: number
+          categorie: string | null
+          created_at: string
+          eind_datum: string | null
+          frequentie: string | null
+          id: string
+          naam: string
+          notities: string | null
+          property_id: string
+          start_datum: string | null
+          updated_at: string
+        }
+        Insert: {
+          bankrekening?: string | null
+          bedrag: number
+          categorie?: string | null
+          created_at?: string
+          eind_datum?: string | null
+          frequentie?: string | null
+          id?: string
+          naam: string
+          notities?: string | null
+          property_id: string
+          start_datum?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bankrekening?: string | null
+          bedrag?: number
+          categorie?: string | null
+          created_at?: string
+          eind_datum?: string | null
+          frequentie?: string | null
+          id?: string
+          naam?: string
+          notities?: string | null
+          property_id?: string
+          start_datum?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_expenses_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"

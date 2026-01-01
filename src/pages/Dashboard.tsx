@@ -7,7 +7,8 @@ import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { PropertyCard } from "@/components/ui/PropertyCard";
 import { QuickAction } from "@/components/ui/QuickAction";
-import { DailyMission } from "@/components/dashboard/DailyMission";
+import { SmartMissions } from "@/components/dashboard/SmartMissions";
+import { RentCountdown } from "@/components/dashboard/RentCountdown";
 
 import { CoPiloot } from "@/components/dashboard/CoPiloot";
 import { RentalIncomeChart } from "@/components/dashboard/RentalIncomeChart";
@@ -352,53 +353,37 @@ const Dashboard = () => {
               </section>
 
               {/* ===================== SECTIE 2: ACTIES & MELDINGEN ===================== */}
-              {(expiringContracts.length > 0 || showCoPilot) && (
-                <section className="space-y-4">
-                  <h2 className="text-lg font-semibold text-foreground">Aandachtspunten</h2>
-                  
-                  {/* VvE Meldingen */}
-                  <VvEMeldingen />
-                  
-                  {/* Contract Warnings */}
-                  {expiringContracts.length > 0 && (
-                    <div className="p-4 rounded-xl bg-warning/10 border border-warning/30">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-5 h-5 text-warning" />
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {expiringContracts.length} {expiringContracts.length === 1 ? "contract verloopt" : "contracten verlopen"} binnen 90 dagen
-                          </p>
-                          <button 
-                            onClick={() => navigate("/contracten")}
-                            className="text-sm text-primary hover:underline"
-                          >
-                            Bekijk contracten →
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+              <section className="space-y-4">
+                <h2 className="text-lg font-semibold text-foreground">Aandachtspunten</h2>
+                
+                {/* Rent Countdown */}
+                <RentCountdown />
+                
+                {/* VvE Meldingen */}
+                <VvEMeldingen />
+                
+                {/* Smart Missions - replaces static DailyMission */}
+                <SmartMissions />
 
-                  {/* Co-Piloot */}
-                  {showCoPilot && (
-                    <CoPiloot onSwitchToManual={() => setShowCoPilot(false)} />
-                  )}
+                {/* Co-Piloot */}
+                {showCoPilot && (
+                  <CoPiloot onSwitchToManual={() => setShowCoPilot(false)} />
+                )}
 
-                  {!showCoPilot && (
-                    <div className="flex justify-end">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setShowCoPilot(true)}
-                        className="gap-2"
-                      >
-                        <Compass className="w-4 h-4" />
-                        Gebruik Co-Piloot
-                      </Button>
-                    </div>
-                  )}
-                </section>
-              )}
+                {!showCoPilot && (
+                  <div className="flex justify-end">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setShowCoPilot(true)}
+                      className="gap-2"
+                    >
+                      <Compass className="w-4 h-4" />
+                      Gebruik Co-Piloot
+                    </Button>
+                  </div>
+                )}
+              </section>
 
               {/* ===================== SECTIE 3: SNELLE ACTIES ===================== */}
               <section className="space-y-4">
@@ -485,7 +470,6 @@ const Dashboard = () => {
                     maandelijkseKosten={vrijheidskosten}
                     maandelijkseCashflow={monthlyCashflow}
                   />
-                  <DailyMission />
                 </div>
               </section>
             </>
