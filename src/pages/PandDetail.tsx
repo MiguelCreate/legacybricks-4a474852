@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Building2, MapPin, Euro, Pencil, TrendingUp, Home, DoorOpen, BarChart3, Palette, Users } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Euro, Pencil, TrendingUp, Home, DoorOpen, BarChart3, Palette, Users, Calculator } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import { PropertyFeaturesManager } from "@/components/panden/PropertyFeaturesMan
 import { RisicoKaart } from "@/components/panden/RisicoKaart";
 import { PandAlsKunstwerk } from "@/components/panden/PandAlsKunstwerk";
 import { VvEModule } from "@/components/vve/VvEModule";
+import { FinancieelDashboard } from "@/components/financieel/FinancieelDashboard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -238,8 +239,12 @@ const PandDetail = () => {
 
         {/* Main Content - Tabs */}
         <div className="p-4 md:p-6 lg:p-8">
-          <Tabs defaultValue="marktwaarde" className="w-full">
+          <Tabs defaultValue="financieel" className="w-full">
             <TabsList className="mb-6 flex-wrap h-auto gap-1">
+              <TabsTrigger value="financieel" className="gap-2">
+                <Calculator className="w-4 h-4" />
+                Financieel
+              </TabsTrigger>
               <TabsTrigger value="marktwaarde" className="gap-2">
                 <TrendingUp className="w-4 h-4" />
                 Marktwaarde
@@ -269,6 +274,10 @@ const PandDetail = () => {
                 Kunstwerk
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="financieel" className="mt-0">
+              <FinancieelDashboard property={property} loans={loans} />
+            </TabsContent>
 
             <TabsContent value="marktwaarde" className="mt-0">
               <ComparablePropertiesManager

@@ -668,6 +668,7 @@ export type Database = {
           totaal_badges: Json | null
           updated_at: string
           user_id: string
+          voorkeur_kpi_modus: string | null
           vrijheidskosten_maand: number | null
         }
         Insert: {
@@ -694,6 +695,7 @@ export type Database = {
           totaal_badges?: Json | null
           updated_at?: string
           user_id: string
+          voorkeur_kpi_modus?: string | null
           vrijheidskosten_maand?: number | null
         }
         Update: {
@@ -720,6 +722,7 @@ export type Database = {
           totaal_badges?: Json | null
           updated_at?: string
           user_id?: string
+          voorkeur_kpi_modus?: string | null
           vrijheidskosten_maand?: number | null
         }
         Relationships: []
