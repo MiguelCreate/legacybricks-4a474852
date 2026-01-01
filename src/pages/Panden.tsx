@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink, Calendar, Clock, DoorOpen, BedDouble, Percent, Sparkles, Map, Wrench, Eye, ArrowLeft } from "lucide-react";
+import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink, Calendar, Clock, DoorOpen, BedDouble, Percent, Sparkles, Map, Wrench, Eye, ArrowLeft, Shield, FileText, Gauge } from "lucide-react";
 import { PropertyMap } from "@/components/panden/PropertyMap";
 import { RoomManager } from "@/components/panden/RoomManager";
 import { PropertyFeaturesManager } from "@/components/panden/PropertyFeaturesManager";
@@ -90,6 +90,19 @@ const Panden = () => {
     type_verhuur?: string;
     st_gemiddelde_dagprijs?: number;
     st_bezetting_percentage?: number;
+    // Nutsbedrijven info
+    gas_leverancier?: string;
+    gas_contractnummer?: string;
+    gas_meternummer?: string;
+    water_leverancier?: string;
+    water_contractnummer?: string;
+    water_meternummer?: string;
+    elektriciteit_leverancier?: string;
+    elektriciteit_contractnummer?: string;
+    elektriciteit_meternummer?: string;
+    verzekering_maatschappij?: string;
+    verzekering_polisnummer?: string;
+    verzekering_dekking?: string;
   }>({
     naam: "",
     locatie: "",
@@ -114,6 +127,19 @@ const Panden = () => {
     type_verhuur: "langdurig",
     st_gemiddelde_dagprijs: 0,
     st_bezetting_percentage: 0,
+    // Nutsbedrijven info
+    gas_leverancier: "",
+    gas_contractnummer: "",
+    gas_meternummer: "",
+    water_leverancier: "",
+    water_contractnummer: "",
+    water_meternummer: "",
+    elektriciteit_leverancier: "",
+    elektriciteit_contractnummer: "",
+    elektriciteit_meternummer: "",
+    verzekering_maatschappij: "",
+    verzekering_polisnummer: "",
+    verzekering_dekking: "",
   });
 
   useEffect(() => {
@@ -193,6 +219,19 @@ const Panden = () => {
               type_verhuur: formData.type_verhuur || "langdurig",
               st_gemiddelde_dagprijs: formData.st_gemiddelde_dagprijs || 0,
               st_bezetting_percentage: formData.st_bezetting_percentage || 0,
+              // Nutsbedrijven info
+              gas_leverancier: formData.gas_leverancier || null,
+              gas_contractnummer: formData.gas_contractnummer || null,
+              gas_meternummer: formData.gas_meternummer || null,
+              water_leverancier: formData.water_leverancier || null,
+              water_contractnummer: formData.water_contractnummer || null,
+              water_meternummer: formData.water_meternummer || null,
+              elektriciteit_leverancier: formData.elektriciteit_leverancier || null,
+              elektriciteit_contractnummer: formData.elektriciteit_contractnummer || null,
+              elektriciteit_meternummer: formData.elektriciteit_meternummer || null,
+              verzekering_maatschappij: formData.verzekering_maatschappij || null,
+              verzekering_polisnummer: formData.verzekering_polisnummer || null,
+              verzekering_dekking: formData.verzekering_dekking || null,
             } as any)
             .eq("id", editingProperty.id);
 
@@ -228,6 +267,19 @@ const Panden = () => {
           type_verhuur: formData.type_verhuur || "langdurig",
           st_gemiddelde_dagprijs: formData.st_gemiddelde_dagprijs || 0,
           st_bezetting_percentage: formData.st_bezetting_percentage || 0,
+          // Nutsbedrijven info
+          gas_leverancier: formData.gas_leverancier || null,
+          gas_contractnummer: formData.gas_contractnummer || null,
+          gas_meternummer: formData.gas_meternummer || null,
+          water_leverancier: formData.water_leverancier || null,
+          water_contractnummer: formData.water_contractnummer || null,
+          water_meternummer: formData.water_meternummer || null,
+          elektriciteit_leverancier: formData.elektriciteit_leverancier || null,
+          elektriciteit_contractnummer: formData.elektriciteit_contractnummer || null,
+          elektriciteit_meternummer: formData.elektriciteit_meternummer || null,
+          verzekering_maatschappij: formData.verzekering_maatschappij || null,
+          verzekering_polisnummer: formData.verzekering_polisnummer || null,
+          verzekering_dekking: formData.verzekering_dekking || null,
         } as any);
 
         if (error) throw error;
@@ -276,6 +328,19 @@ const Panden = () => {
       type_verhuur: property.type_verhuur || "langdurig",
       st_gemiddelde_dagprijs: Number(property.st_gemiddelde_dagprijs) || 0,
       st_bezetting_percentage: Number(property.st_bezetting_percentage) || 0,
+      // Nutsbedrijven info
+      gas_leverancier: (property as any).gas_leverancier || "",
+      gas_contractnummer: (property as any).gas_contractnummer || "",
+      gas_meternummer: (property as any).gas_meternummer || "",
+      water_leverancier: (property as any).water_leverancier || "",
+      water_contractnummer: (property as any).water_contractnummer || "",
+      water_meternummer: (property as any).water_meternummer || "",
+      elektriciteit_leverancier: (property as any).elektriciteit_leverancier || "",
+      elektriciteit_contractnummer: (property as any).elektriciteit_contractnummer || "",
+      elektriciteit_meternummer: (property as any).elektriciteit_meternummer || "",
+      verzekering_maatschappij: (property as any).verzekering_maatschappij || "",
+      verzekering_polisnummer: (property as any).verzekering_polisnummer || "",
+      verzekering_dekking: (property as any).verzekering_dekking || "",
     });
     setIsDialogOpen(true);
   };
@@ -378,13 +443,26 @@ const Panden = () => {
       risico_operationeel: 1,
       water_maandelijks: 0,
       gas_maandelijks: 0,
-    elektriciteit_maandelijks: 0,
-    condominium_maandelijks: 0,
-    aantal_units: undefined,
-    type_verhuur: "langdurig",
-    st_gemiddelde_dagprijs: 0,
-    st_bezetting_percentage: 0,
-  });
+      elektriciteit_maandelijks: 0,
+      condominium_maandelijks: 0,
+      aantal_units: undefined,
+      type_verhuur: "langdurig",
+      st_gemiddelde_dagprijs: 0,
+      st_bezetting_percentage: 0,
+      // Nutsbedrijven info
+      gas_leverancier: "",
+      gas_contractnummer: "",
+      gas_meternummer: "",
+      water_leverancier: "",
+      water_contractnummer: "",
+      water_meternummer: "",
+      elektriciteit_leverancier: "",
+      elektriciteit_contractnummer: "",
+      elektriciteit_meternummer: "",
+      verzekering_maatschappij: "",
+      verzekering_polisnummer: "",
+      verzekering_dekking: "",
+    });
   };
 
   const getTenantsForProperty = (propertyId: string) => {
@@ -1114,6 +1192,183 @@ const Panden = () => {
                       }
                       placeholder="100"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Nutsbedrijven Informatie Sectie */}
+              <div className="col-span-2 pt-4 border-t">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="font-semibold text-foreground">Nutsbedrijven & Verzekering</h3>
+                  <InfoTooltip
+                    title="Leveranciers Info"
+                    content="Bewaar hier de gegevens van je leveranciers, contractnummers en meternummers. Handig voor administratie en bij problemen."
+                  />
+                </div>
+
+                {/* Verzekering */}
+                <div className="p-4 rounded-lg bg-accent/50 border mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Shield className="w-4 h-4 text-primary" />
+                    <h4 className="font-medium text-foreground">Verzekering</h4>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="verzekering_maatschappij" className="text-sm">Maatschappij</Label>
+                      <Input
+                        id="verzekering_maatschappij"
+                        value={formData.verzekering_maatschappij || ""}
+                        onChange={(e) => setFormData({ ...formData, verzekering_maatschappij: e.target.value })}
+                        placeholder="bijv. Allianz"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="verzekering_polisnummer" className="text-sm">Polisnummer</Label>
+                      <Input
+                        id="verzekering_polisnummer"
+                        value={formData.verzekering_polisnummer || ""}
+                        onChange={(e) => setFormData({ ...formData, verzekering_polisnummer: e.target.value })}
+                        placeholder="bijv. POL-123456"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="verzekering_dekking" className="text-sm">Dekking</Label>
+                      <Input
+                        id="verzekering_dekking"
+                        value={formData.verzekering_dekking || ""}
+                        onChange={(e) => setFormData({ ...formData, verzekering_dekking: e.target.value })}
+                        placeholder="bijv. Opstal + Inboedel"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gas */}
+                <div className="p-4 rounded-lg bg-orange-500/5 border border-orange-500/20 mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Flame className="w-4 h-4 text-orange-500" />
+                    <h4 className="font-medium text-foreground">Gas</h4>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="gas_leverancier" className="text-sm">Leverancier</Label>
+                      <Input
+                        id="gas_leverancier"
+                        value={formData.gas_leverancier || ""}
+                        onChange={(e) => setFormData({ ...formData, gas_leverancier: e.target.value })}
+                        placeholder="bijv. Vattenfall"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="gas_contractnummer" className="text-sm flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        Contractnummer
+                      </Label>
+                      <Input
+                        id="gas_contractnummer"
+                        value={formData.gas_contractnummer || ""}
+                        onChange={(e) => setFormData({ ...formData, gas_contractnummer: e.target.value })}
+                        placeholder="bijv. GAS-789012"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="gas_meternummer" className="text-sm flex items-center gap-1">
+                        <Gauge className="w-3 h-3" />
+                        Meternummer
+                      </Label>
+                      <Input
+                        id="gas_meternummer"
+                        value={formData.gas_meternummer || ""}
+                        onChange={(e) => setFormData({ ...formData, gas_meternummer: e.target.value })}
+                        placeholder="bijv. G001234567"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Elektriciteit */}
+                <div className="p-4 rounded-lg bg-yellow-500/5 border border-yellow-500/20 mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Zap className="w-4 h-4 text-yellow-500" />
+                    <h4 className="font-medium text-foreground">Elektriciteit</h4>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="elektriciteit_leverancier" className="text-sm">Leverancier</Label>
+                      <Input
+                        id="elektriciteit_leverancier"
+                        value={formData.elektriciteit_leverancier || ""}
+                        onChange={(e) => setFormData({ ...formData, elektriciteit_leverancier: e.target.value })}
+                        placeholder="bijv. Eneco"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="elektriciteit_contractnummer" className="text-sm flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        Contractnummer
+                      </Label>
+                      <Input
+                        id="elektriciteit_contractnummer"
+                        value={formData.elektriciteit_contractnummer || ""}
+                        onChange={(e) => setFormData({ ...formData, elektriciteit_contractnummer: e.target.value })}
+                        placeholder="bijv. ELK-345678"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="elektriciteit_meternummer" className="text-sm flex items-center gap-1">
+                        <Gauge className="w-3 h-3" />
+                        Meternummer
+                      </Label>
+                      <Input
+                        id="elektriciteit_meternummer"
+                        value={formData.elektriciteit_meternummer || ""}
+                        onChange={(e) => setFormData({ ...formData, elektriciteit_meternummer: e.target.value })}
+                        placeholder="bijv. E001234567"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Water */}
+                <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Droplets className="w-4 h-4 text-blue-500" />
+                    <h4 className="font-medium text-foreground">Water</h4>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="water_leverancier" className="text-sm">Leverancier</Label>
+                      <Input
+                        id="water_leverancier"
+                        value={formData.water_leverancier || ""}
+                        onChange={(e) => setFormData({ ...formData, water_leverancier: e.target.value })}
+                        placeholder="bijv. Vitens"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="water_contractnummer" className="text-sm flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        Contractnummer
+                      </Label>
+                      <Input
+                        id="water_contractnummer"
+                        value={formData.water_contractnummer || ""}
+                        onChange={(e) => setFormData({ ...formData, water_contractnummer: e.target.value })}
+                        placeholder="bijv. WAT-901234"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="water_meternummer" className="text-sm flex items-center gap-1">
+                        <Gauge className="w-3 h-3" />
+                        Meternummer
+                      </Label>
+                      <Input
+                        id="water_meternummer"
+                        value={formData.water_meternummer || ""}
+                        onChange={(e) => setFormData({ ...formData, water_meternummer: e.target.value })}
+                        placeholder="bijv. W001234567"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

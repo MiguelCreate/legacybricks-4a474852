@@ -596,12 +596,18 @@ export type Database = {
           condominium_maandelijks: number | null
           created_at: string
           eigen_inleg: number | null
+          elektriciteit_contractnummer: string | null
+          elektriciteit_leverancier: string | null
           elektriciteit_maandelijks: number | null
+          elektriciteit_meternummer: string | null
           energie_vervaldatum: string | null
           energielabel: Database["public"]["Enums"]["energy_label"] | null
           familie_handleiding: string | null
           foto_url: string | null
+          gas_contractnummer: string | null
+          gas_leverancier: string | null
           gas_maandelijks: number | null
+          gas_meternummer: string | null
           gearchiveerd: boolean | null
           gerelateerd_doel_id: string | null
           gezondheidsscore: number | null
@@ -640,12 +646,18 @@ export type Database = {
           type_verhuur: string | null
           updated_at: string
           user_id: string
+          verzekering_dekking: string | null
           verzekering_jaarlijks: number | null
+          verzekering_maatschappij: string | null
+          verzekering_polisnummer: string | null
           volledig_adres: string | null
           waardegroei_percentage: number | null
           waardering: number | null
           waarom_gekocht: string | null
+          water_contractnummer: string | null
+          water_leverancier: string | null
           water_maandelijks: number | null
+          water_meternummer: string | null
         }
         Insert: {
           aankoopdatum?: string | null
@@ -656,12 +668,18 @@ export type Database = {
           condominium_maandelijks?: number | null
           created_at?: string
           eigen_inleg?: number | null
+          elektriciteit_contractnummer?: string | null
+          elektriciteit_leverancier?: string | null
           elektriciteit_maandelijks?: number | null
+          elektriciteit_meternummer?: string | null
           energie_vervaldatum?: string | null
           energielabel?: Database["public"]["Enums"]["energy_label"] | null
           familie_handleiding?: string | null
           foto_url?: string | null
+          gas_contractnummer?: string | null
+          gas_leverancier?: string | null
           gas_maandelijks?: number | null
+          gas_meternummer?: string | null
           gearchiveerd?: boolean | null
           gerelateerd_doel_id?: string | null
           gezondheidsscore?: number | null
@@ -700,12 +718,18 @@ export type Database = {
           type_verhuur?: string | null
           updated_at?: string
           user_id: string
+          verzekering_dekking?: string | null
           verzekering_jaarlijks?: number | null
+          verzekering_maatschappij?: string | null
+          verzekering_polisnummer?: string | null
           volledig_adres?: string | null
           waardegroei_percentage?: number | null
           waardering?: number | null
           waarom_gekocht?: string | null
+          water_contractnummer?: string | null
+          water_leverancier?: string | null
           water_maandelijks?: number | null
+          water_meternummer?: string | null
         }
         Update: {
           aankoopdatum?: string | null
@@ -716,12 +740,18 @@ export type Database = {
           condominium_maandelijks?: number | null
           created_at?: string
           eigen_inleg?: number | null
+          elektriciteit_contractnummer?: string | null
+          elektriciteit_leverancier?: string | null
           elektriciteit_maandelijks?: number | null
+          elektriciteit_meternummer?: string | null
           energie_vervaldatum?: string | null
           energielabel?: Database["public"]["Enums"]["energy_label"] | null
           familie_handleiding?: string | null
           foto_url?: string | null
+          gas_contractnummer?: string | null
+          gas_leverancier?: string | null
           gas_maandelijks?: number | null
+          gas_meternummer?: string | null
           gearchiveerd?: boolean | null
           gerelateerd_doel_id?: string | null
           gezondheidsscore?: number | null
@@ -760,12 +790,18 @@ export type Database = {
           type_verhuur?: string | null
           updated_at?: string
           user_id?: string
+          verzekering_dekking?: string | null
           verzekering_jaarlijks?: number | null
+          verzekering_maatschappij?: string | null
+          verzekering_polisnummer?: string | null
           volledig_adres?: string | null
           waardegroei_percentage?: number | null
           waardering?: number | null
           waarom_gekocht?: string | null
+          water_contractnummer?: string | null
+          water_leverancier?: string | null
           water_maandelijks?: number | null
+          water_meternummer?: string | null
         }
         Relationships: [
           {
