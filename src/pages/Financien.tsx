@@ -40,6 +40,7 @@ import { HypotheekDialog } from "@/components/financien/HypotheekDialog";
 import { FinancienModeToggle } from "@/components/financien/FinancienModeToggle";
 import { BeginnerFinancienView } from "@/components/financien/BeginnerFinancienView";
 import { RecurringExpensesManager } from "@/components/financien/RecurringExpensesManager";
+import { PortfolioTaxSummary } from "@/components/financien/PortfolioTaxSummary";
 
 type Expense = Tables<"expenses">;
 type Payment = Tables<"payments">;
@@ -424,6 +425,9 @@ const Financien = () => {
         <div className="px-4 md:px-6 lg:px-8 pb-8 space-y-6">
           {/* Mode Toggle */}
           <FinancienModeToggle mode={mode} onModeChange={handleModeChange} />
+
+          {/* Tax Summary - Always visible */}
+          <PortfolioTaxSummary properties={properties} />
 
           {mode === "beginner" ? (
             <BeginnerFinancienView
