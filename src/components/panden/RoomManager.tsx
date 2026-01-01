@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DoorOpen, Plus, Pencil, Trash2, User, Euro, Ruler, Wrench, ChevronDown, ChevronUp } from "lucide-react";
+import { DoorOpen, Plus, Pencil, Trash2, User, Euro, Ruler, Wrench, ChevronDown, ChevronUp, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { RoomFeaturesManager } from "./RoomFeaturesManager";
@@ -42,6 +48,7 @@ interface Tenant {
   huurbedrag: number;
   room_id: string | null;
   unit_nummer: number;
+  betaaldag: number;
 }
 
 interface RoomManagerProps {
@@ -55,12 +62,20 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [editingUnit, setEditingUnit] = useState<Tenant | null>(null);
   const [formData, setFormData] = useState({
     naam: "",
     oppervlakte_m2: "",
     huurprijs: "",
     actieve_huurder_id: "",
+  });
+  const [unitFormData, setUnitFormData] = useState({
+    naam: "",
+    huurbedrag: "",
+    unit_nummer: "",
+    betaaldag: "1",
   });
 
   useEffect(() => {
@@ -78,7 +93,7 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
           .order("naam"),
         supabase
           .from("tenants")
-          .select("id, naam, huurbedrag, room_id, unit_nummer")
+          .select("id, naam, huurbedrag, room_id, unit_nummer, betaaldag")
           .eq("property_id", propertyId)
           .eq("actief", true),
       ]);
@@ -162,6 +177,75 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
     });
   };
 
+  const resetUnitForm = () => {
+    setEditingUnit(null);
+    setUnitFormData({
+      naam: "",
+      huurbedrag: "",
+      unit_nummer: "",
+      betaaldag: "1",
+    });
+  };
+
+  const handleUnitSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const unitData = {
+        property_id: propertyId,
+        naam: unitFormData.naam,
+        huurbedrag: parseFloat(unitFormData.huurbedrag) || 0,
+        unit_nummer: parseInt(unitFormData.unit_nummer) || 1,
+        betaaldag: parseInt(unitFormData.betaaldag) || 1,
+        actief: true,
+        room_id: null,
+      };
+
+      if (editingUnit) {
+        const { error } = await supabase
+          .from("tenants")
+          .update(unitData)
+          .eq("id", editingUnit.id);
+        if (error) throw error;
+        toast({ title: "Unit bijgewerkt" });
+      } else {
+        const { error } = await supabase.from("tenants").insert(unitData);
+        if (error) throw error;
+        toast({ title: "Unit toegevoegd" });
+      }
+
+      setIsUnitDialogOpen(false);
+      resetUnitForm();
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Fout", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleEditUnit = (tenant: Tenant) => {
+    setEditingUnit(tenant);
+    setUnitFormData({
+      naam: tenant.naam,
+      huurbedrag: tenant.huurbedrag.toString(),
+      unit_nummer: tenant.unit_nummer.toString(),
+      betaaldag: tenant.betaaldag.toString(),
+    });
+    setIsUnitDialogOpen(true);
+  };
+
+  const handleDeleteUnit = async (tenant: Tenant) => {
+    if (!confirm(`Weet je zeker dat je "${tenant.naam}" wilt verwijderen?`)) return;
+
+    try {
+      const { error } = await supabase.from("tenants").delete().eq("id", tenant.id);
+      if (error) throw error;
+      toast({ title: "Unit verwijderd" });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Fout", description: error.message, variant: "destructive" });
+    }
+  };
+
   const getTenantName = (room: Room) => {
     // Check actieve_huurder_id on room first
     if (room.actieve_huurder_id) {
@@ -217,17 +301,24 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
             {totalOccupied}/{totalUnits} verhuurd
           </Badge>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            resetForm();
-            setIsDialogOpen(true);
-          }}
-        >
-          <Plus className="w-4 h-4 mr-1" />
-          Kamer
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="outline">
+              <Plus className="w-4 h-4 mr-1" />
+              Toevoegen
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+              <DoorOpen className="w-4 h-4 mr-2" />
+              Kamer toevoegen
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { resetUnitForm(); setIsUnitDialogOpen(true); }}>
+              <Home className="w-4 h-4 mr-2" />
+              Unit toevoegen
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Room List */}
@@ -316,8 +407,8 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
       {standaloneUnits.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <User className="w-4 h-4" />
-            Huurders / Units (niet aan kamer gekoppeld)
+            <Home className="w-4 h-4" />
+            Units (niet aan kamer gekoppeld)
           </h3>
           <div className="grid gap-2">
             {standaloneUnits.map((tenant) => (
@@ -327,7 +418,7 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
-                    <User className="w-4 h-4 text-success" />
+                    <Home className="w-4 h-4 text-success" />
                   </div>
                   <div>
                     <p className="font-medium text-sm">{tenant.naam}</p>
@@ -338,17 +429,30 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
                     </div>
                   </div>
                 </div>
-                <Badge variant="success" className="gap-1">
-                  <User className="w-3 h-3" />
-                  Actief
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="success" className="gap-1">
+                    <User className="w-3 h-3" />
+                    Actief
+                  </Badge>
+                  <Button size="icon" variant="ghost" onClick={() => handleEditUnit(tenant)}>
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-destructive"
+                    onClick={() => handleDeleteUnit(tenant)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Add/Edit Dialog */}
+      {/* Add/Edit Room Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -417,6 +521,74 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
               </Button>
               <Button type="submit" className="flex-1 gradient-primary">
                 {editingRoom ? "Opslaan" : "Toevoegen"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Unit Dialog */}
+      <Dialog open={isUnitDialogOpen} onOpenChange={setIsUnitDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{editingUnit ? "Unit Bewerken" : "Nieuwe Unit"}</DialogTitle>
+            <DialogDescription>{propertyName}</DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleUnitSubmit} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="unit_naam">Naam huurder *</Label>
+              <Input
+                id="unit_naam"
+                value={unitFormData.naam}
+                onChange={(e) => setUnitFormData({ ...unitFormData, naam: e.target.value })}
+                placeholder="bijv. Jan Jansen"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="unit_nummer">Unit nummer *</Label>
+                <Input
+                  id="unit_nummer"
+                  type="number"
+                  value={unitFormData.unit_nummer}
+                  onChange={(e) => setUnitFormData({ ...unitFormData, unit_nummer: e.target.value })}
+                  placeholder="bijv. 1"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="unit_huur">Huurprijs (€) *</Label>
+                <Input
+                  id="unit_huur"
+                  type="number"
+                  value={unitFormData.huurbedrag}
+                  onChange={(e) => setUnitFormData({ ...unitFormData, huurbedrag: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="betaaldag">Betaaldag (dag van de maand)</Label>
+              <Input
+                id="betaaldag"
+                type="number"
+                min="1"
+                max="31"
+                value={unitFormData.betaaldag}
+                onChange={(e) => setUnitFormData({ ...unitFormData, betaaldag: e.target.value })}
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsUnitDialogOpen(false)} className="flex-1">
+                Annuleren
+              </Button>
+              <Button type="submit" className="flex-1 gradient-primary">
+                {editingUnit ? "Opslaan" : "Toevoegen"}
               </Button>
             </div>
           </form>
