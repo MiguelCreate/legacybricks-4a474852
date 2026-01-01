@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Euro, TrendingUp, TrendingDown, Plus, Receipt, PiggyBank, BarChart3, Trash2, Landmark, Building2, Pencil, Calendar, Percent } from "lucide-react";
+import { Euro, TrendingUp, TrendingDown, Plus, Receipt, PiggyBank, BarChart3, Trash2, Landmark, Building2, Pencil, Calendar, Percent, ChevronDown, ChevronRight } from "lucide-react";
 import { ExportMenu, ExportData } from "@/components/ui/ExportMenu";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatCard } from "@/components/ui/StatCard";
@@ -29,6 +29,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,6 +79,13 @@ const Financien = () => {
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
   const [isHypotheekDialogOpen, setIsHypotheekDialogOpen] = useState(false);
   const [editPropertyId, setEditPropertyId] = useState<string | undefined>(undefined);
+  
+  // Collapsible section states
+  const [isPaymentsOpen, setIsPaymentsOpen] = useState(true);
+  const [isExpensesOpen, setIsExpensesOpen] = useState(true);
+  const [isRecurringOpen, setIsRecurringOpen] = useState(true);
+  const [isHypotheekOpen, setIsHypotheekOpen] = useState(false);
+  const [isTaxOpen, setIsTaxOpen] = useState(false);
 
   const [paymentForm, setPaymentForm] = useState({
     tenant_id: "",
@@ -493,258 +505,324 @@ const Financien = () => {
                 />
               </div>
 
-              {/* Tax Summary */}
-              <PortfolioTaxSummary properties={properties} tenants={tenants} />
-
-              {/* Recent Transactions */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            {/* Recent Payments */}
-            <div className="bg-card rounded-xl border shadow-card p-4 sm:p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-foreground">Recente Betalingen</h2>
-                <span className="text-sm text-muted-foreground">
-                  €{monthlyPaymentsReceived.toLocaleString()} deze maand
-                </span>
-              </div>
-              {payments.length === 0 ? (
-                <p className="text-muted-foreground text-sm py-8 text-center">
-                  Nog geen betalingen geregistreerd
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {payments.slice(0, 5).map((payment) => {
-                    const tenant = tenants.find((t) => t.id === payment.tenant_id);
-                    const property = properties.find((p) => p.id === payment.property_id);
-                    return (
-                      <div
-                        key={payment.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
-                      >
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {tenant?.naam || "Onbekend"}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {property?.naam} • {new Date(payment.datum).toLocaleDateString("nl-NL")}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-success">
-                            +€{Number(payment.bedrag).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Recent Expenses */}
-            <div className="bg-card rounded-xl border shadow-card p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-foreground">Recente Kosten</h2>
-                <span className="text-sm text-muted-foreground">
-                  €{monthlyExpenses.toLocaleString()} deze maand
-                </span>
-              </div>
-              {expenses.length === 0 ? (
-                <p className="text-muted-foreground text-sm py-8 text-center">
-                  Nog geen kosten geregistreerd
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {expenses.slice(0, 5).map((expense) => {
-                    const property = properties.find((p) => p.id === expense.property_id);
-                    const category = expenseCategories.find((c) => c.value === expense.categorie);
-                    return (
-                      <div
-                        key={expense.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 group"
-                      >
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {category?.label || expense.categorie}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {property?.naam} • {new Date(expense.datum).toLocaleDateString("nl-NL")}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <p className="font-semibold text-destructive">
-                            -€{Number(expense.bedrag).toLocaleString()}
-                          </p>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                            onClick={() => setExpenseToDelete(expense.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Recurring Expenses */}
-          <RecurringExpensesManager properties={properties} onUpdate={fetchData} />
-
-          {/* Hypotheek Overzicht */}
-          <div className="bg-card rounded-xl border shadow-card p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <h2 className="font-semibold text-foreground">Hypotheek Overzicht</h2>
-                <InfoTooltip
-                  title="Hypotheek Overzicht"
-                  content="Bekijk alle hypotheken per pand met de belangrijkste details zoals maandlast, hoofdsom en rente."
-                />
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsHypotheekDialogOpen(true)}
-                className="gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Toevoegen
-              </Button>
-            </div>
-            
-            {loans.length === 0 ? (
-              <p className="text-muted-foreground text-sm py-8 text-center">
-                Nog geen hypotheken geregistreerd
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {/* Group loans by property */}
-                {properties
-                  .filter((p) => loans.some((l) => l.property_id === p.id))
-                  .map((property) => {
-                    const propertyLoans = loans.filter((l) => l.property_id === property.id);
-                    const propertyTotalMaandlast = propertyLoans.reduce(
-                      (sum, l) => sum + Number(l.maandlast),
-                      0
-                    );
-                    const propertyTotalRestschuld = propertyLoans.reduce(
-                      (sum, l) => sum + Number(l.restschuld || l.hoofdsom || 0),
-                      0
-                    );
-                    
-                    return (
-                      <div
-                        key={property.id}
-                        className="rounded-lg border bg-secondary/30 overflow-hidden"
-                      >
-                        {/* Property Header */}
-                        <div className="p-4 bg-secondary/50 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                              <Building2 className="w-5 h-5 text-primary" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-foreground">{property.naam}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {propertyLoans.length} hypotheekdeel{propertyLoans.length > 1 ? 'en' : ''}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <p className="font-semibold text-foreground">
-                                €{propertyTotalMaandlast.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
-                                <span className="text-sm font-normal text-muted-foreground">/mnd</span>
-                              </p>
-                              {propertyTotalRestschuld > 0 && (
-                                <p className="text-xs text-muted-foreground">
-                                  Restschuld: €{propertyTotalRestschuld.toLocaleString("nl-NL")}
-                                </p>
-                              )}
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setEditPropertyId(property.id);
-                                setIsHypotheekDialogOpen(true);
-                              }}
-                              className="h-8 w-8"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        {/* Loan Parts */}
-                        <div className="divide-y divide-border/50">
-                          {propertyLoans.map((loan, index) => {
-                            const isAdvanced = loan.hypotheek_type === "gevorderd";
-                            
+              {/* Recent Transactions - Collapsible */}
+              <Collapsible open={isPaymentsOpen} onOpenChange={setIsPaymentsOpen}>
+                <div className="bg-card rounded-xl border shadow-card overflow-hidden">
+                  <CollapsibleTrigger className="w-full p-4 sm:p-5 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      {isPaymentsOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      <h2 className="font-semibold text-foreground">Recente Betalingen</h2>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      €{monthlyPaymentsReceived.toLocaleString()} deze maand
+                    </span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+                      {payments.length === 0 ? (
+                        <p className="text-muted-foreground text-sm py-8 text-center">
+                          Nog geen betalingen geregistreerd
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {payments.slice(0, 5).map((payment) => {
+                            const tenant = tenants.find((t) => t.id === payment.tenant_id);
+                            const property = properties.find((p) => p.id === payment.property_id);
                             return (
-                              <div key={loan.id} className="p-4">
-                                <div className="flex items-start justify-between gap-4 mb-2">
-                                  <div>
-                                    <p className="font-medium text-foreground text-sm">
-                                      Deel {index + 1}
-                                      <span className="ml-2 text-xs font-normal text-muted-foreground">
-                                        ({isAdvanced ? "Gevorderd" : "Eenvoudig"})
-                                      </span>
-                                    </p>
-                                  </div>
+                              <div
+                                key={payment.id}
+                                className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+                              >
+                                <div>
                                   <p className="font-medium text-foreground">
-                                    €{Number(loan.maandlast).toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
-                                    <span className="text-xs font-normal text-muted-foreground">/mnd</span>
+                                    {tenant?.naam || "Onbekend"}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {property?.naam} • {new Date(payment.datum).toLocaleDateString("nl-NL")}
                                   </p>
                                 </div>
-                                
-                                {isAdvanced && (
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                                    <div>
-                                      <p className="text-muted-foreground text-xs">Hoofdsom</p>
-                                      <p className="font-medium">€{Number(loan.hoofdsom || 0).toLocaleString("nl-NL")}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-muted-foreground text-xs">Rente</p>
-                                      <p className="font-medium">
-                                        {Number(loan.rente_percentage || 0).toFixed(2)}% 
-                                        <span className="text-xs text-muted-foreground ml-1">
-                                          {loan.rente_type === "vast" ? "(vast)" : "(var.)"}
-                                        </span>
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <p className="text-muted-foreground text-xs">Looptijd</p>
-                                      <p className="font-medium">{loan.looptijd_jaren || 0} jaar</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-muted-foreground text-xs">Restschuld</p>
-                                      <p className="font-medium">€{Number(loan.restschuld || loan.hoofdsom || 0).toLocaleString("nl-NL")}</p>
-                                    </div>
-                                  </div>
-                                )}
+                                <div className="text-right">
+                                  <p className="font-semibold text-success">
+                                    +€{Number(payment.bedrag).toLocaleString()}
+                                  </p>
+                                </div>
                               </div>
                             );
                           })}
                         </div>
-                      </div>
-                    );
-                  })}
-                
-                {/* Totaal */}
-                <div className="pt-4 border-t border-border flex items-center justify-between">
-                  <p className="font-medium text-muted-foreground">Totaal maandlasten</p>
-                  <p className="text-lg font-bold text-foreground">
-                    €{totalMonthlyLoanPayments.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
-                    <span className="text-sm font-normal text-muted-foreground">/mnd</span>
-                  </p>
+                      )}
+                    </div>
+                  </CollapsibleContent>
                 </div>
-              </div>
-            )}
-          </div>
+              </Collapsible>
+
+              {/* Recent Expenses - Collapsible */}
+              <Collapsible open={isExpensesOpen} onOpenChange={setIsExpensesOpen}>
+                <div className="bg-card rounded-xl border shadow-card overflow-hidden">
+                  <CollapsibleTrigger className="w-full p-4 sm:p-5 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      {isExpensesOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      <h2 className="font-semibold text-foreground">Recente Kosten</h2>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      €{monthlyExpenses.toLocaleString()} deze maand
+                    </span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+                      {expenses.length === 0 ? (
+                        <p className="text-muted-foreground text-sm py-8 text-center">
+                          Nog geen kosten geregistreerd
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {expenses.slice(0, 5).map((expense) => {
+                            const property = properties.find((p) => p.id === expense.property_id);
+                            const category = expenseCategories.find((c) => c.value === expense.categorie);
+                            return (
+                              <div
+                                key={expense.id}
+                                className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 group"
+                              >
+                                <div>
+                                  <p className="font-medium text-foreground">
+                                    {category?.label || expense.categorie}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {property?.naam} • {new Date(expense.datum).toLocaleDateString("nl-NL")}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <p className="font-semibold text-destructive">
+                                    -€{Number(expense.bedrag).toLocaleString()}
+                                  </p>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setExpenseToDelete(expense.id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              {/* Recurring Expenses - Collapsible */}
+              <Collapsible open={isRecurringOpen} onOpenChange={setIsRecurringOpen}>
+                <div className="bg-card rounded-xl border shadow-card overflow-hidden">
+                  <CollapsibleTrigger className="w-full p-4 sm:p-5 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      {isRecurringOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      <h2 className="font-semibold text-foreground">Terugkerende Kosten</h2>
+                    </div>
+                    <span className="text-sm text-muted-foreground">Beheer vaste lasten</span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+                      <RecurringExpensesManager properties={properties} onUpdate={fetchData} />
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              {/* Hypotheek Overzicht - Collapsible */}
+              <Collapsible open={isHypotheekOpen} onOpenChange={setIsHypotheekOpen}>
+                <div className="bg-card rounded-xl border shadow-card overflow-hidden">
+                  <CollapsibleTrigger className="w-full p-4 sm:p-5 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      {isHypotheekOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      <h2 className="font-semibold text-foreground">Hypotheek Overzicht</h2>
+                      <InfoTooltip
+                        title="Hypotheek Overzicht"
+                        content="Bekijk alle hypotheken per pand met de belangrijkste details zoals maandlast, hoofdsom en rente."
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        €{totalMonthlyLoanPayments.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}/mnd
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsHypotheekDialogOpen(true);
+                        }}
+                        className="gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Toevoegen
+                      </Button>
+                    </div>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+                      {loans.length === 0 ? (
+                        <p className="text-muted-foreground text-sm py-8 text-center">
+                          Nog geen hypotheken geregistreerd
+                        </p>
+                      ) : (
+                        <div className="space-y-4">
+                          {/* Group loans by property */}
+                          {properties
+                            .filter((p) => loans.some((l) => l.property_id === p.id))
+                            .map((property) => {
+                              const propertyLoans = loans.filter((l) => l.property_id === property.id);
+                              const propertyTotalMaandlast = propertyLoans.reduce(
+                                (sum, l) => sum + Number(l.maandlast),
+                                0
+                              );
+                              const propertyTotalRestschuld = propertyLoans.reduce(
+                                (sum, l) => sum + Number(l.restschuld || l.hoofdsom || 0),
+                                0
+                              );
+                              
+                              return (
+                                <div
+                                  key={property.id}
+                                  className="rounded-lg border bg-secondary/30 overflow-hidden"
+                                >
+                                  {/* Property Header */}
+                                  <div className="p-4 bg-secondary/50 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <Building2 className="w-5 h-5 text-primary" />
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-foreground">{property.naam}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                          {propertyLoans.length} hypotheekdeel{propertyLoans.length > 1 ? 'en' : ''}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                      <div className="text-right">
+                                        <p className="font-semibold text-foreground">
+                                          €{propertyTotalMaandlast.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
+                                          <span className="text-sm font-normal text-muted-foreground">/mnd</span>
+                                        </p>
+                                        {propertyTotalRestschuld > 0 && (
+                                          <p className="text-xs text-muted-foreground">
+                                            Restschuld: €{propertyTotalRestschuld.toLocaleString("nl-NL")}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          setEditPropertyId(property.id);
+                                          setIsHypotheekDialogOpen(true);
+                                        }}
+                                        className="h-8 w-8"
+                                      >
+                                        <Pencil className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Loan Parts */}
+                                  <div className="divide-y divide-border/50">
+                                    {propertyLoans.map((loan, index) => {
+                                      const isAdvanced = loan.hypotheek_type === "gevorderd";
+                                      
+                                      return (
+                                        <div key={loan.id} className="p-4">
+                                          <div className="flex items-start justify-between gap-4 mb-2">
+                                            <div>
+                                              <p className="font-medium text-foreground text-sm">
+                                                Deel {index + 1}
+                                                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                                                  ({isAdvanced ? "Gevorderd" : "Eenvoudig"})
+                                                </span>
+                                              </p>
+                                            </div>
+                                            <p className="font-medium text-foreground">
+                                              €{Number(loan.maandlast).toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
+                                              <span className="text-xs font-normal text-muted-foreground">/mnd</span>
+                                            </p>
+                                          </div>
+                                          
+                                          {isAdvanced && (
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                              <div>
+                                                <p className="text-muted-foreground text-xs">Hoofdsom</p>
+                                                <p className="font-medium">€{Number(loan.hoofdsom || 0).toLocaleString("nl-NL")}</p>
+                                              </div>
+                                              <div>
+                                                <p className="text-muted-foreground text-xs">Rente</p>
+                                                <p className="font-medium">
+                                                  {Number(loan.rente_percentage || 0).toFixed(2)}% 
+                                                  <span className="text-xs text-muted-foreground ml-1">
+                                                    {loan.rente_type === "vast" ? "(vast)" : "(var.)"}
+                                                  </span>
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <p className="text-muted-foreground text-xs">Looptijd</p>
+                                                <p className="font-medium">{loan.looptijd_jaren || 0} jaar</p>
+                                              </div>
+                                              <div>
+                                                <p className="text-muted-foreground text-xs">Restschuld</p>
+                                                <p className="font-medium">€{Number(loan.restschuld || loan.hoofdsom || 0).toLocaleString("nl-NL")}</p>
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          
+                          {/* Totaal */}
+                          <div className="pt-4 border-t border-border flex items-center justify-between">
+                            <p className="font-medium text-muted-foreground">Totaal maandlasten</p>
+                            <p className="text-lg font-bold text-foreground">
+                              €{totalMonthlyLoanPayments.toLocaleString("nl-NL", { minimumFractionDigits: 2 })}
+                              <span className="text-sm font-normal text-muted-foreground">/mnd</span>
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              {/* Tax Summary - Collapsible */}
+              <Collapsible open={isTaxOpen} onOpenChange={setIsTaxOpen}>
+                <div className="bg-card rounded-xl border shadow-card overflow-hidden">
+                  <CollapsibleTrigger className="w-full p-4 sm:p-5 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      {isTaxOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      <h2 className="font-semibold text-foreground">Portugese Belastingen</h2>
+                      <InfoTooltip
+                        title="Belastingoverzicht"
+                        content="Automatische berekening van IMT, IMI en IRS voor al je panden."
+                      />
+                    </div>
+                    <span className="text-sm text-muted-foreground">IMT, IMI & IRS</span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+                      <PortfolioTaxSummary properties={properties} tenants={tenants} />
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
             </>
           )}
         </div>

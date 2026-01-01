@@ -113,26 +113,7 @@ export const PortfolioTaxSummary = ({ properties, tenants = [] }: PortfolioTaxSu
   }
 
   return (
-    <Card className="shadow-card">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Receipt className="h-5 w-5 text-primary" />
-          Portugese Belastingen
-          <InfoTooltip
-            title="Belastingoverzicht"
-            content="Automatische berekening van IMT, IMI en IRS voor al je panden. IMT is eenmalig bij aankoop, IMI en IRS zijn jaarlijks."
-          />
-        </CardTitle>
-        <CardDescription>
-          Geschatte belastingdruk voor je portefeuille (nieuwe regeling 2026-2029: 10% voor huur ≤ €2.300/maand)
-          {taxSummary.pandenZonderHuur > 0 && (
-            <span className="text-warning ml-2">
-              ({taxSummary.pandenZonderHuur} pand(en) zonder huurprijs ingevuld)
-            </span>
-          )}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <div className="space-y-6">
         {/* Summary Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-muted/50 rounded-lg">
@@ -236,7 +217,6 @@ export const PortfolioTaxSummary = ({ properties, tenants = [] }: PortfolioTaxSu
             )}
           </p>
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 };
