@@ -43,6 +43,84 @@ interface Room {
   recibo_verde: boolean;
 }
 
+// Separate component to avoid useState inside map
+const RoomCard = ({
+  room,
+  tenantName,
+  onEdit,
+  onDelete,
+}: {
+  room: Room;
+  tenantName: string | null;
+  onEdit: (room: Room) => void;
+  onDelete: (room: Room) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <div className="rounded-lg border bg-card">
+        <div className="flex items-center justify-between p-3 hover:bg-accent/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <DoorOpen className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">{room.naam}</p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {room.oppervlakte_m2 && <span>{room.oppervlakte_m2} m²</span>}
+                <span>•</span>
+                <span className="text-success">€{room.huurprijs}/mnd</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {room.recibo_verde && (
+              <Badge variant="outline" className="gap-1 text-success border-success/30 bg-success/10">
+                <Receipt className="w-3 h-3" />
+                RV
+              </Badge>
+            )}
+            {tenantName ? (
+              <Badge variant="success" className="gap-1">
+                <User className="w-3 h-3" />
+                {tenantName}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-muted-foreground">
+                Leeg
+              </Badge>
+            )}
+            <CollapsibleTrigger asChild>
+              <Button size="icon" variant="ghost">
+                {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <Button size="icon" variant="ghost" onClick={() => onEdit(room)}>
+              <Pencil className="w-4 h-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-destructive"
+              onClick={() => onDelete(room)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        
+        <CollapsibleContent>
+          <div className="px-3 pb-3 pt-1 border-t">
+            <RoomFeaturesManager roomId={room.id} roomName={room.naam} />
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+};
+
 interface Tenant {
   id: string;
   naam: string;
@@ -348,74 +426,15 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
         </div>
       ) : (
         <div className="grid gap-2">
-          {rooms.map((room) => {
-            const tenantName = getTenantName(room);
-            const occupied = isRoomOccupied(room);
-            const [isOpen, setIsOpen] = useState(false);
-            
-            return (
-              <Collapsible key={room.id} open={isOpen} onOpenChange={setIsOpen}>
-                <div className="rounded-lg border bg-card">
-                  <div className="flex items-center justify-between p-3 hover:bg-accent/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <DoorOpen className="w-4 h-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">{room.naam}</p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {room.oppervlakte_m2 && <span>{room.oppervlakte_m2} m²</span>}
-                          <span>•</span>
-                          <span className="text-success">€{room.huurprijs}/mnd</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {room.recibo_verde && (
-                        <Badge variant="outline" className="gap-1 text-success border-success/30 bg-success/10">
-                          <Receipt className="w-3 h-3" />
-                          RV
-                        </Badge>
-                      )}
-                      {tenantName ? (
-                        <Badge variant="success" className="gap-1">
-                          <User className="w-3 h-3" />
-                          {tenantName}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-muted-foreground">
-                          Leeg
-                        </Badge>
-                      )}
-                      <CollapsibleTrigger asChild>
-                        <Button size="icon" variant="ghost">
-                          {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </Button>
-                      </CollapsibleTrigger>
-                      <Button size="icon" variant="ghost" onClick={() => handleEdit(room)}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="text-destructive"
-                        onClick={() => handleDelete(room)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <CollapsibleContent>
-                    <div className="px-3 pb-3 pt-1 border-t">
-                      <RoomFeaturesManager roomId={room.id} roomName={room.naam} />
-                    </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-            );
-          })}
+          {rooms.map((room) => (
+            <RoomCard
+              key={room.id}
+              room={room}
+              tenantName={getTenantName(room)}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
         </div>
       )}
 
