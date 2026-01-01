@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DoorOpen, Plus, Pencil, Trash2, User, Euro, Ruler, Wrench, ChevronDown, ChevronUp, Home } from "lucide-react";
+import { DoorOpen, Plus, Pencil, Trash2, User, Euro, Ruler, Wrench, ChevronDown, ChevronUp, Home, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +40,7 @@ interface Room {
   oppervlakte_m2: number | null;
   huurprijs: number;
   actieve_huurder_id: string | null;
+  recibo_verde: boolean;
 }
 
 interface Tenant {
@@ -71,6 +72,7 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
     oppervlakte_m2: "",
     huurprijs: "",
     actieve_huurder_id: "",
+    recibo_verde: false,
   });
   const [unitFormData, setUnitFormData] = useState({
     naam: "",
@@ -122,6 +124,7 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
         oppervlakte_m2: formData.oppervlakte_m2 ? parseFloat(formData.oppervlakte_m2) : null,
         huurprijs: parseFloat(formData.huurprijs) || 0,
         actieve_huurder_id: formData.actieve_huurder_id || null,
+        recibo_verde: formData.recibo_verde,
       };
 
       if (editingRoom) {
@@ -165,6 +168,7 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
       oppervlakte_m2: room.oppervlakte_m2?.toString() || "",
       huurprijs: room.huurprijs.toString(),
       actieve_huurder_id: room.actieve_huurder_id || "",
+      recibo_verde: room.recibo_verde || false,
     });
     setIsDialogOpen(true);
   };
@@ -176,6 +180,7 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
       oppervlakte_m2: "",
       huurprijs: "",
       actieve_huurder_id: "",
+      recibo_verde: false,
     });
   };
 
@@ -367,6 +372,12 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {room.recibo_verde && (
+                        <Badge variant="outline" className="gap-1 text-success border-success/30 bg-success/10">
+                          <Receipt className="w-3 h-3" />
+                          RV
+                        </Badge>
+                      )}
                       {tenantName ? (
                         <Badge variant="success" className="gap-1">
                           <User className="w-3 h-3" />
@@ -518,6 +529,23 @@ export const RoomManager = ({ propertyId, propertyName }: RoomManagerProps) => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+              <div className="flex items-center gap-2">
+                <Receipt className="w-4 h-4 text-success" />
+                <div>
+                  <Label htmlFor="recibo_verde" className="cursor-pointer">Recibo Verde</Label>
+                  <p className="text-xs text-muted-foreground">Geef je een groene kwitantie uit voor deze kamer?</p>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                id="recibo_verde"
+                checked={formData.recibo_verde}
+                onChange={(e) => setFormData({ ...formData, recibo_verde: e.target.checked })}
+                className="h-4 w-4 rounded border-input bg-background text-primary focus:ring-primary"
+              />
             </div>
 
             <div className="flex gap-3 pt-4">

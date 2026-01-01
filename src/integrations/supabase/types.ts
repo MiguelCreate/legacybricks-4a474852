@@ -1126,6 +1126,7 @@ export type Database = {
           naam: string
           oppervlakte_m2: number | null
           property_id: string
+          recibo_verde: boolean
           updated_at: string
         }
         Insert: {
@@ -1136,6 +1137,7 @@ export type Database = {
           naam: string
           oppervlakte_m2?: number | null
           property_id: string
+          recibo_verde?: boolean
           updated_at?: string
         }
         Update: {
@@ -1146,6 +1148,7 @@ export type Database = {
           naam?: string
           oppervlakte_m2?: number | null
           property_id?: string
+          recibo_verde?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -1170,6 +1173,7 @@ export type Database = {
           actief: boolean
           beoordeling_betrouwbaarheid: number | null
           betaaldag: number
+          borg: number | null
           created_at: string
           email: string | null
           huurbedrag: number
@@ -1187,6 +1191,7 @@ export type Database = {
           actief?: boolean
           beoordeling_betrouwbaarheid?: number | null
           betaaldag: number
+          borg?: number | null
           created_at?: string
           email?: string | null
           huurbedrag: number
@@ -1204,6 +1209,7 @@ export type Database = {
           actief?: boolean
           beoordeling_betrouwbaarheid?: number | null
           betaaldag?: number
+          borg?: number | null
           created_at?: string
           email?: string | null
           huurbedrag?: number

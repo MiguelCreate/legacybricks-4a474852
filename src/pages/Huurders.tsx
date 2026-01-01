@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Plus, Search, Phone, Mail, Star, Euro, Calendar, Building2, Layers, ExternalLink, DoorOpen, Send } from "lucide-react";
+import { Users, Plus, Search, Phone, Mail, Star, Euro, Calendar, Building2, Layers, ExternalLink, DoorOpen, Send, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ const Huurders = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<Partial<TablesInsert<"tenants">> & { unit_nummer?: number }>({
+  const [formData, setFormData] = useState<Partial<TablesInsert<"tenants">> & { unit_nummer?: number; borg?: number }>({
     naam: "",
     email: "",
     telefoon: "",
@@ -51,6 +51,7 @@ const Huurders = () => {
     notities: "",
     beoordeling_betrouwbaarheid: null,
     unit_nummer: 1,
+    borg: 0,
   });
 
   useEffect(() => {
@@ -109,6 +110,7 @@ const Huurders = () => {
         notities: formData.notities,
         beoordeling_betrouwbaarheid: formData.beoordeling_betrouwbaarheid,
         unit_nummer: formData.unit_nummer || 1,
+        borg: formData.borg || 0,
       } as any);
 
       if (error) throw error;
@@ -141,6 +143,7 @@ const Huurders = () => {
       notities: "",
       beoordeling_betrouwbaarheid: null,
       unit_nummer: 1,
+      borg: 0,
     });
   };
 
@@ -349,11 +352,19 @@ const Huurders = () => {
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Euro className="w-4 h-4 text-success" />
-                      <span className="font-semibold text-foreground">
-                        €{Number(tenant.huurbedrag).toLocaleString()}/mnd
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Euro className="w-4 h-4 text-success" />
+                        <span className="font-semibold text-foreground">
+                          €{Number(tenant.huurbedrag).toLocaleString()}/mnd
+                        </span>
+                      </div>
+                      {(tenant as any).borg > 0 && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Shield className="w-3 h-3" />
+                          <span>Borg: €{Number((tenant as any).borg).toLocaleString()}</span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1 text-muted-foreground text-sm">
@@ -527,24 +538,42 @@ const Huurders = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="betaaldag">
-                  Betaaldag *
+                <Label htmlFor="borg">
+                  Borg (€)
                   <InfoTooltip
-                    title="Betaaldag"
-                    content="De dag van de maand waarop de huur betaald moet worden. Maximum 28 om problemen met korte maanden te voorkomen."
+                    title="Borg / Waarborgsom"
+                    content="Het bedrag dat de huurder als borg heeft betaald. Dit wordt meestal terugbetaald bij vertrek."
                   />
                 </Label>
                 <Input
-                  id="betaaldag"
+                  id="borg"
                   type="number"
-                  min="1"
-                  max="28"
-                  value={formData.betaaldag || ""}
-                  onChange={(e) => setFormData({ ...formData, betaaldag: Number(e.target.value) })}
-                  placeholder="1"
-                  required
+                  min="0"
+                  value={formData.borg || ""}
+                  onChange={(e) => setFormData({ ...formData, borg: Number(e.target.value) })}
+                  placeholder="1700"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="betaaldag">
+                Betaaldag *
+                <InfoTooltip
+                  title="Betaaldag"
+                  content="De dag van de maand waarop de huur betaald moet worden. Maximum 28 om problemen met korte maanden te voorkomen."
+                />
+              </Label>
+              <Input
+                id="betaaldag"
+                type="number"
+                min="1"
+                max="28"
+                value={formData.betaaldag || ""}
+                onChange={(e) => setFormData({ ...formData, betaaldag: Number(e.target.value) })}
+                placeholder="1"
+                required
+              />
             </div>
 
             <div className="space-y-2">
