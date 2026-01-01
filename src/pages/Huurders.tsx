@@ -310,7 +310,7 @@ const Huurders = () => {
         {/* Tenants List */}
         <div className="px-4 md:px-6 lg:px-8 pb-8">
           {loading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-48 bg-card rounded-xl border animate-pulse" />
               ))}
@@ -337,7 +337,7 @@ const Huurders = () => {
               )}
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {filteredTenants.map((tenant, index) => {
                 const property = getProperty(tenant.property_id);
                 const roomName = getRoomName(tenant.room_id);
@@ -346,7 +346,7 @@ const Huurders = () => {
                 return (
                 <div
                   key={tenant.id}
-                  className="p-5 bg-card rounded-xl border shadow-card hover:shadow-glow transition-all duration-300 animate-slide-up"
+                  className="p-4 sm:p-5 bg-card rounded-xl border shadow-card hover:shadow-glow transition-all duration-300 animate-slide-up"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <div className="flex items-start justify-between mb-4">

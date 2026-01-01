@@ -27,12 +27,12 @@ export const QuickAction = ({
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-2 p-4 rounded-xl border shadow-card transition-all duration-300 active:scale-95 ${getVariantStyles()}`}
+      className={`flex flex-col items-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-xl border shadow-card transition-all duration-300 active:scale-95 ${getVariantStyles()}`}
     >
-      <div className="w-10 h-10 rounded-xl bg-background/20 flex items-center justify-center">
+      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-background/20 flex items-center justify-center">
         {icon}
       </div>
-      <span className="text-xs font-medium text-center">{label}</span>
+      <span className="text-[10px] sm:text-xs font-medium text-center leading-tight">{label}</span>
     </button>
   );
 };

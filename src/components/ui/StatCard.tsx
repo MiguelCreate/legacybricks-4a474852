@@ -69,12 +69,12 @@ export const StatCard = ({
 
   return (
     <div
-      className={`relative p-5 rounded-xl border shadow-card hover:shadow-glow transition-all duration-300 animate-fade-in ${getVariantStyles()}`}
+      className={`relative p-4 sm:p-5 rounded-xl border shadow-card hover:shadow-glow transition-all duration-300 animate-fade-in ${getVariantStyles()}`}
     >
-      <div className="flex items-start justify-between">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <p className={`text-sm font-medium ${variant === "primary" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-2 sm:space-y-3 min-w-0 flex-1">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <p className={`text-xs sm:text-sm font-medium truncate ${variant === "primary" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
               {title}
             </p>
             {tooltip && (
@@ -82,11 +82,11 @@ export const StatCard = ({
             )}
           </div>
           <div>
-            <p className={`text-2xl font-bold tracking-tight ${variant === "primary" ? "text-primary-foreground" : "text-foreground"}`}>
+            <p className={`text-lg sm:text-2xl font-bold tracking-tight ${variant === "primary" ? "text-primary-foreground" : "text-foreground"}`}>
               {value}
             </p>
             {subtitle && (
-              <p className={`text-sm mt-1 ${variant === "primary" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+              <p className={`text-xs sm:text-sm mt-0.5 sm:mt-1 ${variant === "primary" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                 {subtitle}
               </p>
             )}
@@ -95,11 +95,11 @@ export const StatCard = ({
             <div className={`flex items-center gap-1 text-xs font-medium ${getTrendColor()}`}>
               {getTrendIcon()}
               <span>{trend.value > 0 ? "+" : ""}{trend.value}%</span>
-              <span className="text-muted-foreground">{trend.label}</span>
+              <span className="text-muted-foreground hidden sm:inline">{trend.label}</span>
             </div>
           )}
         </div>
-        <div className={`p-3 rounded-xl ${getIconBg()}`}>
+        <div className={`p-2 sm:p-3 rounded-xl shrink-0 ${getIconBg()}`}>
           {icon}
         </div>
       </div>

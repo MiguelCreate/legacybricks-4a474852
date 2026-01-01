@@ -570,7 +570,7 @@ const Panden = () => {
 
             <TabsContent value="grid" className="mt-0">
           {loading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
@@ -602,7 +602,7 @@ const Panden = () => {
               )}
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {filteredProperties.map((property, index) => {
                 const propertyTenants = getTenantsForProperty(property.id);
                 const statusInfo = statusConfig[property.status];
@@ -610,34 +610,34 @@ const Panden = () => {
                 return (
                   <div
                     key={property.id}
-                    className="group relative p-5 bg-card rounded-xl border shadow-card hover:shadow-glow hover:border-primary/30 transition-all duration-300 animate-slide-up"
+                    className="group relative p-4 sm:p-5 bg-card rounded-xl border shadow-card hover:shadow-glow hover:border-primary/30 transition-all duration-300 animate-slide-up"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     {property.is_pinned && (
-                      <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-glow">
-                        <Star className="w-3 h-3 text-primary-foreground fill-current" />
+                      <div className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary flex items-center justify-center shadow-glow">
+                        <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary-foreground fill-current" />
                       </div>
                     )}
 
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-                          <Building2 className="w-6 h-6 text-primary-foreground" />
+                    <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow shrink-0">
+                          <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors truncate">
                             {property.naam}
                           </h3>
                           <a 
                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.locatie)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+                            className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <MapPin className="w-3 h-3" />
-                            <span>{property.locatie}</span>
-                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <MapPin className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{property.locatie}</span>
+                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                           </a>
                         </div>
                       </div>
