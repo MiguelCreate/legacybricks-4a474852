@@ -181,6 +181,28 @@ const Doelen = () => {
     return properties.find((p) => p.id === propertyId)?.naam;
   };
 
+  const getPropertyById = (propertyId: string | null) => {
+    if (!propertyId) return null;
+    return properties.find((p) => p.id === propertyId);
+  };
+
+  const calculateMonthlySurplus = (property: Property | null) => {
+    if (!property) return null;
+    
+    const monthlyIncome = Number(property.maandelijkse_huur || 0);
+    const monthlyVve = Number(property.vve_maandbijdrage || 0);
+    const monthlyCondominium = Number(property.condominium_maandelijks || 0);
+    const monthlyInsurance = Number(property.verzekering_jaarlijks || 0) / 12;
+    const monthlyMaintenance = Number(property.onderhoud_jaarlijks || 0) / 12;
+    const monthlyGas = Number(property.gas_maandelijks || 0);
+    const monthlyElectric = Number(property.elektriciteit_maandelijks || 0);
+    const monthlyWater = Number(property.water_maandelijks || 0);
+    
+    const totalCosts = monthlyVve + monthlyCondominium + monthlyInsurance + monthlyMaintenance + monthlyGas + monthlyElectric + monthlyWater;
+    
+    return monthlyIncome - totalCosts;
+  };
+
   const calculateMonthsToGoal = (goal: Goal) => {
     const remaining = Number(goal.doelbedrag) - Number(goal.huidig_bedrag);
     if (remaining <= 0) return 0;
@@ -188,7 +210,11 @@ const Doelen = () => {
     const property = properties.find((p) => p.id === goal.bron_property_id);
     if (!property) return null;
 
-    const monthlyContribution = Number(property.maandelijkse_huur || 0) * 0.1; // Assume 10% goes to goal
+    const surplus = calculateMonthlySurplus(property);
+    if (!surplus || surplus <= 0) return null;
+
+    // Assume 10% of surplus goes to goal
+    const monthlyContribution = surplus * 0.1;
     if (monthlyContribution <= 0) return null;
 
     return Math.ceil(remaining / monthlyContribution);
@@ -257,7 +283,8 @@ const Doelen = () => {
                 {activeGoals.map((goal, index) => {
                   const progress = (Number(goal.huidig_bedrag) / Number(goal.doelbedrag)) * 100;
                   const monthsToGoal = calculateMonthsToGoal(goal);
-                  const propertyName = getPropertyName(goal.bron_property_id);
+                  const linkedProperty = getPropertyById(goal.bron_property_id);
+                  const monthlySurplus = calculateMonthlySurplus(linkedProperty);
                   const inflationAdjusted = adjustForInflation(
                     Number(goal.doelbedrag),
                     monthsToGoal ? monthsToGoal / 12 : 1
@@ -272,12 +299,6 @@ const Doelen = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="font-semibold text-foreground">{goal.naam}</h3>
-                          {propertyName && (
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                              <Building2 className="w-3 h-3" />
-                              <span>Gekoppeld aan {propertyName}</span>
-                            </div>
-                          )}
                         </div>
                         <div className="text-right">
                           <p className="text-2xl font-bold text-foreground">
@@ -297,6 +318,30 @@ const Doelen = () => {
                         </span>
                       </div>
 
+                      {/* Linked Property Info */}
+                      <div className="p-3 bg-muted/50 rounded-lg mb-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Building2 className="w-4 h-4 text-primary" />
+                            <span className="text-muted-foreground">Bronpand:</span>
+                          </div>
+                          <span className="text-sm font-medium text-foreground">
+                            {linkedProperty?.naam || "Geen gekoppeld"}
+                          </span>
+                        </div>
+                        {linkedProperty && (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-sm">
+                              <TrendingUp className="w-4 h-4 text-success" />
+                              <span className="text-muted-foreground">Maandelijks overschot:</span>
+                            </div>
+                            <span className={`text-sm font-medium ${monthlySurplus && monthlySurplus >= 0 ? 'text-success' : 'text-destructive'}`}>
+                              €{monthlySurplus?.toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
                       <div className="flex items-center justify-between pt-4 border-t border-border">
                         {monthsToGoal !== null ? (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -306,7 +351,7 @@ const Doelen = () => {
                         ) : (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Percent className="w-4 h-4" />
-                            <span>Geen bron gekoppeld</span>
+                            <span>Koppel een bron voor schatting</span>
                           </div>
                         )}
                         <Button
