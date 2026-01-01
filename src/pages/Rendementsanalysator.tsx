@@ -28,7 +28,9 @@ import {
   Euro,
   Percent,
   HelpCircle,
-  Sparkles
+  Sparkles,
+  GraduationCap,
+  LineChart
 } from "lucide-react";
 import { 
   analyzeInvestment, 
@@ -44,6 +46,8 @@ import { PartnerOverview } from "@/components/analysator/PartnerOverview";
 import { SnowballImpact } from "@/components/analysator/SnowballImpact";
 import { GuidedTour, getStepForSection } from "@/components/analysator/GuidedTour";
 import { VisualCharts } from "@/components/analysator/VisualCharts";
+import { AnalysatorModeToggle } from "@/components/analysator/AnalysatorModeToggle";
+import { BeginnerAnalysatorView } from "@/components/analysator/BeginnerAnalysatorView";
 
 type TimeFrame = "5j" | "10j" | "15j" | "30j";
 
@@ -95,6 +99,7 @@ export default function Rendementsanalysator() {
   const [tourStep, setTourStep] = useState(1);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState<string>("");
+  const [mode, setMode] = useState<"beginner" | "gevorderd">("beginner");
   const [expandedSections, setExpandedSections] = useState({
     purchase: true,
     mortgage: false,
@@ -134,7 +139,7 @@ export default function Rendementsanalysator() {
   const [propertyName, setPropertyName] = useState("");
   const [propertyLocation, setPropertyLocation] = useState("");
   
-  // Fetch goals
+  // Fetch goals and mode preference
   useEffect(() => {
     const fetchGoals = async () => {
       if (!user) return;
@@ -150,8 +155,42 @@ export default function Rendementsanalysator() {
       }
     };
     
+    const fetchModePreference = async () => {
+      if (!user) return;
+      
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("voorkeur_kpi_modus")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        
+        if (data?.voorkeur_kpi_modus) {
+          setMode(data.voorkeur_kpi_modus as "beginner" | "gevorderd");
+        }
+      } catch (error) {
+        console.error("Error fetching mode preference:", error);
+      }
+    };
+    
     fetchGoals();
+    fetchModePreference();
   }, [user]);
+
+  const handleModeChange = async (newMode: "beginner" | "gevorderd") => {
+    setMode(newMode);
+    
+    if (!user) return;
+    
+    try {
+      await supabase
+        .from("profiles")
+        .update({ voorkeur_kpi_modus: newMode })
+        .eq("user_id", user.id);
+    } catch (error) {
+      console.error("Error saving mode preference:", error);
+    }
+  };
   
   // Update analysis when inputs or timeframe changes
   useEffect(() => {
@@ -374,40 +413,49 @@ export default function Rendementsanalysator() {
         </div>
         
         {/* Guided Tour */}
-        {showGuidedTour && (
+        {showGuidedTour && mode === "gevorderd" && (
           <GuidedTour 
             currentStep={tourStep}
             onStepChange={setTourStep}
             onClose={() => setShowGuidedTour(false)}
           />
         )}
-        
-        {/* Timeframe Tabs */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <Tabs value={activeTimeframe} onValueChange={(v) => setActiveTimeframe(v as TimeFrame)}>
-            <TabsList className="grid w-full max-w-md grid-cols-4">
-              <TabsTrigger value="5j">5 Jaar</TabsTrigger>
-              <TabsTrigger value="10j">10 Jaar</TabsTrigger>
-              <TabsTrigger value="15j">15 Jaar</TabsTrigger>
-              <TabsTrigger value="30j">30 Jaar</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          
-          {analysis && (
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm text-muted-foreground">
-                Live berekening actief
-              </span>
+
+        {/* Mode Toggle */}
+        <AnalysatorModeToggle mode={mode} onModeChange={handleModeChange} />
+
+        {mode === "beginner" ? (
+          /* Beginner Mode - Simple View */
+          analysis && <BeginnerAnalysatorView analysis={analysis} />
+        ) : (
+          /* Advanced Mode - Full View */
+          <>
+            {/* Timeframe Tabs */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <Tabs value={activeTimeframe} onValueChange={(v) => setActiveTimeframe(v as TimeFrame)}>
+                <TabsList className="grid w-full max-w-md grid-cols-4">
+                  <TabsTrigger value="5j">5 Jaar</TabsTrigger>
+                  <TabsTrigger value="10j">10 Jaar</TabsTrigger>
+                  <TabsTrigger value="15j">15 Jaar</TabsTrigger>
+                  <TabsTrigger value="30j">30 Jaar</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              
+              {analysis && (
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-muted-foreground">
+                    Live berekening actief
+                  </span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Input Column */}
-          <div className="space-y-4 lg:col-span-1">
-            {/* Purchase Section */}
-            <InputSection title="Aankoop" sectionKey="purchase" icon={Building2} stepNumber={1}>
+            
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* Input Column */}
+              <div className="space-y-4 lg:col-span-1">
+                {/* Purchase Section */}
+                <InputSection title="Aankoop" sectionKey="purchase" icon={Building2} stepNumber={1}>
               <div className="grid gap-3">
                 <InputField
                   label="Aankoopprijs"
@@ -800,6 +848,8 @@ export default function Rendementsanalysator() {
             )}
           </div>
         </div>
+          </>
+        )}
       </div>
       
       {/* Partner Overview Dialog */}

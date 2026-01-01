@@ -447,8 +447,41 @@ const Financien = () => {
                     title: "Netto Cashflow",
                     content: "Dit is wat je overhoudt na aftrek van hypotheeklasten en kosten. Een positieve cashflow is je doel!",
                   }}
+                />
+                <StatCard
+                  title="Huurinkomsten"
+                  value={`€${totalMonthlyRent.toLocaleString()}`}
+                  subtitle="Per maand"
+                  icon={<Euro className="w-5 h-5 text-primary" />}
+                  tooltip={{
+                    title: "Totale Huurinkomsten",
+                    content: "De som van alle maandelijkse huren van je actieve huurders.",
+                  }}
+                />
+                <StatCard
+                  title="Hypotheeklasten"
+                  value={`€${totalMonthlyLoanPayments.toLocaleString()}`}
+                  subtitle="Per maand"
+                  icon={<TrendingDown className="w-5 h-5 text-destructive" />}
+                  tooltip={{
+                    title: "Totale Hypotheeklasten",
+                    content: "De som van alle maandelijkse hypotheekbetalingen.",
+                  }}
+                />
+                <StatCard
+                  title="Bruto Rendement"
+                  value={`${grossYield.toFixed(1)}%`}
+                  subtitle="Jaarlijks"
+                  icon={<BarChart3 className="w-5 h-5 text-warning" />}
+                  tooltip={{
+                    title: "Bruto Rendement",
+                    content: "Jaarlijkse huurinkomsten gedeeld door de totale waarde van je portefeuille. Geeft aan hoe efficiënt je investering is.",
+                  }}
+                />
               </div>
-          <div className="grid lg:grid-cols-2 gap-6">
+
+              {/* Recent Transactions */}
+              <div className="grid lg:grid-cols-2 gap-6">
             {/* Recent Payments */}
             <div className="bg-card rounded-xl border shadow-card p-5">
               <div className="flex items-center justify-between mb-4">
