@@ -3,6 +3,7 @@ import {
   Sunset, Calculator, Euro, Calendar, TrendingUp, 
   AlertCircle, CheckCircle2, Target, Clock, Building2, Wallet
 } from "lucide-react";
+import { EarlyRetirementStrategies } from "@/components/pensioen/EarlyRetirementStrategies";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatCard } from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
@@ -316,6 +317,20 @@ const Pensioen = () => {
                 </p>
               )}
             </div>
+          )}
+
+          {/* Early Retirement Strategies */}
+          {gapPreRetirement > 0 && (
+            <EarlyRetirementStrategies
+              totalSavingsNeeded={totalSavingsNeeded}
+              yearsToDesiredRetirement={yearsToDesiredRetirement}
+              monthlyGapPreRetirement={gapPreRetirement}
+              netRentalIncome={netRentalIncome}
+              properties={properties}
+              loans={loans}
+              desiredIncome={desiredIncome}
+              incomePreRetirement={incomePreRetirement}
+            />
           )}
 
           {/* Financial Freedom */}
