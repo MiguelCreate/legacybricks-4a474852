@@ -209,31 +209,31 @@ export const WelcomeHeader = () => {
   };
 
   return (
-    <header className="flex flex-col gap-4 p-4 md:p-6 lg:p-8">
-      <div className="flex items-center justify-between">
-        <div className="animate-fade-in">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+    <header className="flex flex-col gap-3 sm:gap-4 p-4 md:p-6 lg:p-8">
+      <div className="flex items-start sm:items-center justify-between gap-3">
+        <div className="animate-fade-in min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate">
             {getGreeting()}, {userName || "Investeerder"} 👋
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Hier is je portefeuille-overzicht voor vandaag
+          <p className="text-sm sm:text-base text-muted-foreground mt-0.5 sm:mt-1">
+            Hier is je portefeuille-overzicht
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button 
             onClick={toggleDarkMode}
-            className="p-2.5 rounded-xl bg-card border border-border hover:bg-accent transition-colors"
+            className="p-2 sm:p-2.5 rounded-xl bg-card border border-border hover:bg-accent transition-colors"
           >
             {isDark ? (
-              <Sun className="w-5 h-5 text-warning" />
+              <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-warning" />
             ) : (
-              <Moon className="w-5 h-5 text-muted-foreground" />
+              <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
             )}
           </button>
-          <button className="relative p-2.5 rounded-xl bg-card border border-border hover:bg-accent transition-colors">
-            <Bell className="w-5 h-5 text-muted-foreground" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive animate-pulse-soft" />
+          <button className="relative p-2 sm:p-2.5 rounded-xl bg-card border border-border hover:bg-accent transition-colors">
+            <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+            <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 h-2 rounded-full bg-destructive animate-pulse-soft" />
           </button>
         </div>
       </div>

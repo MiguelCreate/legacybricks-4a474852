@@ -437,7 +437,7 @@ const Financien = () => {
           ) : (
             <>
               {/* Stats Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <StatCard
                   title="Maandelijkse Cashflow"
                   value={`€${netCashflow.toLocaleString()}`}
@@ -482,9 +482,9 @@ const Financien = () => {
               </div>
 
               {/* Recent Transactions */}
-              <div className="grid lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Recent Payments */}
-            <div className="bg-card rounded-xl border shadow-card p-5">
+            <div className="bg-card rounded-xl border shadow-card p-4 sm:p-5">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-semibold text-foreground">Recente Betalingen</h2>
                 <span className="text-sm text-muted-foreground">

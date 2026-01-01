@@ -296,7 +296,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Stats Grid - 5 columns */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                   <StatCard
                     title="Portefeuillewaarde"
                     value={`€${totalPortfolioValue.toLocaleString("nl-NL")}`}
@@ -385,10 +385,9 @@ const Dashboard = () => {
                 )}
               </section>
 
-              {/* ===================== SECTIE 3: SNELLE ACTIES ===================== */}
               <section className="space-y-4">
                 <h2 className="text-lg font-semibold text-foreground">Snelle Acties</h2>
-                <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
                   <QuickAction
                     icon={<Plus className="w-5 h-5" />}
                     label="Nieuw Pand"
