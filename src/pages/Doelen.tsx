@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { 
   Target, Plus, TrendingUp, Sparkles, CheckCircle2, 
-  Calendar, Building2, Percent, PiggyBank 
+  Calendar, Building2, Percent, PiggyBank, Trash2 
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -166,6 +166,32 @@ const Doelen = () => {
 
       setIsEditDialogOpen(false);
       setEditingGoal(null);
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: "Fout",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteGoal = async (goal: Goal) => {
+    if (!confirm(`Weet je zeker dat je "${goal.naam}" wilt verwijderen?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from("goals")
+        .delete()
+        .eq("id", goal.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Doel verwijderd",
+        description: `"${goal.naam}" is verwijderd.`,
+      });
+      
       fetchData();
     } catch (error: any) {
       toast({
@@ -354,13 +380,23 @@ const Doelen = () => {
                             <span>Koppel een bron voor schatting</span>
                           </div>
                         )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleOpenEdit(goal)}
-                        >
-                          Bewerken
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenEdit(goal)}
+                          >
+                            Bewerken
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteGoal(goal)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
 
                       {monthsToGoal && monthsToGoal > 12 && (
@@ -396,16 +432,26 @@ const Doelen = () => {
                     className="p-4 bg-success/5 rounded-xl border border-success/20 animate-slide-up"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center">
-                        <CheckCircle2 className="w-5 h-5 text-success" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center">
+                          <CheckCircle2 className="w-5 h-5 text-success" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground">{goal.naam}</h3>
+                          <p className="text-sm text-success">
+                            €{Number(goal.doelbedrag).toLocaleString()} bereikt!
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">{goal.naam}</h3>
-                        <p className="text-sm text-success">
-                          €{Number(goal.doelbedrag).toLocaleString()} bereikt!
-                        </p>
-                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteGoal(goal)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
