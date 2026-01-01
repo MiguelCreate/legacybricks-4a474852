@@ -245,6 +245,97 @@ export type Database = {
           },
         ]
       }
+      gemeenschappelijk_onderhoud: {
+        Row: {
+          created_at: string
+          element_naam: string
+          frequentie_jaren: number | null
+          geschatte_kosten: number | null
+          id: string
+          laatste_onderhoud: string | null
+          notities: string | null
+          property_id: string
+          updated_at: string
+          volgend_onderhoud: string | null
+        }
+        Insert: {
+          created_at?: string
+          element_naam: string
+          frequentie_jaren?: number | null
+          geschatte_kosten?: number | null
+          id?: string
+          laatste_onderhoud?: string | null
+          notities?: string | null
+          property_id: string
+          updated_at?: string
+          volgend_onderhoud?: string | null
+        }
+        Update: {
+          created_at?: string
+          element_naam?: string
+          frequentie_jaren?: number | null
+          geschatte_kosten?: number | null
+          id?: string
+          laatste_onderhoud?: string | null
+          notities?: string | null
+          property_id?: string
+          updated_at?: string
+          volgend_onderhoud?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gemeenschappelijk_onderhoud_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gemeenschappelijke_notulen: {
+        Row: {
+          beslissing: string
+          created_at: string
+          datum: string
+          id: string
+          jouw_aandeel_euro: number | null
+          kostenverdeling_percentage: number | null
+          property_id: string
+          status: Database["public"]["Enums"]["notulen_status"]
+          updated_at: string
+        }
+        Insert: {
+          beslissing: string
+          created_at?: string
+          datum: string
+          id?: string
+          jouw_aandeel_euro?: number | null
+          kostenverdeling_percentage?: number | null
+          property_id: string
+          status?: Database["public"]["Enums"]["notulen_status"]
+          updated_at?: string
+        }
+        Update: {
+          beslissing?: string
+          created_at?: string
+          datum?: string
+          id?: string
+          jouw_aandeel_euro?: number | null
+          kostenverdeling_percentage?: number | null
+          property_id?: string
+          status?: Database["public"]["Enums"]["notulen_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gemeenschappelijke_notulen_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goals: {
         Row: {
           bereikt: boolean
@@ -425,6 +516,53 @@ export type Database = {
           },
         ]
       }
+      noodgevallen_contacten: {
+        Row: {
+          actie: string
+          contact_email: string | null
+          contact_naam: string | null
+          contact_telefoon: string | null
+          created_at: string
+          extra_info: string | null
+          id: string
+          property_id: string
+          situatie: string
+          updated_at: string
+        }
+        Insert: {
+          actie: string
+          contact_email?: string | null
+          contact_naam?: string | null
+          contact_telefoon?: string | null
+          created_at?: string
+          extra_info?: string | null
+          id?: string
+          property_id: string
+          situatie: string
+          updated_at?: string
+        }
+        Update: {
+          actie?: string
+          contact_email?: string | null
+          contact_naam?: string | null
+          contact_telefoon?: string | null
+          created_at?: string
+          extra_info?: string | null
+          id?: string
+          property_id?: string
+          situatie?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "noodgevallen_contacten_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notes: {
         Row: {
           categorie: Database["public"]["Enums"]["note_category"]
@@ -593,6 +731,7 @@ export type Database = {
           aantal_units: number
           analyse_status: Database["public"]["Enums"]["analyse_status"] | null
           beheerkosten_percentage: number | null
+          bouwkundig_rapport_link: string | null
           condominium_maandelijks: number | null
           created_at: string
           eigen_inleg: number | null
@@ -600,6 +739,7 @@ export type Database = {
           elektriciteit_leverancier: string | null
           elektriciteit_maandelijks: number | null
           elektriciteit_meternummer: string | null
+          energie_certificaat_gebouw_vervaldatum: string | null
           energie_vervaldatum: string | null
           energielabel: Database["public"]["Enums"]["energy_label"] | null
           familie_handleiding: string | null
@@ -609,6 +749,9 @@ export type Database = {
           gas_maandelijks: number | null
           gas_meternummer: string | null
           gearchiveerd: boolean | null
+          gebouw_verzekering_link: string | null
+          gebouw_verzekering_polisnummer: string | null
+          gebouw_verzekering_vervaldatum: string | null
           gerelateerd_doel_id: string | null
           gezondheidsscore: number | null
           google_drive_link: string | null
@@ -621,6 +764,8 @@ export type Database = {
           kostenstijging_percentage: number | null
           latitude: number | null
           leegstand_buffer_percentage: number | null
+          lift_aanwezig: boolean | null
+          lift_beheerder_contact: string | null
           locatie: string
           longitude: number | null
           maandelijkse_huur: number | null
@@ -651,6 +796,9 @@ export type Database = {
           verzekering_maatschappij: string | null
           verzekering_polisnummer: string | null
           volledig_adres: string | null
+          vve_maandbijdrage: number | null
+          vve_reserve_huidig: number | null
+          vve_reserve_streef: number | null
           waardegroei_percentage: number | null
           waardering: number | null
           waarom_gekocht: string | null
@@ -665,6 +813,7 @@ export type Database = {
           aantal_units?: number
           analyse_status?: Database["public"]["Enums"]["analyse_status"] | null
           beheerkosten_percentage?: number | null
+          bouwkundig_rapport_link?: string | null
           condominium_maandelijks?: number | null
           created_at?: string
           eigen_inleg?: number | null
@@ -672,6 +821,7 @@ export type Database = {
           elektriciteit_leverancier?: string | null
           elektriciteit_maandelijks?: number | null
           elektriciteit_meternummer?: string | null
+          energie_certificaat_gebouw_vervaldatum?: string | null
           energie_vervaldatum?: string | null
           energielabel?: Database["public"]["Enums"]["energy_label"] | null
           familie_handleiding?: string | null
@@ -681,6 +831,9 @@ export type Database = {
           gas_maandelijks?: number | null
           gas_meternummer?: string | null
           gearchiveerd?: boolean | null
+          gebouw_verzekering_link?: string | null
+          gebouw_verzekering_polisnummer?: string | null
+          gebouw_verzekering_vervaldatum?: string | null
           gerelateerd_doel_id?: string | null
           gezondheidsscore?: number | null
           google_drive_link?: string | null
@@ -693,6 +846,8 @@ export type Database = {
           kostenstijging_percentage?: number | null
           latitude?: number | null
           leegstand_buffer_percentage?: number | null
+          lift_aanwezig?: boolean | null
+          lift_beheerder_contact?: string | null
           locatie: string
           longitude?: number | null
           maandelijkse_huur?: number | null
@@ -723,6 +878,9 @@ export type Database = {
           verzekering_maatschappij?: string | null
           verzekering_polisnummer?: string | null
           volledig_adres?: string | null
+          vve_maandbijdrage?: number | null
+          vve_reserve_huidig?: number | null
+          vve_reserve_streef?: number | null
           waardegroei_percentage?: number | null
           waardering?: number | null
           waarom_gekocht?: string | null
@@ -737,6 +895,7 @@ export type Database = {
           aantal_units?: number
           analyse_status?: Database["public"]["Enums"]["analyse_status"] | null
           beheerkosten_percentage?: number | null
+          bouwkundig_rapport_link?: string | null
           condominium_maandelijks?: number | null
           created_at?: string
           eigen_inleg?: number | null
@@ -744,6 +903,7 @@ export type Database = {
           elektriciteit_leverancier?: string | null
           elektriciteit_maandelijks?: number | null
           elektriciteit_meternummer?: string | null
+          energie_certificaat_gebouw_vervaldatum?: string | null
           energie_vervaldatum?: string | null
           energielabel?: Database["public"]["Enums"]["energy_label"] | null
           familie_handleiding?: string | null
@@ -753,6 +913,9 @@ export type Database = {
           gas_maandelijks?: number | null
           gas_meternummer?: string | null
           gearchiveerd?: boolean | null
+          gebouw_verzekering_link?: string | null
+          gebouw_verzekering_polisnummer?: string | null
+          gebouw_verzekering_vervaldatum?: string | null
           gerelateerd_doel_id?: string | null
           gezondheidsscore?: number | null
           google_drive_link?: string | null
@@ -765,6 +928,8 @@ export type Database = {
           kostenstijging_percentage?: number | null
           latitude?: number | null
           leegstand_buffer_percentage?: number | null
+          lift_aanwezig?: boolean | null
+          lift_beheerder_contact?: string | null
           locatie?: string
           longitude?: number | null
           maandelijkse_huur?: number | null
@@ -795,6 +960,9 @@ export type Database = {
           verzekering_maatschappij?: string | null
           verzekering_polisnummer?: string | null
           volledig_adres?: string | null
+          vve_maandbijdrage?: number | null
+          vve_reserve_huidig?: number | null
+          vve_reserve_streef?: number | null
           waardegroei_percentage?: number | null
           waardering?: number | null
           waarom_gekocht?: string | null
@@ -1085,6 +1253,7 @@ export type Database = {
         | "overig"
       loan_type: "eenvoudig" | "gevorderd"
       note_category: "onderhoud" | "energie" | "noodgeval" | "overig"
+      notulen_status: "afgerond" | "open" | "uitgesteld"
       property_status: "aankoop" | "renovatie" | "verhuur" | "te_koop"
       tijdsframe_analyse: "5j" | "10j" | "15j" | "30j"
     }
@@ -1229,6 +1398,7 @@ export const Constants = {
       ],
       loan_type: ["eenvoudig", "gevorderd"],
       note_category: ["onderhoud", "energie", "noodgeval", "overig"],
+      notulen_status: ["afgerond", "open", "uitgesteld"],
       property_status: ["aankoop", "renovatie", "verhuur", "te_koop"],
       tijdsframe_analyse: ["5j", "10j", "15j", "30j"],
     },

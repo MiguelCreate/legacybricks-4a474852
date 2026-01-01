@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Building2, MapPin, Euro, Pencil, TrendingUp, Home, DoorOpen, BarChart3, Palette } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Euro, Pencil, TrendingUp, Home, DoorOpen, BarChart3, Palette, Users } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { RoomManager } from "@/components/panden/RoomManager";
 import { PropertyFeaturesManager } from "@/components/panden/PropertyFeaturesManager";
 import { RisicoKaart } from "@/components/panden/RisicoKaart";
 import { PandAlsKunstwerk } from "@/components/panden/PandAlsKunstwerk";
+import { VvEModule } from "@/components/vve/VvEModule";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -259,6 +260,10 @@ const PandDetail = () => {
                 <BarChart3 className="w-4 h-4" />
                 Risicoprofiel
               </TabsTrigger>
+              <TabsTrigger value="vve" className="gap-2">
+                <Users className="w-4 h-4" />
+                Mini-VvE
+              </TabsTrigger>
               <TabsTrigger value="kunstwerk" className="gap-2">
                 <Palette className="w-4 h-4" />
                 Kunstwerk
@@ -306,6 +311,22 @@ const PandDetail = () => {
                 fysiek={property.risico_fysiek || 1}
                 operationeel={property.risico_operationeel || 1}
                 readonly
+              />
+            </TabsContent>
+
+            <TabsContent value="vve" className="mt-0">
+              <VvEModule
+                propertyId={property.id}
+                propertyName={property.naam}
+                vveReserveStreef={Number((property as any).vve_reserve_streef || 0)}
+                vveReserveHuidig={Number((property as any).vve_reserve_huidig || 0)}
+                vveMaandbijdrage={Number((property as any).vve_maandbijdrage || 0)}
+                gebouwVerzekeringPolisnummer={(property as any).gebouw_verzekering_polisnummer || null}
+                gebouwVerzekeringVervaldatum={(property as any).gebouw_verzekering_vervaldatum || null}
+                gebouwVerzekeringLink={(property as any).gebouw_verzekering_link || null}
+                bouwkundigRapportLink={(property as any).bouwkundig_rapport_link || null}
+                energieCertificaatGebouwVervaldatum={(property as any).energie_certificaat_gebouw_vervaldatum || null}
+                onPropertyUpdate={fetchProperty}
               />
             </TabsContent>
 
