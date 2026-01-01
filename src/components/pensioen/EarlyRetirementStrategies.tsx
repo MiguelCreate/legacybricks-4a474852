@@ -1,11 +1,17 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { 
   Lightbulb, TrendingUp, Building2, PiggyBank, 
-  Clock, DoorOpen, ArrowUp, CheckCircle2, AlertCircle 
+  Clock, DoorOpen, ArrowUp, CheckCircle2, AlertCircle,
+  ChevronDown, ChevronUp
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Property = Tables<"properties">;
@@ -271,84 +277,106 @@ export function EarlyRetirementStrategies({
     );
   }
 
+  const [isOpen, setIsOpen] = useState(false);
+  const achievableCount = strategies.filter(s => s.achievable).length;
+
   return (
-    <Card className="shadow-card">
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <Lightbulb className="h-5 w-5 text-warning" />
-          Strategieën om Eerder te Stoppen
-          <InfoTooltip 
-            title="Gepersonaliseerde Strategieën"
-            content="Op basis van je panden, cashflow en doelen geven we je concrete opties om je spaardoel te bereiken en eerder te stoppen met werken."
-          />
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="p-3 bg-muted/50 rounded-lg border">
-          <p className="text-sm text-muted-foreground">
-            <strong>Doel:</strong> €{Math.round(totalSavingsNeeded).toLocaleString()} sparen in{" "}
-            {yearsToDesiredRetirement > 0 ? `${Math.round(yearsToDesiredRetirement)} jaar` : "korte tijd"}
-          </p>
-        </div>
-        
-        <div className="grid gap-4">
-          {strategies.map((strategy) => (
-            <div 
-              key={strategy.id}
-              className={`p-4 rounded-lg border transition-colors ${
-                strategy.achievable 
-                  ? "bg-success/5 border-success/30" 
-                  : "bg-muted/30 border-border"
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${
-                  strategy.achievable ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"
-                }`}>
-                  {strategy.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-medium text-foreground">{strategy.title}</h3>
-                    {strategy.achievable && (
-                      <span className="text-xs px-2 py-0.5 bg-success/20 text-success rounded-full">
-                        Haalbaar
-                      </span>
-                    )}
-                    {strategy.priority === "high" && !strategy.achievable && (
-                      <span className="text-xs px-2 py-0.5 bg-warning/20 text-warning rounded-full">
-                        Kansrijk
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">{strategy.description}</p>
-                  <p className={`text-sm font-medium mt-2 ${
-                    strategy.achievable ? "text-success" : "text-foreground"
-                  }`}>
-                    {strategy.result}
-                  </p>
-                  
-                  <div className="mt-3 space-y-1">
-                    {strategy.details.map((detail, idx) => (
-                      <p key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
-                        <span className="text-primary mt-0.5">•</span>
-                        {detail}
-                      </p>
-                    ))}
-                  </div>
-                </div>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="shadow-card">
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
+            <CardTitle className="text-base flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-warning" />
+                Strategieën om Eerder te Stoppen
+                {achievableCount > 0 && (
+                  <span className="text-xs px-2 py-0.5 bg-success/20 text-success rounded-full">
+                    {achievableCount} haalbaar
+                  </span>
+                )}
+                <InfoTooltip 
+                  title="Gepersonaliseerde Strategieën"
+                  content="Op basis van je panden, cashflow en doelen geven we je concrete opties om je spaardoel te bereiken en eerder te stoppen met werken."
+                />
               </div>
-            </div>
-          ))}
-        </div>
+              {isOpen ? (
+                <ChevronUp className="h-5 w-5 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
+              )}
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
         
-        <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-          <p className="text-xs text-muted-foreground">
-            <strong>Tip:</strong> Combineer meerdere strategieën voor het beste resultaat. 
-            Bijvoorbeeld: spaar een deel van je cashflow én plan de verkoop van een pand rond je gewenste pensioenleeftijd.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+        <CollapsibleContent>
+          <CardContent className="space-y-4 pt-0">
+            <div className="p-3 bg-muted/50 rounded-lg border">
+              <p className="text-sm text-muted-foreground">
+                <strong>Doel:</strong> €{Math.round(totalSavingsNeeded).toLocaleString()} sparen in{" "}
+                {yearsToDesiredRetirement > 0 ? `${Math.round(yearsToDesiredRetirement)} jaar` : "korte tijd"}
+              </p>
+            </div>
+            
+            <div className="grid gap-4">
+              {strategies.map((strategy) => (
+                <div 
+                  key={strategy.id}
+                  className={`p-4 rounded-lg border transition-colors ${
+                    strategy.achievable 
+                      ? "bg-success/5 border-success/30" 
+                      : "bg-muted/30 border-border"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      strategy.achievable ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"
+                    }`}>
+                      {strategy.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-medium text-foreground">{strategy.title}</h3>
+                        {strategy.achievable && (
+                          <span className="text-xs px-2 py-0.5 bg-success/20 text-success rounded-full">
+                            Haalbaar
+                          </span>
+                        )}
+                        {strategy.priority === "high" && !strategy.achievable && (
+                          <span className="text-xs px-2 py-0.5 bg-warning/20 text-warning rounded-full">
+                            Kansrijk
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">{strategy.description}</p>
+                      <p className={`text-sm font-medium mt-2 ${
+                        strategy.achievable ? "text-success" : "text-foreground"
+                      }`}>
+                        {strategy.result}
+                      </p>
+                      
+                      <div className="mt-3 space-y-1">
+                        {strategy.details.map((detail, idx) => (
+                          <p key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
+                            <span className="text-primary mt-0.5">•</span>
+                            {detail}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <p className="text-xs text-muted-foreground">
+                <strong>Tip:</strong> Combineer meerdere strategieën voor het beste resultaat. 
+                Bijvoorbeeld: spaar een deel van je cashflow én plan de verkoop van een pand rond je gewenste pensioenleeftijd.
+              </p>
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }
