@@ -107,30 +107,31 @@ const InputField = ({
   suffix?: string;
   hint?: string;
 }) => (
-  <div className="space-y-1.5">
+  <div className="space-y-1.5 sm:space-y-1">
     <div className="flex items-center gap-1">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Label className="text-sm sm:text-xs text-muted-foreground">{label}</Label>
       {tooltip && <InfoTooltip title={label} content={tooltip} />}
     </div>
     <div className="relative">
       {prefix && (
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm sm:text-xs text-muted-foreground">
           {prefix}
         </span>
       )}
       <Input
         type="number"
+        inputMode="decimal"
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-        className={`h-9 text-sm ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-12' : ''}`}
+        className={`h-12 sm:h-9 text-base sm:text-sm ${prefix ? 'pl-8 sm:pl-7' : ''} ${suffix ? 'pr-14 sm:pr-12' : ''}`}
       />
       {suffix && (
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm sm:text-xs text-muted-foreground">
           {suffix}
         </span>
       )}
     </div>
-    {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+    {hint && <p className="text-xs sm:text-[10px] text-muted-foreground">{hint}</p>}
   </div>
 );
 
@@ -158,35 +159,35 @@ const InputSection = ({
   return (
     <Card className={`shadow-card transition-all ${isActive ? 'ring-2 ring-primary/20' : ''}`}>
       <CardHeader 
-        className="cursor-pointer py-3"
+        className="cursor-pointer py-4 sm:py-3 px-4 sm:px-6"
         onClick={() => toggleSection(sectionKey)}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+          <div className="flex items-center gap-2 sm:gap-2">
+            <div className={`w-8 h-8 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-sm sm:text-xs font-bold ${
               isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             }`}>
               {stepNumber}
             </div>
-            <Icon className={`h-4 w-4 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            <Icon className={`h-5 w-5 sm:h-4 sm:w-4 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+            <CardTitle className="text-base sm:text-sm font-medium">{title}</CardTitle>
           </div>
           {isActive ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            <ChevronUp className="h-5 w-5 sm:h-4 sm:w-4 text-muted-foreground" />
           ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <ChevronDown className="h-5 w-5 sm:h-4 sm:w-4 text-muted-foreground" />
           )}
         </div>
         {!isActive && explanation && (
-          <p className="text-xs text-muted-foreground mt-1 ml-8">{explanation.description}</p>
+          <p className="text-sm sm:text-xs text-muted-foreground mt-2 sm:mt-1 ml-10 sm:ml-8">{explanation.description}</p>
         )}
       </CardHeader>
       {isActive && (
-        <CardContent className="pt-0 pb-4">
+        <CardContent className="pt-0 pb-4 px-4 sm:px-6">
           {explanation && (
-            <div className="bg-accent/50 rounded-lg p-3 mb-4">
-              <p className="text-sm text-foreground font-medium">{explanation.title}</p>
-              <p className="text-xs text-muted-foreground mt-1">{explanation.description}</p>
+            <div className="bg-accent/50 rounded-lg p-4 sm:p-3 mb-4">
+              <p className="text-base sm:text-sm text-foreground font-medium">{explanation.title}</p>
+              <p className="text-sm sm:text-xs text-muted-foreground mt-1">{explanation.description}</p>
             </div>
           )}
           {children}
