@@ -4,6 +4,7 @@ import {
   AlertCircle, CheckCircle2, Target, Clock, Building2, Wallet
 } from "lucide-react";
 import { EarlyRetirementStrategies } from "@/components/pensioen/EarlyRetirementStrategies";
+import { CompoundInterestSimulator } from "@/components/pensioen/CompoundInterestSimulator";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatCard } from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
@@ -374,7 +375,25 @@ const Pensioen = () => {
             )}
           </div>
 
-          {/* Income Breakdown */}
+          {/* Vermogensopbouw Section Header */}
+          <div className="pt-4">
+            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              Vermogensopbouw
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Bouw extra vermogen op door slim te sparen en beleggen
+            </p>
+          </div>
+
+          {/* Compound Interest Simulator */}
+          <CompoundInterestSimulator
+            netRentalIncome={netRentalIncome}
+            desiredRetirementAge={desiredRetirementAge}
+            currentAge={currentAge}
+            desiredMonthlyIncome={desiredIncome}
+          />
+
           <div className="grid md:grid-cols-4 gap-4">
             <StatCard
               title="AOW (geschat)"
