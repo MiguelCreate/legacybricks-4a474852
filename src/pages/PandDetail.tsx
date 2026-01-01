@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Building2, MapPin, Euro, Pencil, TrendingUp, Home, DoorOpen, BarChart3, Palette, Users, Calculator, FolderOpen } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Euro, Pencil, TrendingUp, Home, DoorOpen, BarChart3, Palette, Users, Calculator, FolderOpen, Receipt } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import { RisicoKaart } from "@/components/panden/RisicoKaart";
 import { PandAlsKunstwerk } from "@/components/panden/PandAlsKunstwerk";
 import { VvEModule } from "@/components/vve/VvEModule";
 import { FinancieelDashboard } from "@/components/financieel/FinancieelDashboard";
+import { PortugueseTaxCalculator } from "@/components/panden/PortugueseTaxCalculator";
 import { PropertyDocuments } from "@/components/panden/PropertyDocuments";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -274,6 +275,10 @@ const PandDetail = () => {
                 <Palette className="w-4 h-4" />
                 Kunstwerk
               </TabsTrigger>
+              <TabsTrigger value="belasting" className="gap-2">
+                <Receipt className="w-4 h-4" />
+                Belasting
+              </TabsTrigger>
               <TabsTrigger value="documenten" className="gap-2">
                 <FolderOpen className="w-4 h-4" />
                 Documenten
@@ -363,6 +368,14 @@ const PandDetail = () => {
                 persoonlijkeQuote={property.persoonlijke_quote || undefined}
                 fotoUrl={property.foto_url || undefined}
                 onUpdate={fetchProperty}
+              />
+            </TabsContent>
+
+            <TabsContent value="belasting" className="mt-0">
+              <PortugueseTaxCalculator
+                aankoopprijs={Number(property.aankoopprijs)}
+                maandelijksHuur={Number(property.maandelijkse_huur || 0)}
+                imiTarief={property.imi_percentage ? Number(property.imi_percentage) : undefined}
               />
             </TabsContent>
 
