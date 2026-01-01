@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { 
   Sunset, Calculator, Euro, Calendar, TrendingUp, 
-  AlertCircle, CheckCircle2, Target, Clock
+  AlertCircle, CheckCircle2, Target, Clock, Building2, Wallet
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatCard } from "@/components/ui/StatCard";
@@ -22,6 +22,9 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type Profile = Tables<"profiles">;
 type Tenant = Tables<"tenants">;
+type Property = Tables<"properties">;
+type Loan = Tables<"loans">;
+type RecurringExpense = Tables<"recurring_expenses">;
 
 const Pensioen = () => {
   const { user } = useAuth();
@@ -30,6 +33,9 @@ const Pensioen = () => {
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -39,18 +45,27 @@ const Pensioen = () => {
 
   const fetchData = async () => {
     try {
-      const [profileRes, tenantsRes] = await Promise.all([
+      const [profileRes, tenantsRes, propertiesRes, loansRes, recurringRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", user!.id).maybeSingle(),
         supabase.from("tenants").select("*").eq("actief", true),
+        supabase.from("properties").select("*").eq("gearchiveerd", false),
+        supabase.from("loans").select("*"),
+        supabase.from("recurring_expenses").select("*"),
       ]);
 
       if (profileRes.error) throw profileRes.error;
       if (tenantsRes.error) throw tenantsRes.error;
+      if (propertiesRes.error) throw propertiesRes.error;
+      if (loansRes.error) throw loansRes.error;
+      if (recurringRes.error) throw recurringRes.error;
 
       if (profileRes.data) {
         setProfile(profileRes.data);
       }
       setTenants(tenantsRes.data || []);
+      setProperties(propertiesRes.data || []);
+      setLoans(loansRes.data || []);
+      setRecurringExpenses(recurringRes.data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -92,6 +107,42 @@ const Pensioen = () => {
     }
   };
 
+  // Calculate net rental income (bruto - kosten - leningen)
+  const netRentalIncome = useMemo(() => {
+    const grossRentalIncome = tenants.reduce((sum, t) => sum + Number(t.huurbedrag), 0);
+    
+    // Calculate total monthly loan payments
+    const totalMonthlyLoanPayments = loans.reduce((sum, loan) => sum + Number(loan.maandlast || 0), 0);
+    
+    // Calculate monthly recurring expenses (convert based on frequency)
+    const totalMonthlyExpenses = recurringExpenses.reduce((sum, expense) => {
+      const amount = Number(expense.bedrag || 0);
+      const frequency = expense.frequentie || 'maandelijks';
+      
+      switch (frequency) {
+        case 'jaarlijks': return sum + (amount / 12);
+        case 'kwartaal': return sum + (amount / 3);
+        case 'maandelijks': return sum + amount;
+        default: return sum + amount;
+      }
+    }, 0);
+    
+    // Calculate property-level costs (VvE, verzekering, onderhoud, condominium, utilities)
+    const totalPropertyCosts = properties.reduce((sum, property) => {
+      const vve = Number(property.vve_maandbijdrage || 0);
+      const insurance = Number(property.verzekering_jaarlijks || 0) / 12;
+      const maintenance = Number(property.onderhoud_jaarlijks || 0) / 12;
+      const condominium = Number(property.condominium_maandelijks || 0);
+      const electricity = Number(property.elektriciteit_maandelijks || 0);
+      const gas = Number(property.gas_maandelijks || 0);
+      const water = Number(property.water_maandelijks || 0);
+      
+      return sum + vve + insurance + maintenance + condominium + electricity + gas + water;
+    }, 0);
+    
+    return Math.max(0, grossRentalIncome - totalMonthlyLoanPayments - totalMonthlyExpenses - totalPropertyCosts);
+  }, [tenants, loans, recurringExpenses, properties]);
+
   // Calculations
   const currentAge = Number(profile.huidige_leeftijd || 40);
   const retirementAge = Number(profile.gewenste_pensioenleeftijd || 67);
@@ -100,7 +151,7 @@ const Pensioen = () => {
   const aow = Number(profile.aow_maandelijks || 1400);
   const pension = Number(profile.pensioen_maandelijks || 0);
   const otherIncome = Number(profile.overige_inkomsten || 0);
-  const rentalIncome = tenants.reduce((sum, t) => sum + Number(t.huurbedrag), 0);
+  const rentalIncome = netRentalIncome; // Now uses net instead of gross
 
   const pensionGap = calculatePensionGap(desiredIncome, aow, pension, otherIncome, rentalIncome);
   const inflationAdjustedGap = adjustForInflation(pensionGap, yearsToRetirement);
@@ -236,14 +287,14 @@ const Pensioen = () => {
               }}
             />
             <StatCard
-              title="Huurinkomsten"
-              value={`€${rentalIncome.toLocaleString()}`}
+              title="Netto Huurinkomsten"
+              value={`€${Math.round(rentalIncome).toLocaleString()}`}
               subtitle={`${tenants.length} huurders`}
               icon={<Building2 className="w-5 h-5 text-primary" />}
               variant="success"
               tooltip={{
-                title: "Huurinkomsten",
-                content: "Je huidige maandelijkse huurinkomsten uit vastgoed. Dit groeit naarmate je meer panden verhuurt.",
+                title: "Netto Huurinkomsten",
+                content: "Je netto maandelijkse huurinkomsten uit vastgoed na aftrek van hypotheeklasten, terugkerende kosten, VvE-bijdragen, verzekeringen en onderhoud.",
               }}
             />
             <StatCard
@@ -361,5 +412,3 @@ const Pensioen = () => {
 
 export default Pensioen;
 
-// Missing import
-import { Building2, Wallet } from "lucide-react";
