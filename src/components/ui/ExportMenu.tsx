@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download, FileText, Calculator, Heart, ChevronDown, Calendar } from "lucide-react";
+import { Download, FileText, Calculator, Heart, ChevronDown, Calendar, Presentation } from "lucide-react";
 import { format as formatDate, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, subDays } from "date-fns";
 import { nl } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
+import pptxgen from "pptxgenjs";
 
 export type ExportType = "simple" | "accountant" | "partner";
 
@@ -238,6 +239,199 @@ const generateExcel = (data: ExportData, type: ExportType, dateRange?: DateRange
   return workbook;
 };
 
+const generatePowerPoint = (data: ExportData, type: ExportType, dateRange?: DateRange) => {
+  const pptx = new pptxgen();
+  
+  // Set presentation properties
+  pptx.author = "Vastgoed Portfolio";
+  pptx.title = data.title;
+  pptx.subject = type === "partner" ? "Partner Overzicht" : "Vastgoed Analyse";
+  
+  // Define colors
+  const primaryColor = "4A6CF7";
+  const greenColor = "10B981";
+  const redColor = "EF4444";
+  const grayColor = "6B7280";
+  
+  // Title slide
+  const titleSlide = pptx.addSlide();
+  titleSlide.addText(data.title, {
+    x: 0.5,
+    y: 2,
+    w: "90%",
+    h: 1,
+    fontSize: 44,
+    bold: true,
+    color: primaryColor,
+    align: "center",
+  });
+  
+  if (type === "partner") {
+    titleSlide.addText("Ons Vastgoed Overzicht", {
+      x: 0.5,
+      y: 3,
+      w: "90%",
+      h: 0.5,
+      fontSize: 24,
+      color: grayColor,
+      align: "center",
+    });
+  }
+  
+  if (dateRange) {
+    titleSlide.addText(
+      `Periode: ${formatDate(dateRange.from, "d MMM yyyy", { locale: nl })} - ${formatDate(dateRange.to, "d MMM yyyy", { locale: nl })}`,
+      {
+        x: 0.5,
+        y: 4,
+        w: "90%",
+        h: 0.3,
+        fontSize: 14,
+        color: grayColor,
+        align: "center",
+      }
+    );
+  }
+  
+  // Content slides - one per section
+  data.sections.forEach((section, sectionIndex) => {
+    const slide = pptx.addSlide();
+    
+    // Section title
+    slide.addText(section.title, {
+      x: 0.5,
+      y: 0.3,
+      w: "90%",
+      h: 0.6,
+      fontSize: 32,
+      bold: true,
+      color: primaryColor,
+    });
+    
+    // Section explanation (for partner view)
+    if (type === "partner" && section.explanation) {
+      slide.addText(section.explanation, {
+        x: 0.5,
+        y: 1,
+        w: "90%",
+        h: 0.5,
+        fontSize: 14,
+        color: grayColor,
+        italic: true,
+      });
+    }
+    
+    // Items - display as large cards/boxes
+    const startY = type === "partner" && section.explanation ? 1.7 : 1.2;
+    const itemsPerRow = 2;
+    const itemWidth = 4.3;
+    const itemHeight = 1.2;
+    const gapX = 0.4;
+    const gapY = 0.3;
+    
+    section.items.forEach((item, itemIndex) => {
+      const col = itemIndex % itemsPerRow;
+      const row = Math.floor(itemIndex / itemsPerRow);
+      const x = 0.5 + col * (itemWidth + gapX);
+      const y = startY + row * (itemHeight + gapY);
+      
+      // Only show up to 6 items per slide
+      if (row >= 3) return;
+      
+      // Item box
+      slide.addShape("rect", {
+        x,
+        y,
+        w: itemWidth,
+        h: itemHeight,
+        fill: { color: "F8F9FA" },
+        line: { color: "E5E7EB", pt: 1 },
+      });
+      
+      // Item label
+      slide.addText(item.label, {
+        x: x + 0.2,
+        y: y + 0.15,
+        w: itemWidth - 0.4,
+        h: 0.3,
+        fontSize: 12,
+        color: grayColor,
+      });
+      
+      // Item value - large and bold
+      const valueStr = typeof item.value === "number" 
+        ? item.value.toLocaleString("nl-NL") 
+        : String(item.value);
+      
+      slide.addText(valueStr, {
+        x: x + 0.2,
+        y: y + 0.5,
+        w: itemWidth - 0.4,
+        h: 0.5,
+        fontSize: 24,
+        bold: true,
+        color: "1F2937",
+      });
+      
+      // Item explanation (partner view)
+      if (type === "partner" && item.explanation) {
+        slide.addText(`→ ${item.explanation}`, {
+          x: x + 0.2,
+          y: y + 0.9,
+          w: itemWidth - 0.4,
+          h: 0.25,
+          fontSize: 9,
+          color: grayColor,
+          italic: true,
+        });
+      }
+    });
+  });
+  
+  // Summary slide for partner view
+  if (type === "partner") {
+    const summarySlide = pptx.addSlide();
+    
+    summarySlide.addText("Samenvatting", {
+      x: 0.5,
+      y: 0.5,
+      w: "90%",
+      h: 0.6,
+      fontSize: 32,
+      bold: true,
+      color: primaryColor,
+    });
+    
+    summarySlide.addText(
+      "Dit overzicht laat zien hoe vastgoedinvesteringen bijdragen aan onze financiële toekomst.\n\n" +
+      "Elk pand genereert passief inkomen en bouwt vermogen op voor de lange termijn.\n\n" +
+      "Met een gediversifieerde portefeuille spreiden we risico's en creëren we financiële vrijheid.",
+      {
+        x: 0.5,
+        y: 1.5,
+        w: "90%",
+        h: 3,
+        fontSize: 18,
+        color: "374151",
+        align: "center",
+        valign: "top",
+      }
+    );
+    
+    // Add heart icon placeholder
+    summarySlide.addText("❤️", {
+      x: 4.5,
+      y: 4,
+      w: 1,
+      h: 1,
+      fontSize: 48,
+      align: "center",
+    });
+  }
+  
+  return pptx;
+};
+
 type PresetPeriod = "this_month" | "last_month" | "last_3_months" | "this_year" | "last_year" | "last_30_days" | "custom";
 
 const getPresetDateRange = (preset: PresetPeriod): DateRange => {
@@ -278,7 +472,7 @@ export const ExportMenu = ({ data, filename = "export", onDateRangeChange, showD
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<PresetPeriod>("this_month");
   const [dateRange, setDateRange] = useState<DateRange>(getPresetDateRange("this_month"));
-  const [pendingExport, setPendingExport] = useState<{ type: ExportType; format: "pdf" | "excel" } | null>(null);
+  const [pendingExport, setPendingExport] = useState<{ type: ExportType; format: "pdf" | "excel" | "pptx" } | null>(null);
 
   const handlePresetChange = (preset: PresetPeriod) => {
     setSelectedPreset(preset);
@@ -297,7 +491,7 @@ export const ExportMenu = ({ data, filename = "export", onDateRangeChange, showD
     onDateRangeChange?.(newRange);
   };
 
-  const handleExportClick = (type: ExportType, exportFormat: "pdf" | "excel") => {
+  const handleExportClick = (type: ExportType, exportFormat: "pdf" | "excel" | "pptx") => {
     if (showDateFilter) {
       setPendingExport({ type, format: exportFormat });
       setIsDialogOpen(true);
@@ -306,7 +500,7 @@ export const ExportMenu = ({ data, filename = "export", onDateRangeChange, showD
     }
   };
 
-  const executeExport = async (type: ExportType, exportFormat: "pdf" | "excel") => {
+  const executeExport = async (type: ExportType, exportFormat: "pdf" | "excel" | "pptx") => {
     setIsExporting(true);
     
     try {
@@ -321,6 +515,9 @@ export const ExportMenu = ({ data, filename = "export", onDateRangeChange, showD
       if (exportFormat === "pdf") {
         const doc = generatePDF(data, type, showDateFilter ? dateRange : undefined);
         doc.save(`${filename}_${type}_${dateStr}.pdf`);
+      } else if (exportFormat === "pptx") {
+        const pptx = generatePowerPoint(data, type, showDateFilter ? dateRange : undefined);
+        await pptx.writeFile({ fileName: `${filename}_${type}_${dateStr}.pptx` });
       } else {
         const workbook = generateExcel(data, type, showDateFilter ? dateRange : undefined);
         XLSX.writeFile(workbook, `${filename}_${type}_${dateStr}.xlsx`);
@@ -389,6 +586,10 @@ export const ExportMenu = ({ data, filename = "export", onDateRangeChange, showD
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleExportClick("partner", "excel")}>
             Download als Excel
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExportClick("partner", "pptx")}>
+            <Presentation className="w-4 h-4 mr-2" />
+            Download als PowerPoint
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
