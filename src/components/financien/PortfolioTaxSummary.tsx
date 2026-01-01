@@ -19,13 +19,22 @@ import {
 import type { Tables } from "@/integrations/supabase/types";
 
 type Property = Tables<"properties">;
+type Tenant = Tables<"tenants">;
 
 interface PortfolioTaxSummaryProps {
   properties: Property[];
+  tenants?: Tenant[];
 }
 
-export const PortfolioTaxSummary = ({ properties }: PortfolioTaxSummaryProps) => {
+export const PortfolioTaxSummary = ({ properties, tenants = [] }: PortfolioTaxSummaryProps) => {
   const currentYear = new Date().getFullYear();
+
+  // Helper to get total rent for a property from tenants
+  const getTenantRentForProperty = (propertyId: string): number => {
+    return tenants
+      .filter(t => t.property_id === propertyId && t.actief)
+      .reduce((sum, t) => sum + Number(t.huurbedrag || 0), 0);
+  };
 
   // Calculate aggregated tax data for all properties
   const taxSummary = useMemo(() => {
@@ -38,7 +47,11 @@ export const PortfolioTaxSummary = ({ properties }: PortfolioTaxSummaryProps) =>
 
     const propertyTaxes = properties.map(property => {
       const aankoopprijs = Number(property.aankoopprijs) || 0;
-      const maandHuur = Number(property.maandelijkse_huur) || 0;
+      
+      // Use tenant rents if available, otherwise fall back to property's maandelijkse_huur
+      const tenantRent = getTenantRentForProperty(property.id);
+      const maandHuur = tenantRent > 0 ? tenantRent : Number(property.maandelijkse_huur) || 0;
+      
       const vptWaarde = estimateVPT(aankoopprijs, 60); // Estimate VPT at 60% of purchase price
       const imiTarief = Number(property.imi_percentage) || 0.5;
 
@@ -74,7 +87,8 @@ export const PortfolioTaxSummary = ({ properties }: PortfolioTaxSummaryProps) =>
         imt: imtResult,
         imi: imiResult,
         irs: irsResult,
-        heeftHuur: maandHuur > 0
+        heeftHuur: maandHuur > 0,
+        maandHuur
       };
     });
 
@@ -89,7 +103,7 @@ export const PortfolioTaxSummary = ({ properties }: PortfolioTaxSummaryProps) =>
       totalMaandelijksBelasting: (totalIMI + totalIRS) / 12,
       pandenZonderHuur
     };
-  }, [properties]);
+  }, [properties, tenants]);
 
   const formatCurrency = (value: number) => 
     `€${value.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}`;
@@ -155,7 +169,7 @@ export const PortfolioTaxSummary = ({ properties }: PortfolioTaxSummaryProps) =>
         <div className="space-y-3">
           <h3 className="font-medium text-sm text-muted-foreground">Per pand</h3>
           <div className="space-y-2">
-            {taxSummary.propertyTaxes.map(({ property, imt, imi, irs, heeftHuur }) => (
+            {taxSummary.propertyTaxes.map(({ property, imt, imi, irs, heeftHuur, maandHuur }) => (
               <div 
                 key={property.id}
                 className="flex flex-wrap items-center justify-between p-3 bg-muted/30 rounded-lg gap-2"
@@ -163,6 +177,11 @@ export const PortfolioTaxSummary = ({ properties }: PortfolioTaxSummaryProps) =>
                 <div className="flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium text-sm">{property.naam}</span>
+                  {heeftHuur && (
+                    <Badge variant="outline" className="text-xs bg-success/10 text-success">
+                      €{maandHuur.toLocaleString('nl-NL')}/mnd
+                    </Badge>
+                  )}
                   {!heeftHuur && (
                     <Badge variant="outline" className="text-xs bg-warning/10 text-warning">
                       Geen huur

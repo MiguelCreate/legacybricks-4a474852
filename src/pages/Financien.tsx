@@ -494,7 +494,7 @@ const Financien = () => {
               </div>
 
               {/* Tax Summary */}
-              <PortfolioTaxSummary properties={properties} />
+              <PortfolioTaxSummary properties={properties} tenants={tenants} />
 
               {/* Recent Transactions */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
