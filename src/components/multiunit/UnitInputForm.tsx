@@ -99,9 +99,20 @@ export const UnitInputForm = ({ units, onUnitsChange }: UnitInputFormProps) => {
                 </div>
                 <div className="relative">
                   <Input
-                    type="number"
-                    value={unit.oppervlakte_m2}
-                    onChange={(e) => updateUnit(unit.id, "oppervlakte_m2", parseFloat(e.target.value) || 0)}
+                    type="text"
+                    inputMode="decimal"
+                    value={unit.oppervlakte_m2 || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        updateUnit(unit.id, "oppervlakte_m2", 0);
+                      } else {
+                        const parsed = parseFloat(val);
+                        if (!isNaN(parsed)) {
+                          updateUnit(unit.id, "oppervlakte_m2", parsed);
+                        }
+                      }
+                    }}
                     className="h-9 pr-10"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">m²</span>
@@ -117,9 +128,20 @@ export const UnitInputForm = ({ units, onUnitsChange }: UnitInputFormProps) => {
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">€</span>
                   <Input
-                    type="number"
-                    value={unit.maandhuur}
-                    onChange={(e) => updateUnit(unit.id, "maandhuur", parseFloat(e.target.value) || 0)}
+                    type="text"
+                    inputMode="decimal"
+                    value={unit.maandhuur || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        updateUnit(unit.id, "maandhuur", 0);
+                      } else {
+                        const parsed = parseFloat(val);
+                        if (!isNaN(parsed)) {
+                          updateUnit(unit.id, "maandhuur", parsed);
+                        }
+                      }
+                    }}
                     className="h-9 pl-7"
                   />
                 </div>
@@ -213,9 +235,20 @@ export const UnitInputForm = ({ units, onUnitsChange }: UnitInputFormProps) => {
                   <InfoTooltip title="Huurderretentie" content="Gemiddelde duur van huurcontracten in maanden." />
                 </div>
                 <Input
-                  type="number"
-                  value={unit.huurderretentie_maanden}
-                  onChange={(e) => updateUnit(unit.id, "huurderretentie_maanden", parseInt(e.target.value) || 0)}
+                  type="text"
+                  inputMode="numeric"
+                  value={unit.huurderretentie_maanden || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      updateUnit(unit.id, "huurderretentie_maanden", 0);
+                    } else {
+                      const parsed = parseInt(val);
+                      if (!isNaN(parsed)) {
+                        updateUnit(unit.id, "huurderretentie_maanden", parsed);
+                      }
+                    }
+                  }}
                   className="h-9"
                 />
               </div>

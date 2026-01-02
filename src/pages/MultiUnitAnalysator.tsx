@@ -8,6 +8,8 @@ import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Calculator, 
   Building2, 
@@ -22,7 +24,8 @@ import {
   UnitInput, 
   GemeenschappelijkeKosten,
   analyzeMultiUnit,
-  MultiUnitAnalysis
+  MultiUnitAnalysis,
+  calculateIMTForMultiUnit
 } from "@/lib/multiUnitCalculations";
 import { MultiUnitModeToggle } from "@/components/multiunit/MultiUnitModeToggle";
 import { UnitInputForm } from "@/components/multiunit/UnitInputForm";
@@ -51,6 +54,14 @@ const defaultKosten: GemeenschappelijkeKosten = {
   verzekering_jaarlijks: 500,
 };
 
+// Helper to calculate PMT for display
+function calculatePMT(principal: number, annualRate: number, years: number): number {
+  if (principal <= 0 || annualRate <= 0 || years <= 0) return 0;
+  const monthlyRate = annualRate / 100 / 12;
+  const n = years * 12;
+  return principal * (monthlyRate * Math.pow(1 + monthlyRate, n)) / (Math.pow(1 + monthlyRate, n) - 1);
+}
+
 export default function MultiUnitAnalysator() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -66,21 +77,26 @@ export default function MultiUnitAnalysator() {
   const [inputs, setInputs] = useState<MultiUnitInputs>({
     pandNaam: "",
     aankoopprijs: 300000,
-    imt: 15000,
+    imt: 19500, // 6.5% of 300000 for niet-woning
+    imtAutomatisch: true,
     notarisKosten: 4000,
     renovatieKosten: 20000,
     eigenInleg: 85000,
     hypotheekBedrag: 215000,
+    hypotheekMaandlast: 0,
+    maandlastHandmatig: false,
     rentePercentage: 3.5,
     looptijdJaren: 30,
     marktwaarde: 320000,
+    pandType: 'niet-woning',
     units: [
       { ...defaultUnit(), naam: "Unit 1", verdelingsfactor_pct: 33.33 },
       { ...defaultUnit(), id: crypto.randomUUID(), naam: "Unit 2", verdelingsfactor_pct: 33.33 },
       { ...defaultUnit(), id: crypto.randomUUID(), naam: "Unit 3", verdelingsfactor_pct: 33.34 },
     ],
     gemeenschappelijkeKosten: defaultKosten,
-    irsPercentage: 28,
+    irsJaar: new Date().getFullYear(),
+    contractduurJaren: 1,
   });
   
   const [analysis, setAnalysis] = useState<MultiUnitAnalysis | null>(null);
@@ -128,6 +144,24 @@ export default function MultiUnitAnalysator() {
     const result = analyzeMultiUnit(inputs);
     setAnalysis(result);
   }, [inputs]);
+
+  // Auto-calculate IMT when aankoopprijs or pandType changes
+  useEffect(() => {
+    if (inputs.imtAutomatisch) {
+      const calculatedIMT = calculateIMTForMultiUnit(inputs.aankoopprijs, inputs.pandType);
+      setInputs(prev => ({ ...prev, imt: calculatedIMT }));
+    }
+  }, [inputs.aankoopprijs, inputs.pandType, inputs.imtAutomatisch]);
+
+  // Auto-calculate hypotheekBedrag when eigenInleg changes
+  useEffect(() => {
+    const totaalKosten = inputs.aankoopprijs + inputs.notarisKosten + inputs.renovatieKosten + (inputs.imtAutomatisch ? inputs.imt : inputs.imt);
+    const berekendHypotheek = Math.max(0, totaalKosten - inputs.eigenInleg);
+    setInputs(prev => ({ ...prev, hypotheekBedrag: berekendHypotheek }));
+  }, [inputs.eigenInleg, inputs.aankoopprijs, inputs.notarisKosten, inputs.renovatieKosten, inputs.imt, inputs.imtAutomatisch]);
+
+  // Calculate maandlast when not manual
+  const berekendeMaandlast = calculatePMT(inputs.hypotheekBedrag, inputs.rentePercentage, inputs.looptijdJaren);
   
   const updateInput = <K extends keyof MultiUnitInputs>(key: K, value: MultiUnitInputs[K]) => {
     setInputs(prev => ({ ...prev, [key]: value }));
@@ -138,6 +172,21 @@ export default function MultiUnitAnalysator() {
       ...prev,
       gemeenschappelijkeKosten: { ...prev.gemeenschappelijkeKosten, [key]: value }
     }));
+  };
+
+  const handleNumberInput = (
+    value: string,
+    onChange: (val: number) => void
+  ) => {
+    // Allow empty string for clearing the field
+    if (value === '' || value === '-') {
+      onChange(0);
+      return;
+    }
+    const parsed = parseFloat(value);
+    if (!isNaN(parsed)) {
+      onChange(parsed);
+    }
   };
   
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -151,6 +200,7 @@ export default function MultiUnitAnalysator() {
     tooltip,
     prefix,
     suffix,
+    disabled,
   }: { 
     label: string; 
     value: number; 
@@ -158,32 +208,58 @@ export default function MultiUnitAnalysator() {
     tooltip?: string;
     prefix?: string;
     suffix?: string;
-  }) => (
-    <div className="space-y-1.5">
-      <div className="flex items-center gap-1">
-        <Label className="text-sm text-muted-foreground">{label}</Label>
-        {tooltip && <InfoTooltip title={label} content={tooltip} />}
+    disabled?: boolean;
+  }) => {
+    const [localValue, setLocalValue] = useState(value.toString());
+
+    // Sync localValue when external value changes
+    useEffect(() => {
+      setLocalValue(value.toString());
+    }, [value]);
+
+    return (
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1">
+          <Label className="text-sm text-muted-foreground">{label}</Label>
+          {tooltip && <InfoTooltip title={label} content={tooltip} />}
+        </div>
+        <div className="relative">
+          {prefix && (
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+              {prefix}
+            </span>
+          )}
+          <Input
+            type="text"
+            inputMode="decimal"
+            value={localValue}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setLocalValue(newValue);
+              handleNumberInput(newValue, onChange);
+            }}
+            onBlur={() => {
+              // On blur, format to proper number
+              const parsed = parseFloat(localValue);
+              if (!isNaN(parsed)) {
+                setLocalValue(parsed.toString());
+              } else {
+                setLocalValue('0');
+                onChange(0);
+              }
+            }}
+            disabled={disabled}
+            className={`h-10 ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-12' : ''} ${disabled ? 'bg-muted' : ''}`}
+          />
+          {suffix && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+              {suffix}
+            </span>
+          )}
+        </div>
       </div>
-      <div className="relative">
-        {prefix && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-            {prefix}
-          </span>
-        )}
-        <Input
-          type="number"
-          value={value}
-          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-          className={`h-10 ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-12' : ''}`}
-        />
-        {suffix && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-            {suffix}
-          </span>
-        )}
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <AppLayout>
@@ -235,6 +311,27 @@ export default function MultiUnitAnalysator() {
                         className="h-10"
                       />
                     </div>
+                    
+                    {/* Pand Type Selection */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1">
+                        <Label className="text-sm text-muted-foreground">Type Pand</Label>
+                        <InfoTooltip title="Type Pand" content="Selecteer het type pand voor IMT berekening. Niet-woning = 6.5% vast tarief." />
+                      </div>
+                      <Select
+                        value={inputs.pandType}
+                        onValueChange={(v) => updateInput("pandType", v as 'woning' | 'niet-woning')}
+                      >
+                        <SelectTrigger className="h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="niet-woning">Niet-woning (investering) - 6.5%</SelectItem>
+                          <SelectItem value="woning">Woning - progressief tarief</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div className="grid gap-3 sm:grid-cols-2">
                       <InputField
                         label="Aankoopprijs"
@@ -243,13 +340,39 @@ export default function MultiUnitAnalysator() {
                         prefix="€"
                         tooltip="De totale aankoopprijs van het pand"
                       />
-                      <InputField
-                        label="IMT"
-                        value={inputs.imt}
-                        onChange={(v) => updateInput("imt", v)}
-                        prefix="€"
-                        tooltip="Imposto Municipal sobre Transmissões Onerosas de Imóveis"
-                      />
+                      
+                      {/* IMT with auto-calculate toggle */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            <Label className="text-sm text-muted-foreground">IMT</Label>
+                            <InfoTooltip title="IMT" content="Imposto Municipal sobre Transmissões - overdrachtsbelasting bij aankoop. Automatisch berekend volgens Portugese 2025 tarieven." />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">Auto</span>
+                            <Switch
+                              checked={inputs.imtAutomatisch}
+                              onCheckedChange={(v) => updateInput("imtAutomatisch", v)}
+                            />
+                          </div>
+                        </div>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                          <Input
+                            type="text"
+                            inputMode="decimal"
+                            value={inputs.imt}
+                            onChange={(e) => {
+                              if (!inputs.imtAutomatisch) {
+                                handleNumberInput(e.target.value, (v) => updateInput("imt", v));
+                              }
+                            }}
+                            disabled={inputs.imtAutomatisch}
+                            className={`h-10 pl-7 ${inputs.imtAutomatisch ? 'bg-muted' : ''}`}
+                          />
+                        </div>
+                      </div>
+
                       <InputField
                         label="Notariskosten"
                         value={inputs.notarisKosten}
@@ -296,21 +419,32 @@ export default function MultiUnitAnalysator() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent className="space-y-4 pt-0">
+                    <p className="text-xs text-muted-foreground">
+                      Voer je eigen inleg in - het hypotheekbedrag wordt automatisch berekend (totale kosten - eigen inleg).
+                    </p>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <InputField
                         label="Eigen Inleg"
                         value={inputs.eigenInleg}
                         onChange={(v) => updateInput("eigenInleg", v)}
                         prefix="€"
-                        tooltip="Je eigen kapitaal dat je inlegt"
+                        tooltip="Je eigen kapitaal dat je inlegt. Hypotheekbedrag = totale kosten - eigen inleg."
                       />
-                      <InputField
-                        label="Hypotheekbedrag"
-                        value={inputs.hypotheekBedrag}
-                        onChange={(v) => updateInput("hypotheekBedrag", v)}
-                        prefix="€"
-                        tooltip="Het bedrag dat je leent"
-                      />
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-1">
+                          <Label className="text-sm text-muted-foreground">Hypotheekbedrag</Label>
+                          <InfoTooltip title="Hypotheekbedrag" content="Automatisch berekend: aankoopprijs + kosten - eigen inleg" />
+                        </div>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">€</span>
+                          <Input
+                            type="text"
+                            value={inputs.hypotheekBedrag.toLocaleString('nl-NL')}
+                            disabled
+                            className="h-10 pl-7 bg-muted"
+                          />
+                        </div>
+                      </div>
                       <InputField
                         label="Rentepercentage"
                         value={inputs.rentePercentage}
@@ -325,6 +459,40 @@ export default function MultiUnitAnalysator() {
                         suffix="jaar"
                         tooltip="Looptijd van de hypotheek in jaren"
                       />
+                    </div>
+
+                    {/* Maandlast section */}
+                    <div className="pt-2 border-t">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1">
+                          <Label className="text-sm text-muted-foreground">Hypotheek Maandlast</Label>
+                          <InfoTooltip title="Maandlast" content="Kies of je de maandlast automatisch wilt laten berekenen of handmatig wilt invoeren." />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Handmatig</span>
+                          <Switch
+                            checked={inputs.maandlastHandmatig}
+                            onCheckedChange={(v) => updateInput("maandlastHandmatig", v)}
+                          />
+                        </div>
+                      </div>
+                      
+                      {inputs.maandlastHandmatig ? (
+                        <InputField
+                          label=""
+                          value={inputs.hypotheekMaandlast}
+                          onChange={(v) => updateInput("hypotheekMaandlast", v)}
+                          prefix="€"
+                          tooltip="Voer je maandelijkse hypotheeklast in"
+                        />
+                      ) : (
+                        <div className="p-3 bg-muted rounded-md">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Berekende maandlast:</span>
+                            <span className="text-lg font-semibold">€{berekendeMaandlast.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </CollapsibleContent>
@@ -389,13 +557,63 @@ export default function MultiUnitAnalysator() {
                         prefix="€"
                         tooltip="Jaarlijkse verzekeringspremie"
                       />
-                      <InputField
-                        label="IRS Belasting"
-                        value={inputs.irsPercentage}
-                        onChange={(v) => updateInput("irsPercentage", v)}
-                        suffix="%"
-                        tooltip="Belastingpercentage op huurinkomsten"
-                      />
+                    </div>
+
+                    {/* IRS Belasting sectie */}
+                    <div className="pt-3 border-t space-y-3">
+                      <div className="flex items-center gap-1">
+                        <Label className="text-sm font-medium">IRS Belasting (Portugese regels)</Label>
+                        <InfoTooltip title="IRS Belasting" content="De IRS wordt automatisch berekend op basis van het jaar en contractduur. 2026-2029: 10% bij huur ≤€2.300/maand, anders 25%. Vóór 2026: progressief op basis van contractduur." />
+                      </div>
+                      
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">IRS Jaar</Label>
+                          <Select
+                            value={inputs.irsJaar.toString()}
+                            onValueChange={(v) => updateInput("irsJaar", parseInt(v))}
+                          >
+                            <SelectTrigger className="h-10">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[2024, 2025, 2026, 2027, 2028, 2029, 2030].map(year => (
+                                <SelectItem key={year} value={year.toString()}>
+                                  {year} {year >= 2026 && year <= 2029 ? '(nieuw regime)' : year <= 2025 ? '(oud regime)' : ''}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Contractduur (jaren)</Label>
+                          <Select
+                            value={inputs.contractduurJaren.toString()}
+                            onValueChange={(v) => updateInput("contractduurJaren", parseInt(v))}
+                          >
+                            <SelectTrigger className="h-10">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">1 jaar (28%)</SelectItem>
+                              <SelectItem value="2">2-4 jaar (25%)</SelectItem>
+                              <SelectItem value="5">5-9 jaar (15%)</SelectItem>
+                              <SelectItem value="10">10-19 jaar (10%)</SelectItem>
+                              <SelectItem value="20">20+ jaar (5%)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-muted rounded-md">
+                        <p className="text-xs text-muted-foreground">
+                          {inputs.irsJaar >= 2026 && inputs.irsJaar <= 2029 
+                            ? `Nieuw regime (2026-2029): ${inputs.units.reduce((sum, u) => sum + u.maandhuur, 0) / Math.max(1, inputs.units.length) <= 2300 ? '10%' : '25%'} belasting`
+                            : `Oud regime: Tarief op basis van contractduur (${inputs.contractduurJaren < 2 ? '28%' : inputs.contractduurJaren < 5 ? '25%' : inputs.contractduurJaren < 10 ? '15%' : inputs.contractduurJaren < 20 ? '10%' : '5%'})`
+                          }
+                        </p>
+                      </div>
                     </div>
                   </CardContent>
                 </CollapsibleContent>
