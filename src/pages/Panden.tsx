@@ -325,7 +325,7 @@ const Panden = () => {
       gas_maandelijks: (property as any).gas_maandelijks || 0,
       elektriciteit_maandelijks: (property as any).elektriciteit_maandelijks || 0,
       condominium_maandelijks: (property as any).condominium_maandelijks || 0,
-      aantal_units: (property as any).aantal_units || 1,
+      aantal_units: (property as any).aantal_units ?? undefined,
       type_verhuur: property.type_verhuur || "langdurig",
       st_gemiddelde_dagprijs: Number(property.st_gemiddelde_dagprijs) || 0,
       st_bezetting_percentage: Number(property.st_bezetting_percentage) || 0,
