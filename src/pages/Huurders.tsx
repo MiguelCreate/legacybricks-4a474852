@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Plus, Search, Phone, Mail, Star, Euro, Calendar, Building2, Layers, ExternalLink, DoorOpen, Send, Shield, Pencil, MoreVertical, Trash2, Archive } from "lucide-react";
+import { Users, Plus, Search, Phone, Mail, Star, Euro, Calendar, Building2, Layers, ExternalLink, DoorOpen, Send, Shield, Pencil, MoreVertical, Trash2, Archive, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -247,6 +247,22 @@ const Huurders = () => {
     }
   };
 
+  const handleReactivate = async (tenant: Tenant) => {
+    if (!confirm(`Weet je zeker dat je "${tenant.naam}" wilt heractiveren?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from("tenants")
+        .update({ actief: true })
+        .eq("id", tenant.id);
+      if (error) throw error;
+      toast({ title: "Huurder geheractiveerd", description: `${tenant.naam} is weer actief.` });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Fout", description: error.message, variant: "destructive" });
+    }
+  };
+
   const resetForm = () => {
     setEditingTenant(null);
     setFormData({
@@ -466,10 +482,15 @@ const Huurders = () => {
                             <Pencil className="w-4 h-4 mr-2" />
                             Bewerken
                           </DropdownMenuItem>
-                          {tenant.actief && (
+                          {tenant.actief ? (
                             <DropdownMenuItem onClick={() => handleArchive(tenant)}>
                               <Archive className="w-4 h-4 mr-2" />
                               Archiveren
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => handleReactivate(tenant)}>
+                              <RotateCcw className="w-4 h-4 mr-2" />
+                              Heractiveren
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem
