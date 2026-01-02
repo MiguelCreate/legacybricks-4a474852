@@ -1,6 +1,6 @@
 import { 
   Home, Building2, Wallet, MoreHorizontal, Users, Target, Heart, Settings, 
-  ClipboardCheck, Calculator, Wrench, Building, FileText, Snowflake, PiggyBank, Sunset, TrendingUp
+  ClipboardCheck, Calculator, Wrench, Building, FileText, Snowflake, PiggyBank, Sunset, TrendingUp, GraduationCap
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -44,6 +44,12 @@ const moreGroups = [
       { icon: PiggyBank, label: "Vermogen", path: "/vermogen" },
       { icon: Sunset, label: "Pensioen", path: "/pensioen" },
       { icon: Heart, label: "Legacy", path: "/legacy" },
+    ],
+  },
+  {
+    label: "Leren",
+    items: [
+      { icon: GraduationCap, label: "Academy", path: "/academy" },
     ],
   },
   {

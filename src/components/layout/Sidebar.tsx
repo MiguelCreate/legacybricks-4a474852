@@ -1,7 +1,7 @@
 import { 
   Home, Building2, Users, Wallet, Settings, Target, ChevronLeft, ChevronRight, 
   Snowflake, PiggyBank, Sunset, FileText, Heart, ClipboardCheck, Calculator, 
-  Wrench, Building, ChevronDown, TrendingUp
+  Wrench, Building, ChevronDown, TrendingUp, GraduationCap
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -53,13 +53,20 @@ const navGroups: NavGroup[] = [
       { icon: Heart, label: "Legacy", path: "/legacy" },
     ],
   },
+  {
+    label: "Leren",
+    icon: GraduationCap,
+    items: [
+      { icon: GraduationCap, label: "Academy", path: "/academy" },
+    ],
+  },
 ];
 
 export const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [openGroups, setOpenGroups] = useState<string[]>(["Vastgoed", "Analyse", "Vermogensopbouw"]);
+  const [openGroups, setOpenGroups] = useState<string[]>(["Vastgoed", "Analyse", "Vermogensopbouw", "Leren"]);
 
   const toggleGroup = (label: string) => {
     setOpenGroups(prev => 

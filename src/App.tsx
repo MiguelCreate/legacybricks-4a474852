@@ -25,6 +25,7 @@ import Rendementsanalysator from "./pages/Rendementsanalysator";
 import MultiUnitAnalysator from "./pages/MultiUnitAnalysator";
 import Aannemers from "./pages/Aannemers";
 import VvEOverzicht from "./pages/VvEOverzicht";
+import Academy from "./pages/Academy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/multi-unit" element={<ProtectedRoute><MultiUnitAnalysator /></ProtectedRoute>} />
               <Route path="/aannemers" element={<ProtectedRoute><Aannemers /></ProtectedRoute>} />
               <Route path="/vve" element={<ProtectedRoute><VvEOverzicht /></ProtectedRoute>} />
+              <Route path="/academy" element={<ProtectedRoute><Academy /></ProtectedRoute>} />
               <Route path="/instellingen" element={<ProtectedRoute><Instellingen /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
