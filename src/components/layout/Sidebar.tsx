@@ -38,6 +38,7 @@ const navGroups: NavGroup[] = [
     items: [
       { icon: Wallet, label: "Financiën", path: "/financien" },
       { icon: Calculator, label: "Analysator", path: "/analysator" },
+      { icon: Building2, label: "Multi-Unit", path: "/multi-unit" },
     ],
   },
   {
