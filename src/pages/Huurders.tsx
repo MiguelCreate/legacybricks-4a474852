@@ -46,6 +46,7 @@ const Huurders = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"actief" | "gearchiveerd" | "alle">("actief");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [formData, setFormData] = useState<Partial<TablesInsert<"tenants">> & { unit_nummer?: number; borg?: number }>({
@@ -259,10 +260,16 @@ const Huurders = () => {
 
   const selectedPropertyUnits = formData.property_id ? getPropertyUnits(formData.property_id) : 1;
 
-  const filteredTenants = tenants.filter((tenant) =>
-    tenant.naam.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tenant.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTenants = tenants.filter((tenant) => {
+    const matchesSearch = tenant.naam.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tenant.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "alle" 
+      ? true 
+      : statusFilter === "actief" 
+        ? tenant.actief 
+        : !tenant.actief;
+    return matchesSearch && matchesStatus;
+  });
 
   const renderStars = (rating: number | null) => {
     if (!rating) return null;
@@ -311,15 +318,40 @@ const Huurders = () => {
             </Button>
           </div>
 
-          {/* Search */}
-          <div className="relative max-w-md mt-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Zoek op naam of e-mail..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+          {/* Search and Filter */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-6">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Zoek op naam of e-mail..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant={statusFilter === "actief" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("actief")}
+              >
+                Actief ({tenants.filter(t => t.actief).length})
+              </Button>
+              <Button
+                variant={statusFilter === "gearchiveerd" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("gearchiveerd")}
+              >
+                Gearchiveerd ({tenants.filter(t => !t.actief).length})
+              </Button>
+              <Button
+                variant={statusFilter === "alle" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("alle")}
+              >
+                Alle ({tenants.length})
+              </Button>
+            </div>
           </div>
         </header>
 
