@@ -136,13 +136,22 @@ const Huurders = () => {
           description: `${formData.naam} is succesvol bijgewerkt.`,
         });
       } else {
-        const { error } = await supabase.from("tenants").insert(tenantData as any);
+        const { data: newTenant, error } = await supabase
+          .from("tenants")
+          .insert(tenantData as any)
+          .select()
+          .single();
 
         if (error) throw error;
 
+        // Automatically create an incheck checklist for the new tenant
+        if (newTenant) {
+          await createIncheckChecklist(newTenant.property_id, newTenant.naam);
+        }
+
         toast({
           title: "Huurder toegevoegd",
-          description: `${formData.naam} is succesvol toegevoegd.`,
+          description: `${formData.naam} is toegevoegd en een inchecklijst is aangemaakt.`,
         });
       }
 
@@ -155,6 +164,39 @@ const Huurders = () => {
         description: error.message || "Er is iets misgegaan",
         variant: "destructive",
       });
+    }
+  };
+
+  const createIncheckChecklist = async (propertyId: string, tenantName: string) => {
+    try {
+      const defaultIncheckItems = [
+        { id: "1", label: "Sleutels overhandigd", checked: false },
+        { id: "2", label: "Meterstanden genoteerd (water, gas, elektra)", checked: false },
+        { id: "3", label: "Huurcontract ondertekend", checked: false },
+        { id: "4", label: "Borgsom ontvangen", checked: false },
+        { id: "5", label: "Huisregels doorgenomen", checked: false },
+        { id: "6", label: "Noodcontactnummers gedeeld", checked: false },
+        { id: "7", label: "Staat van de woning gefotografeerd", checked: false },
+        { id: "8", label: "Inventarislijst ondertekend", checked: false },
+      ];
+
+      const { error } = await supabase.from("checklists").insert({
+        property_id: propertyId,
+        huurder_naam: tenantName,
+        type: "incheck",
+        datum: new Date().toISOString().split("T")[0],
+        items: {
+          items: defaultIncheckItems,
+          opmerkingen: "",
+          foto_drive_link: "",
+        },
+        voltooid: false,
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error creating incheck checklist:", error);
+      // Don't show error toast as the tenant was already created successfully
     }
   };
 
