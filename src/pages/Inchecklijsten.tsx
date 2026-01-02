@@ -35,6 +35,7 @@ import { nl } from "date-fns/locale";
 
 type Checklist = Tables<"checklists">;
 type Property = Tables<"properties">;
+type Tenant = Tables<"tenants">;
 
 interface ChecklistItem {
   id: string;
@@ -69,6 +70,7 @@ const Inchecklijsten = () => {
   const { toast } = useToast();
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -94,16 +96,19 @@ const Inchecklijsten = () => {
 
   const fetchData = async () => {
     try {
-      const [checklistsRes, propertiesRes] = await Promise.all([
+      const [checklistsRes, propertiesRes, tenantsRes] = await Promise.all([
         supabase.from("checklists").select("*").order("datum", { ascending: false }),
         supabase.from("properties").select("*").eq("gearchiveerd", false),
+        supabase.from("tenants").select("*").eq("actief", true),
       ]);
 
       if (checklistsRes.error) throw checklistsRes.error;
       if (propertiesRes.error) throw propertiesRes.error;
+      if (tenantsRes.error) throw tenantsRes.error;
 
       setChecklists(checklistsRes.data || []);
       setProperties(propertiesRes.data || []);
+      setTenants(tenantsRes.data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -581,13 +586,24 @@ const Inchecklijsten = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Huurder Naam *</Label>
-                  <Input
-                    value={formData.huurder_naam}
-                    onChange={e => setFormData({ ...formData, huurder_naam: e.target.value })}
-                    placeholder="Naam van de huurder"
-                    required
-                  />
+                  <Label>Huurder *</Label>
+                  <Select 
+                    value={formData.huurder_naam} 
+                    onValueChange={value => setFormData({ ...formData, huurder_naam: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecteer een huurder" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tenants
+                        .filter(t => !formData.property_id || t.property_id === formData.property_id)
+                        .map(tenant => (
+                          <SelectItem key={tenant.id} value={tenant.naam}>
+                            {tenant.naam}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

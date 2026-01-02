@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Plus, Search, Phone, Mail, Star, Euro, Calendar, Building2, Layers, ExternalLink, DoorOpen, Send, Shield, Pencil, MoreVertical, Trash2 } from "lucide-react";
+import { Users, Plus, Search, Phone, Mail, Star, Euro, Calendar, Building2, Layers, ExternalLink, DoorOpen, Send, Shield, Pencil, MoreVertical, Trash2, Archive } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -182,6 +182,22 @@ const Huurders = () => {
       const { error } = await supabase.from("tenants").delete().eq("id", tenant.id);
       if (error) throw error;
       toast({ title: "Huurder verwijderd" });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Fout", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleArchive = async (tenant: Tenant) => {
+    if (!confirm(`Weet je zeker dat je "${tenant.naam}" wilt archiveren?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from("tenants")
+        .update({ actief: false })
+        .eq("id", tenant.id);
+      if (error) throw error;
+      toast({ title: "Huurder gearchiveerd", description: `${tenant.naam} is nu inactief.` });
       fetchData();
     } catch (error: any) {
       toast({ title: "Fout", description: error.message, variant: "destructive" });
@@ -376,6 +392,12 @@ const Huurders = () => {
                             <Pencil className="w-4 h-4 mr-2" />
                             Bewerken
                           </DropdownMenuItem>
+                          {tenant.actief && (
+                            <DropdownMenuItem onClick={() => handleArchive(tenant)}>
+                              <Archive className="w-4 h-4 mr-2" />
+                              Archiveren
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             onClick={() => handleDelete(tenant)}
                             className="text-destructive"
