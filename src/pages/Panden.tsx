@@ -40,63 +40,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 type Property = Tables<"properties">;
 type Tenant = Tables<"tenants">;
 type PropertyInsert = TablesInsert<"properties">;
-
-// Zod schema voor panden-formulier validatie
-const propertyFormSchema = z.object({
-  naam: z.string().min(1, "Naam is verplicht").max(100, "Naam mag maximaal 100 tekens zijn"),
-  locatie: z.string().min(1, "Locatie is verplicht").max(200, "Locatie mag maximaal 200 tekens zijn"),
-  status: z.enum(["aankoop", "renovatie", "verhuur", "te_koop"]),
-  aankoopprijs: z.number().min(0, "Aankoopprijs moet 0 of hoger zijn"),
-  oppervlakte_m2: z.number().nullable().optional(),
-  energielabel: z.enum(["A_plus", "A", "B", "C", "D", "E", "F"]).nullable().optional(),
-  waardering: z.number().nullable().optional(),
-  waarom_gekocht: z.string().optional(),
-  google_drive_link: z.string().optional(),
-  maandelijkse_huur: z.number().min(0).optional(),
-  risico_juridisch: z.number().min(1).max(5).optional(),
-  risico_markt: z.number().min(1).max(5).optional(),
-  risico_fiscaal: z.number().min(1).max(5).optional(),
-  risico_fysiek: z.number().min(1).max(5).optional(),
-  risico_operationeel: z.number().min(1).max(5).optional(),
-  water_maandelijks: z.number().min(0).optional(),
-  gas_maandelijks: z.number().min(0).optional(),
-  elektriciteit_maandelijks: z.number().min(0).optional(),
-  condominium_maandelijks: z.number().min(0).optional(),
-  aantal_units: z.number().min(1, "Aantal units moet minimaal 1 zijn"),
-  type_verhuur: z.string().optional(),
-  st_gemiddelde_dagprijs: z.number().min(0).optional(),
-  st_bezetting_percentage: z.number().min(0).max(100).optional(),
-  gas_leverancier: z.string().optional(),
-  gas_contractnummer: z.string().optional(),
-  gas_meternummer: z.string().optional(),
-  water_leverancier: z.string().optional(),
-  water_contractnummer: z.string().optional(),
-  water_meternummer: z.string().optional(),
-  elektriciteit_leverancier: z.string().optional(),
-  elektriciteit_contractnummer: z.string().optional(),
-  elektriciteit_meternummer: z.string().optional(),
-  verzekering_maatschappij: z.string().optional(),
-  verzekering_polisnummer: z.string().optional(),
-  verzekering_dekking: z.string().optional(),
-});
-
-type PropertyFormValues = z.infer<typeof propertyFormSchema>;
 
 const statusConfig = {
   aankoop: { label: "Aankoop", color: "secondary" as const },
@@ -120,44 +68,6 @@ const getHealthColor = (score: number | null) => {
   return "text-destructive bg-destructive/10";
 };
 
-const defaultFormValues: PropertyFormValues = {
-  naam: "",
-  locatie: "",
-  status: "aankoop",
-  aankoopprijs: 0,
-  oppervlakte_m2: null,
-  energielabel: null,
-  waardering: null,
-  waarom_gekocht: "",
-  google_drive_link: "",
-  maandelijkse_huur: 0,
-  risico_juridisch: 1,
-  risico_markt: 1,
-  risico_fiscaal: 1,
-  risico_fysiek: 1,
-  risico_operationeel: 1,
-  water_maandelijks: 0,
-  gas_maandelijks: 0,
-  elektriciteit_maandelijks: 0,
-  condominium_maandelijks: 0,
-  aantal_units: 1,
-  type_verhuur: "langdurig",
-  st_gemiddelde_dagprijs: 0,
-  st_bezetting_percentage: 0,
-  gas_leverancier: "",
-  gas_contractnummer: "",
-  gas_meternummer: "",
-  water_leverancier: "",
-  water_contractnummer: "",
-  water_meternummer: "",
-  elektriciteit_leverancier: "",
-  elektriciteit_contractnummer: "",
-  elektriciteit_meternummer: "",
-  verzekering_maatschappij: "",
-  verzekering_polisnummer: "",
-  verzekering_dekking: "",
-};
-
 const Panden = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -172,10 +82,65 @@ const Panden = () => {
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [adviceProperty, setAdviceProperty] = useState<Property | null>(null);
   const [isAdviceDialogOpen, setIsAdviceDialogOpen] = useState(false);
-
-  const form = useForm<PropertyFormValues>({
-    resolver: zodResolver(propertyFormSchema),
-    defaultValues: defaultFormValues,
+  const [formData, setFormData] = useState<Partial<PropertyInsert> & { 
+    water_maandelijks?: number; 
+    gas_maandelijks?: number; 
+    elektriciteit_maandelijks?: number; 
+    condominium_maandelijks?: number; 
+    aantal_units?: number;
+    type_verhuur?: string;
+    st_gemiddelde_dagprijs?: number;
+    st_bezetting_percentage?: number;
+    // Nutsbedrijven info
+    gas_leverancier?: string;
+    gas_contractnummer?: string;
+    gas_meternummer?: string;
+    water_leverancier?: string;
+    water_contractnummer?: string;
+    water_meternummer?: string;
+    elektriciteit_leverancier?: string;
+    elektriciteit_contractnummer?: string;
+    elektriciteit_meternummer?: string;
+    verzekering_maatschappij?: string;
+    verzekering_polisnummer?: string;
+    verzekering_dekking?: string;
+  }>({
+    naam: "",
+    locatie: "",
+    status: "aankoop",
+    aankoopprijs: 0,
+    oppervlakte_m2: null,
+    energielabel: null,
+    waardering: null,
+    waarom_gekocht: "",
+    google_drive_link: "",
+    maandelijkse_huur: 0,
+    risico_juridisch: 1,
+    risico_markt: 1,
+    risico_fiscaal: 1,
+    risico_fysiek: 1,
+    risico_operationeel: 1,
+    water_maandelijks: 0,
+    gas_maandelijks: 0,
+    elektriciteit_maandelijks: 0,
+    condominium_maandelijks: 0,
+    aantal_units: undefined,
+    type_verhuur: "langdurig",
+    st_gemiddelde_dagprijs: 0,
+    st_bezetting_percentage: 0,
+    // Nutsbedrijven info
+    gas_leverancier: "",
+    gas_contractnummer: "",
+    gas_meternummer: "",
+    water_leverancier: "",
+    water_contractnummer: "",
+    water_meternummer: "",
+    elektriciteit_leverancier: "",
+    elektriciteit_contractnummer: "",
+    elektriciteit_meternummer: "",
+    verzekering_maatschappij: "",
+    verzekering_polisnummer: "",
+    verzekering_dekking: "",
   });
 
   useEffect(() => {
@@ -222,7 +187,9 @@ const Panden = () => {
     }
   };
 
-  const onSubmit = async (data: PropertyFormValues) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!user) return;
 
     try {
@@ -230,41 +197,42 @@ const Panden = () => {
           const { error } = await supabase
             .from("properties")
             .update({
-              naam: data.naam,
-              locatie: data.locatie,
-              status: data.status,
-              aankoopprijs: data.aankoopprijs,
-              oppervlakte_m2: data.oppervlakte_m2,
-              energielabel: data.energielabel,
-              waardering: data.waardering,
-              waarom_gekocht: data.waarom_gekocht,
-              google_drive_link: data.google_drive_link,
-              maandelijkse_huur: data.maandelijkse_huur,
-              risico_juridisch: data.risico_juridisch,
-              risico_markt: data.risico_markt,
-              risico_fiscaal: data.risico_fiscaal,
-              risico_fysiek: data.risico_fysiek,
-              risico_operationeel: data.risico_operationeel,
-              water_maandelijks: data.water_maandelijks,
-              gas_maandelijks: data.gas_maandelijks,
-              elektriciteit_maandelijks: data.elektriciteit_maandelijks,
-              condominium_maandelijks: data.condominium_maandelijks,
-              aantal_units: data.aantal_units,
-              type_verhuur: data.type_verhuur || "langdurig",
-              st_gemiddelde_dagprijs: data.st_gemiddelde_dagprijs || 0,
-              st_bezetting_percentage: data.st_bezetting_percentage || 0,
-              gas_leverancier: data.gas_leverancier || null,
-              gas_contractnummer: data.gas_contractnummer || null,
-              gas_meternummer: data.gas_meternummer || null,
-              water_leverancier: data.water_leverancier || null,
-              water_contractnummer: data.water_contractnummer || null,
-              water_meternummer: data.water_meternummer || null,
-              elektriciteit_leverancier: data.elektriciteit_leverancier || null,
-              elektriciteit_contractnummer: data.elektriciteit_contractnummer || null,
-              elektriciteit_meternummer: data.elektriciteit_meternummer || null,
-              verzekering_maatschappij: data.verzekering_maatschappij || null,
-              verzekering_polisnummer: data.verzekering_polisnummer || null,
-              verzekering_dekking: data.verzekering_dekking || null,
+              naam: formData.naam,
+              locatie: formData.locatie,
+              status: formData.status,
+              aankoopprijs: formData.aankoopprijs,
+              oppervlakte_m2: formData.oppervlakte_m2,
+              energielabel: formData.energielabel,
+              waardering: formData.waardering,
+              waarom_gekocht: formData.waarom_gekocht,
+              google_drive_link: formData.google_drive_link,
+              maandelijkse_huur: formData.maandelijkse_huur,
+              risico_juridisch: formData.risico_juridisch,
+              risico_markt: formData.risico_markt,
+              risico_fiscaal: formData.risico_fiscaal,
+              risico_fysiek: formData.risico_fysiek,
+              risico_operationeel: formData.risico_operationeel,
+              water_maandelijks: formData.water_maandelijks,
+              gas_maandelijks: formData.gas_maandelijks,
+              elektriciteit_maandelijks: formData.elektriciteit_maandelijks,
+              condominium_maandelijks: formData.condominium_maandelijks,
+              aantal_units: formData.aantal_units || 1,
+              type_verhuur: formData.type_verhuur || "langdurig",
+              st_gemiddelde_dagprijs: formData.st_gemiddelde_dagprijs || 0,
+              st_bezetting_percentage: formData.st_bezetting_percentage || 0,
+              // Nutsbedrijven info
+              gas_leverancier: formData.gas_leverancier || null,
+              gas_contractnummer: formData.gas_contractnummer || null,
+              gas_meternummer: formData.gas_meternummer || null,
+              water_leverancier: formData.water_leverancier || null,
+              water_contractnummer: formData.water_contractnummer || null,
+              water_meternummer: formData.water_meternummer || null,
+              elektriciteit_leverancier: formData.elektriciteit_leverancier || null,
+              elektriciteit_contractnummer: formData.elektriciteit_contractnummer || null,
+              elektriciteit_meternummer: formData.elektriciteit_meternummer || null,
+              verzekering_maatschappij: formData.verzekering_maatschappij || null,
+              verzekering_polisnummer: formData.verzekering_polisnummer || null,
+              verzekering_dekking: formData.verzekering_dekking || null,
             } as any)
             .eq("id", editingProperty.id);
 
@@ -272,53 +240,54 @@ const Panden = () => {
 
         toast({
           title: "Pand bijgewerkt",
-          description: `${data.naam} is succesvol bijgewerkt.`,
+          description: `${formData.naam} is succesvol bijgewerkt.`,
         });
       } else {
         const { error } = await supabase.from("properties").insert({
           user_id: user.id,
-          naam: data.naam,
-          locatie: data.locatie,
-          status: data.status,
-          aankoopprijs: data.aankoopprijs,
-          oppervlakte_m2: data.oppervlakte_m2,
-          energielabel: data.energielabel,
-          waardering: data.waardering,
-          waarom_gekocht: data.waarom_gekocht,
-          google_drive_link: data.google_drive_link,
-          maandelijkse_huur: data.maandelijkse_huur || 0,
-          risico_juridisch: data.risico_juridisch || 1,
-          risico_markt: data.risico_markt || 1,
-          risico_fiscaal: data.risico_fiscaal || 1,
-          risico_fysiek: data.risico_fysiek || 1,
-          risico_operationeel: data.risico_operationeel || 1,
-          water_maandelijks: data.water_maandelijks || 0,
-          gas_maandelijks: data.gas_maandelijks || 0,
-          elektriciteit_maandelijks: data.elektriciteit_maandelijks || 0,
-          condominium_maandelijks: data.condominium_maandelijks || 0,
-          aantal_units: data.aantal_units,
-          type_verhuur: data.type_verhuur || "langdurig",
-          st_gemiddelde_dagprijs: data.st_gemiddelde_dagprijs || 0,
-          st_bezetting_percentage: data.st_bezetting_percentage || 0,
-          gas_leverancier: data.gas_leverancier || null,
-          gas_contractnummer: data.gas_contractnummer || null,
-          gas_meternummer: data.gas_meternummer || null,
-          water_leverancier: data.water_leverancier || null,
-          water_contractnummer: data.water_contractnummer || null,
-          water_meternummer: data.water_meternummer || null,
-          elektriciteit_leverancier: data.elektriciteit_leverancier || null,
-          elektriciteit_contractnummer: data.elektriciteit_contractnummer || null,
-          elektriciteit_meternummer: data.elektriciteit_meternummer || null,
-          verzekering_maatschappij: data.verzekering_maatschappij || null,
-          verzekering_polisnummer: data.verzekering_polisnummer || null,
-          verzekering_dekking: data.verzekering_dekking || null,
+          naam: formData.naam || "",
+          locatie: formData.locatie || "",
+          status: formData.status || "aankoop",
+          aankoopprijs: formData.aankoopprijs || 0,
+          oppervlakte_m2: formData.oppervlakte_m2,
+          energielabel: formData.energielabel,
+          waardering: formData.waardering,
+          waarom_gekocht: formData.waarom_gekocht,
+          google_drive_link: formData.google_drive_link,
+          maandelijkse_huur: formData.maandelijkse_huur || 0,
+          risico_juridisch: formData.risico_juridisch || 1,
+          risico_markt: formData.risico_markt || 1,
+          risico_fiscaal: formData.risico_fiscaal || 1,
+          risico_fysiek: formData.risico_fysiek || 1,
+          risico_operationeel: formData.risico_operationeel || 1,
+          water_maandelijks: formData.water_maandelijks || 0,
+          gas_maandelijks: formData.gas_maandelijks || 0,
+          elektriciteit_maandelijks: formData.elektriciteit_maandelijks || 0,
+          condominium_maandelijks: formData.condominium_maandelijks || 0,
+          aantal_units: formData.aantal_units || 1,
+          type_verhuur: formData.type_verhuur || "langdurig",
+          st_gemiddelde_dagprijs: formData.st_gemiddelde_dagprijs || 0,
+          st_bezetting_percentage: formData.st_bezetting_percentage || 0,
+          // Nutsbedrijven info
+          gas_leverancier: formData.gas_leverancier || null,
+          gas_contractnummer: formData.gas_contractnummer || null,
+          gas_meternummer: formData.gas_meternummer || null,
+          water_leverancier: formData.water_leverancier || null,
+          water_contractnummer: formData.water_contractnummer || null,
+          water_meternummer: formData.water_meternummer || null,
+          elektriciteit_leverancier: formData.elektriciteit_leverancier || null,
+          elektriciteit_contractnummer: formData.elektriciteit_contractnummer || null,
+          elektriciteit_meternummer: formData.elektriciteit_meternummer || null,
+          verzekering_maatschappij: formData.verzekering_maatschappij || null,
+          verzekering_polisnummer: formData.verzekering_polisnummer || null,
+          verzekering_dekking: formData.verzekering_dekking || null,
         } as any);
 
         if (error) throw error;
 
         toast({
           title: "Pand toegevoegd",
-          description: `${data.naam} is succesvol toegevoegd aan je portefeuille.`,
+          description: `${formData.naam} is succesvol toegevoegd aan je portefeuille.`,
         });
       }
 
@@ -336,7 +305,7 @@ const Panden = () => {
 
   const handleEdit = (property: Property) => {
     setEditingProperty(property);
-    form.reset({
+    setFormData({
       naam: property.naam,
       locatie: property.locatie,
       status: property.status,
@@ -356,10 +325,11 @@ const Panden = () => {
       gas_maandelijks: (property as any).gas_maandelijks || 0,
       elektriciteit_maandelijks: (property as any).elektriciteit_maandelijks || 0,
       condominium_maandelijks: (property as any).condominium_maandelijks || 0,
-      aantal_units: (property as any).aantal_units || 1,
+      aantal_units: (property as any).aantal_units ?? undefined,
       type_verhuur: property.type_verhuur || "langdurig",
       st_gemiddelde_dagprijs: Number(property.st_gemiddelde_dagprijs) || 0,
       st_bezetting_percentage: Number(property.st_bezetting_percentage) || 0,
+      // Nutsbedrijven info
       gas_leverancier: (property as any).gas_leverancier || "",
       gas_contractnummer: (property as any).gas_contractnummer || "",
       gas_meternummer: (property as any).gas_meternummer || "",
@@ -456,7 +426,44 @@ const Panden = () => {
 
   const resetForm = () => {
     setEditingProperty(null);
-    form.reset(defaultFormValues);
+    setFormData({
+      naam: "",
+      locatie: "",
+      status: "aankoop",
+      aankoopprijs: 0,
+      oppervlakte_m2: null,
+      energielabel: null,
+      waardering: null,
+      waarom_gekocht: "",
+      google_drive_link: "",
+      maandelijkse_huur: 0,
+      risico_juridisch: 1,
+      risico_markt: 1,
+      risico_fiscaal: 1,
+      risico_fysiek: 1,
+      risico_operationeel: 1,
+      water_maandelijks: 0,
+      gas_maandelijks: 0,
+      elektriciteit_maandelijks: 0,
+      condominium_maandelijks: 0,
+      aantal_units: undefined,
+      type_verhuur: "langdurig",
+      st_gemiddelde_dagprijs: 0,
+      st_bezetting_percentage: 0,
+      // Nutsbedrijven info
+      gas_leverancier: "",
+      gas_contractnummer: "",
+      gas_meternummer: "",
+      water_leverancier: "",
+      water_contractnummer: "",
+      water_meternummer: "",
+      elektriciteit_leverancier: "",
+      elektriciteit_contractnummer: "",
+      elektriciteit_meternummer: "",
+      verzekering_maatschappij: "",
+      verzekering_polisnummer: "",
+      verzekering_dekking: "",
+    });
   };
 
   const getTenantsForProperty = (propertyId: string) => {
@@ -839,719 +846,616 @@ const Panden = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="naam"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel className="flex items-center gap-1">
-                        Naam *
-                        <InfoTooltip
-                          title="Pandnaam"
-                          content="Geef je pand een herkenbare naam, zoals 'Casa Lisboa' of 'Appartement Porto'."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="bijv. Casa Lisboa" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="naam">
+                  Naam *
+                  <InfoTooltip
+                    title="Pandnaam"
+                    content="Geef je pand een herkenbare naam, zoals 'Casa Lisboa' of 'Appartement Porto'."
+                  />
+                </Label>
+                <Input
+                  id="naam"
+                  value={formData.naam}
+                  onChange={(e) => setFormData({ ...formData, naam: e.target.value })}
+                  placeholder="bijv. Casa Lisboa"
+                  required
                 />
+              </div>
 
-                <FormField
-                  control={form.control}
-                  name="locatie"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel className="flex items-center gap-1">
-                        Locatie *
-                        <InfoTooltip
-                          title="Locatie"
-                          content="De stad of regio waar het pand zich bevindt."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="bijv. Lissabon, Portugal" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="locatie">
+                  Locatie *
+                  <InfoTooltip
+                    title="Locatie"
+                    content="De stad of regio waar het pand zich bevindt."
+                  />
+                </Label>
+                <Input
+                  id="locatie"
+                  value={formData.locatie}
+                  onChange={(e) => setFormData({ ...formData, locatie: e.target.value })}
+                  placeholder="bijv. Lissabon, Portugal"
+                  required
                 />
+              </div>
 
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status *</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="aankoop">Aankoop</SelectItem>
-                          <SelectItem value="renovatie">Renovatie</SelectItem>
-                          <SelectItem value="verhuur">Verhuurd</SelectItem>
-                          <SelectItem value="te_koop">Te Koop</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <div className="space-y-2">
+                <Label htmlFor="status">Status *</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value: Property["status"]) =>
+                    setFormData({ ...formData, status: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="aankoop">Aankoop</SelectItem>
+                    <SelectItem value="renovatie">Renovatie</SelectItem>
+                    <SelectItem value="verhuur">Verhuurd</SelectItem>
+                    <SelectItem value="te_koop">Te Koop</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="aantal_units">
+                  Aantal Units/Woningen
+                  <InfoTooltip
+                    title="Aantal Units"
+                    content="Hoeveel aparte woningen of verhuurbare eenheden heeft dit pand? Bijv. een flat met 3 appartementen = 3 units."
+                  />
+                </Label>
+                <Input
+                  id="aantal_units"
+                  type="number"
+                  min="1"
+                  value={formData.aantal_units ?? ""}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    const next = raw === "" ? undefined : Number.parseInt(raw, 10);
+                    setFormData({
+                      ...formData,
+                      aantal_units: Number.isFinite(next as number) ? (next as number) : undefined,
+                    });
+                  }}
+                  placeholder="Bijv. 2"
                 />
+              </div>
 
-                <FormField
-                  control={form.control}
-                  name="aantal_units"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1">
-                        Aantal Units/Woningen *
-                        <InfoTooltip
-                          title="Aantal Units"
-                          content="Hoeveel aparte woningen of verhuurbare eenheden heeft dit pand? Bijv. een flat met 3 appartementen = 3 units."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={field.value ?? ""}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            field.onChange(val === "" ? 1 : Number.parseInt(val, 10));
-                          }}
-                          placeholder="Bijv. 2"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Verhuurtype Sectie */}
-                <div className="col-span-2 pt-4 border-t">
-                  <div className="flex items-center gap-2 mb-4">
-                    <h3 className="font-semibold text-foreground">Type Verhuur</h3>
-                    <InfoTooltip
-                      title="Verhuurtype"
-                      content="Kies het type verhuur dat van toepassing is. Dit bepaalt welke velden je invult en hoe inkomsten worden berekend."
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {Object.entries(verhuurTypeConfig).map(([key, config]) => {
-                      const Icon = config.icon;
-                      const isSelected = form.watch("type_verhuur") === key;
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => form.setValue("type_verhuur", key)}
-                          className={`p-3 rounded-lg border text-left transition-all ${
-                            isSelected 
-                              ? 'border-primary bg-primary/10 ring-2 ring-primary/20' 
-                              : 'border-border hover:border-primary/50 hover:bg-accent'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <Icon className={`w-4 h-4 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
-                            <span className={`font-medium text-sm ${isSelected ? 'text-primary' : 'text-foreground'}`}>
-                              {config.label}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">{config.description}</p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Short-term rental velden */}
-                {form.watch("type_verhuur") === 'korte_termijn' && (
-                  <div className="col-span-2 space-y-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-primary" />
-                      <h4 className="font-medium text-foreground">Short-Term Rental Gegevens</h4>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="st_gemiddelde_dagprijs"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="flex items-center gap-2">
-                              <Euro className="w-4 h-4 text-success" />
-                              Gemiddelde Dagprijs (€)
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="0"
-                                value={field.value || ""}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                                placeholder="85"
-                              />
-                            </FormControl>
-                            <p className="text-xs text-muted-foreground">Gemiddelde prijs per nacht over het jaar</p>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="st_bezetting_percentage"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="flex items-center gap-2">
-                              <Percent className="w-4 h-4 text-warning" />
-                              Bezettingsgraad (%)
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={field.value || ""}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                                placeholder="70"
-                              />
-                            </FormControl>
-                            <p className="text-xs text-muted-foreground">% van de tijd dat het pand verhuurd is</p>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    {/* Geschatte maandelijkse inkomsten */}
-                    {form.watch("st_gemiddelde_dagprijs") && form.watch("st_bezetting_percentage") ? (
-                      <div className="p-3 rounded-lg bg-success/10 border border-success/20">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Geschatte maandelijkse inkomsten:</span>
-                          <span className="font-bold text-success">
-                            €{Math.round((form.watch("st_gemiddelde_dagprijs") || 0) * 30 * ((form.watch("st_bezetting_percentage") || 0) / 100)).toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                )}
-
-                {/* Kamerverhuur info */}
-                {form.watch("type_verhuur") === 'kamerverhuur' && (
-                  <div className="col-span-2 p-4 rounded-lg bg-accent/50 border">
-                    <div className="flex items-center gap-2 mb-2">
-                      <DoorOpen className="w-4 h-4 text-primary" />
-                      <h4 className="font-medium text-foreground">Kamerverhuur</h4>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Bij kamerverhuur kun je meerdere huurders toevoegen aan dezelfde woning. 
-                      Gebruik "Aantal Units" om aan te geven hoeveel kamers je verhuurt.
-                      Elke kamer kan aan een aparte huurder worden toegewezen via de Huurders pagina.
-                    </p>
-                  </div>
-                )}
-
-                <FormField
-                  control={form.control}
-                  name="energielabel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Energielabel</FormLabel>
-                      <Select
-                        value={field.value || "none"}
-                        onValueChange={(value) => field.onChange(value === "none" ? null : value)}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecteer..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">Niet bekend</SelectItem>
-                          {energyLabels.map((label) => (
-                            <SelectItem key={label} value={label}>
-                              {label.replace("_plus", "+")}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="aankoopprijs"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1">
-                        Aankoopprijs (€) *
-                        <InfoTooltip
-                          title="Aankoopprijs"
-                          content="De oorspronkelijke aankoopprijs van het pand. Wordt gebruikt voor rendementsberekeningen."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={field.value || ""}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                          placeholder="150000"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="waardering"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Huidige Waarde (€)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={field.value || ""}
-                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                          placeholder="175000"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="oppervlakte_m2"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>Oppervlakte (m²)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={field.value || ""}
-                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                          placeholder="85"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="maandelijkse_huur"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1">
-                        Maandelijkse Huur (€)
-                        <InfoTooltip
-                          title="Maandelijkse Huur"
-                          content="De maandelijkse huurinkomsten van dit pand. Wordt gebruikt voor cashflow en rendementsberekeningen."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={field.value || ""}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                          placeholder="1200"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                {/* Nutsvoorzieningen Section */}
-                <div className="col-span-2 pt-4 border-t">
-                  <div className="flex items-center gap-2 mb-4">
-                    <h3 className="font-semibold text-foreground">Maandelijkse Kosten</h3>
-                    <InfoTooltip
-                      title="Nutsvoorzieningen"
-                      content="Voer de maandelijkse kosten voor water, gas, elektriciteit en VvE/condominium in. Dit helpt bij het berekenen van je netto cashflow."
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="water_maandelijks"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Droplets className="w-4 h-4 text-blue-500" />
-                            Water (€/maand)
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              value={field.value || ""}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
-                              placeholder="25"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="gas_maandelijks"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Flame className="w-4 h-4 text-orange-500" />
-                            Gas (€/maand)
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              value={field.value || ""}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
-                              placeholder="40"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="elektriciteit_maandelijks"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Zap className="w-4 h-4 text-yellow-500" />
-                            Elektriciteit (€/maand)
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              value={field.value || ""}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
-                              placeholder="60"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="condominium_maandelijks"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Home className="w-4 h-4 text-purple-500" />
-                            VvE/Condominium (€/maand)
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              value={field.value || ""}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
-                              placeholder="100"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                {/* Nutsbedrijven Informatie Sectie */}
-                <div className="col-span-2 pt-4 border-t">
-                  <div className="flex items-center gap-2 mb-4">
-                    <h3 className="font-semibold text-foreground">Nutsbedrijven & Verzekering</h3>
-                    <InfoTooltip
-                      title="Leveranciers Info"
-                      content="Bewaar hier de gegevens van je leveranciers, contractnummers en meternummers. Handig voor administratie en bij problemen."
-                    />
-                  </div>
-
-                  {/* Verzekering */}
-                  <div className="p-4 rounded-lg bg-accent/50 border mb-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Shield className="w-4 h-4 text-primary" />
-                      <h4 className="font-medium text-foreground">Verzekering</h4>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <FormField
-                        control={form.control}
-                        name="verzekering_maatschappij"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm">Maatschappij</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="bijv. Allianz" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="verzekering_polisnummer"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm">Polisnummer</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="bijv. POL-123456" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="verzekering_dekking"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm">Dekking</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="bijv. Opstal + Inboedel" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Gas */}
-                  <div className="p-4 rounded-lg bg-orange-500/5 border border-orange-500/20 mb-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Flame className="w-4 h-4 text-orange-500" />
-                      <h4 className="font-medium text-foreground">Gas</h4>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <FormField
-                        control={form.control}
-                        name="gas_leverancier"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm">Leverancier</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="bijv. Vattenfall" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="gas_contractnummer"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm flex items-center gap-1">
-                              <FileText className="w-3 h-3" />
-                              Contractnummer
-                            </FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="bijv. GAS-789012" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="gas_meternummer"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm flex items-center gap-1">
-                              <Gauge className="w-3 h-3" />
-                              Meternummer
-                            </FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="bijv. G001234567" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Elektriciteit */}
-                  <div className="p-4 rounded-lg bg-yellow-500/5 border border-yellow-500/20 mb-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Zap className="w-4 h-4 text-yellow-500" />
-                      <h4 className="font-medium text-foreground">Elektriciteit</h4>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <FormField
-                        control={form.control}
-                        name="elektriciteit_leverancier"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm">Leverancier</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="bijv. Eneco" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="elektriciteit_contractnummer"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm flex items-center gap-1">
-                              <FileText className="w-3 h-3" />
-                              Contractnummer
-                            </FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="bijv. ELK-345678" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="elektriciteit_meternummer"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm flex items-center gap-1">
-                              <Gauge className="w-3 h-3" />
-                              Meternummer
-                            </FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="bijv. E001234567" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Water */}
-                  <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Droplets className="w-4 h-4 text-blue-500" />
-                      <h4 className="font-medium text-foreground">Water</h4>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <FormField
-                        control={form.control}
-                        name="water_leverancier"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm">Leverancier</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="bijv. Vitens" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="water_contractnummer"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm flex items-center gap-1">
-                              <FileText className="w-3 h-3" />
-                              Contractnummer
-                            </FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="bijv. WAT-901234" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="water_meternummer"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm flex items-center gap-1">
-                              <Gauge className="w-3 h-3" />
-                              Meternummer
-                            </FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="bijv. W001234567" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="google_drive_link"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel className="flex items-center gap-1">
-                        Documentenkluis (Google Drive/OneDrive Link)
-                        <InfoTooltip
-                          title="Documentenkluis"
-                          content="Link naar een externe map met al je documenten voor dit pand: contracten, facturen, foto's, etc."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Input {...field} type="url" placeholder="https://drive.google.com/..." />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="waarom_gekocht"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel className="flex items-center gap-1">
-                        Waarom heb je dit pand gekocht?
-                        <InfoTooltip
-                          title="Legacy Notitie"
-                          content="Leg vast waarom je dit pand hebt gekocht. Handig voor jezelf en voor toekomstige overdracht aan familie."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Strategische ligging nabij het centrum, goed huurrendement..."
-                          rows={3}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                {/* Risicokaart */}
-                <div className="col-span-2 pt-4 border-t">
-                  <RisicoKaart
-                    juridisch={form.watch("risico_juridisch") || 1}
-                    markt={form.watch("risico_markt") || 1}
-                    fiscaal={form.watch("risico_fiscaal") || 1}
-                    fysiek={form.watch("risico_fysiek") || 1}
-                    operationeel={form.watch("risico_operationeel") || 1}
-                    onChange={(field, value) => form.setValue(`risico_${field}` as any, value)}
+              {/* Verhuurtype Sectie */}
+              <div className="col-span-2 pt-4 border-t">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="font-semibold text-foreground">Type Verhuur</h3>
+                  <InfoTooltip
+                    title="Verhuurtype"
+                    content="Kies het type verhuur dat van toepassing is. Dit bepaalt welke velden je invult en hoe inkomsten worden berekend."
                   />
                 </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {Object.entries(verhuurTypeConfig).map(([key, config]) => {
+                    const Icon = config.icon;
+                    const isSelected = formData.type_verhuur === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, type_verhuur: key })}
+                        className={`p-3 rounded-lg border text-left transition-all ${
+                          isSelected 
+                            ? 'border-primary bg-primary/10 ring-2 ring-primary/20' 
+                            : 'border-border hover:border-primary/50 hover:bg-accent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <Icon className={`w-4 h-4 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <span className={`font-medium text-sm ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                            {config.label}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{config.description}</p>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                  className="flex-1"
+              {/* Short-term rental velden */}
+              {formData.type_verhuur === 'korte_termijn' && (
+                <div className="col-span-2 space-y-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    <h4 className="font-medium text-foreground">Short-Term Rental Gegevens</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="st_gemiddelde_dagprijs" className="flex items-center gap-2">
+                        <Euro className="w-4 h-4 text-success" />
+                        Gemiddelde Dagprijs (€)
+                      </Label>
+                      <Input
+                        id="st_gemiddelde_dagprijs"
+                        type="number"
+                        min="0"
+                        value={formData.st_gemiddelde_dagprijs || ""}
+                        onChange={(e) =>
+                          setFormData({ ...formData, st_gemiddelde_dagprijs: Number(e.target.value) })
+                        }
+                        placeholder="85"
+                      />
+                      <p className="text-xs text-muted-foreground">Gemiddelde prijs per nacht over het jaar</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="st_bezetting_percentage" className="flex items-center gap-2">
+                        <Percent className="w-4 h-4 text-warning" />
+                        Bezettingsgraad (%)
+                      </Label>
+                      <Input
+                        id="st_bezetting_percentage"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={formData.st_bezetting_percentage || ""}
+                        onChange={(e) =>
+                          setFormData({ ...formData, st_bezetting_percentage: Number(e.target.value) })
+                        }
+                        placeholder="70"
+                      />
+                      <p className="text-xs text-muted-foreground">% van de tijd dat het pand verhuurd is</p>
+                    </div>
+                  </div>
+                  {/* Geschatte maandelijkse inkomsten */}
+                  {formData.st_gemiddelde_dagprijs && formData.st_bezetting_percentage ? (
+                    <div className="p-3 rounded-lg bg-success/10 border border-success/20">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Geschatte maandelijkse inkomsten:</span>
+                        <span className="font-bold text-success">
+                          €{Math.round(formData.st_gemiddelde_dagprijs * 30 * (formData.st_bezetting_percentage / 100)).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+
+              {/* Kamerverhuur info */}
+              {formData.type_verhuur === 'kamerverhuur' && (
+                <div className="col-span-2 p-4 rounded-lg bg-accent/50 border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <DoorOpen className="w-4 h-4 text-primary" />
+                    <h4 className="font-medium text-foreground">Kamerverhuur</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Bij kamerverhuur kun je meerdere huurders toevoegen aan dezelfde woning. 
+                    Gebruik "Aantal Units" om aan te geven hoeveel kamers je verhuurt.
+                    Elke kamer kan aan een aparte huurder worden toegewezen via de Huurders pagina.
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="energielabel">Energielabel</Label>
+                <Select
+                  value={formData.energielabel || "none"}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      energielabel: value === "none" ? null : value as Property["energielabel"],
+                    })
+                  }
                 >
-                  Annuleren
-                </Button>
-                <Button type="submit" className="flex-1 gradient-primary text-primary-foreground">
-                  {editingProperty ? "Opslaan" : "Toevoegen"}
-                </Button>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecteer..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Niet bekend</SelectItem>
+                    {energyLabels.map((label) => (
+                      <SelectItem key={label} value={label}>
+                        {label.replace("_plus", "+")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </form>
-          </Form>
+
+              <div className="space-y-2">
+                <Label htmlFor="aankoopprijs">
+                  Aankoopprijs (€) *
+                  <InfoTooltip
+                    title="Aankoopprijs"
+                    content="De oorspronkelijke aankoopprijs van het pand. Wordt gebruikt voor rendementsberekeningen."
+                  />
+                </Label>
+                <Input
+                  id="aankoopprijs"
+                  type="number"
+                  min="0"
+                  value={formData.aankoopprijs || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, aankoopprijs: Number(e.target.value) })
+                  }
+                  placeholder="150000"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="waardering">Huidige Waarde (€)</Label>
+                <Input
+                  id="waardering"
+                  type="number"
+                  min="0"
+                  value={formData.waardering || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      waardering: e.target.value ? Number(e.target.value) : null,
+                    })
+                  }
+                  placeholder="175000"
+                />
+              </div>
+
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="oppervlakte_m2">Oppervlakte (m²)</Label>
+                <Input
+                  id="oppervlakte_m2"
+                  type="number"
+                  min="0"
+                  value={formData.oppervlakte_m2 || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      oppervlakte_m2: e.target.value ? Number(e.target.value) : null,
+                    })
+                  }
+                  placeholder="85"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="maandelijkse_huur">
+                  Maandelijkse Huur (€)
+                  <InfoTooltip
+                    title="Maandelijkse Huur"
+                    content="De maandelijkse huurinkomsten van dit pand. Wordt gebruikt voor cashflow en rendementsberekeningen."
+                  />
+                </Label>
+                <Input
+                  id="maandelijkse_huur"
+                  type="number"
+                  min="0"
+                  value={formData.maandelijkse_huur || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, maandelijkse_huur: Number(e.target.value) })
+                  }
+                  placeholder="1200"
+                />
+              </div>
+
+              {/* Nutsvoorzieningen Section */}
+              <div className="col-span-2 pt-4 border-t">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="font-semibold text-foreground">Maandelijkse Kosten</h3>
+                  <InfoTooltip
+                    title="Nutsvoorzieningen"
+                    content="Voer de maandelijkse kosten voor water, gas, elektriciteit en VvE/condominium in. Dit helpt bij het berekenen van je netto cashflow."
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="water_maandelijks" className="flex items-center gap-2">
+                      <Droplets className="w-4 h-4 text-blue-500" />
+                      Water (€/maand)
+                    </Label>
+                    <Input
+                      id="water_maandelijks"
+                      type="number"
+                      min="0"
+                      value={formData.water_maandelijks || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, water_maandelijks: Number(e.target.value) })
+                      }
+                      placeholder="25"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gas_maandelijks" className="flex items-center gap-2">
+                      <Flame className="w-4 h-4 text-orange-500" />
+                      Gas (€/maand)
+                    </Label>
+                    <Input
+                      id="gas_maandelijks"
+                      type="number"
+                      min="0"
+                      value={formData.gas_maandelijks || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, gas_maandelijks: Number(e.target.value) })
+                      }
+                      placeholder="40"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="elektriciteit_maandelijks" className="flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-yellow-500" />
+                      Elektriciteit (€/maand)
+                    </Label>
+                    <Input
+                      id="elektriciteit_maandelijks"
+                      type="number"
+                      min="0"
+                      value={formData.elektriciteit_maandelijks || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, elektriciteit_maandelijks: Number(e.target.value) })
+                      }
+                      placeholder="60"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="condominium_maandelijks" className="flex items-center gap-2">
+                      <Home className="w-4 h-4 text-purple-500" />
+                      VvE/Condominium (€/maand)
+                    </Label>
+                    <Input
+                      id="condominium_maandelijks"
+                      type="number"
+                      min="0"
+                      value={formData.condominium_maandelijks || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, condominium_maandelijks: Number(e.target.value) })
+                      }
+                      placeholder="100"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Nutsbedrijven Informatie Sectie */}
+              <div className="col-span-2 pt-4 border-t">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="font-semibold text-foreground">Nutsbedrijven & Verzekering</h3>
+                  <InfoTooltip
+                    title="Leveranciers Info"
+                    content="Bewaar hier de gegevens van je leveranciers, contractnummers en meternummers. Handig voor administratie en bij problemen."
+                  />
+                </div>
+
+                {/* Verzekering */}
+                <div className="p-4 rounded-lg bg-accent/50 border mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Shield className="w-4 h-4 text-primary" />
+                    <h4 className="font-medium text-foreground">Verzekering</h4>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="verzekering_maatschappij" className="text-sm">Maatschappij</Label>
+                      <Input
+                        id="verzekering_maatschappij"
+                        value={formData.verzekering_maatschappij || ""}
+                        onChange={(e) => setFormData({ ...formData, verzekering_maatschappij: e.target.value })}
+                        placeholder="bijv. Allianz"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="verzekering_polisnummer" className="text-sm">Polisnummer</Label>
+                      <Input
+                        id="verzekering_polisnummer"
+                        value={formData.verzekering_polisnummer || ""}
+                        onChange={(e) => setFormData({ ...formData, verzekering_polisnummer: e.target.value })}
+                        placeholder="bijv. POL-123456"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="verzekering_dekking" className="text-sm">Dekking</Label>
+                      <Input
+                        id="verzekering_dekking"
+                        value={formData.verzekering_dekking || ""}
+                        onChange={(e) => setFormData({ ...formData, verzekering_dekking: e.target.value })}
+                        placeholder="bijv. Opstal + Inboedel"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gas */}
+                <div className="p-4 rounded-lg bg-orange-500/5 border border-orange-500/20 mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Flame className="w-4 h-4 text-orange-500" />
+                    <h4 className="font-medium text-foreground">Gas</h4>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="gas_leverancier" className="text-sm">Leverancier</Label>
+                      <Input
+                        id="gas_leverancier"
+                        value={formData.gas_leverancier || ""}
+                        onChange={(e) => setFormData({ ...formData, gas_leverancier: e.target.value })}
+                        placeholder="bijv. Vattenfall"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="gas_contractnummer" className="text-sm flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        Contractnummer
+                      </Label>
+                      <Input
+                        id="gas_contractnummer"
+                        value={formData.gas_contractnummer || ""}
+                        onChange={(e) => setFormData({ ...formData, gas_contractnummer: e.target.value })}
+                        placeholder="bijv. GAS-789012"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="gas_meternummer" className="text-sm flex items-center gap-1">
+                        <Gauge className="w-3 h-3" />
+                        Meternummer
+                      </Label>
+                      <Input
+                        id="gas_meternummer"
+                        value={formData.gas_meternummer || ""}
+                        onChange={(e) => setFormData({ ...formData, gas_meternummer: e.target.value })}
+                        placeholder="bijv. G001234567"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Elektriciteit */}
+                <div className="p-4 rounded-lg bg-yellow-500/5 border border-yellow-500/20 mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Zap className="w-4 h-4 text-yellow-500" />
+                    <h4 className="font-medium text-foreground">Elektriciteit</h4>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="elektriciteit_leverancier" className="text-sm">Leverancier</Label>
+                      <Input
+                        id="elektriciteit_leverancier"
+                        value={formData.elektriciteit_leverancier || ""}
+                        onChange={(e) => setFormData({ ...formData, elektriciteit_leverancier: e.target.value })}
+                        placeholder="bijv. Eneco"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="elektriciteit_contractnummer" className="text-sm flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        Contractnummer
+                      </Label>
+                      <Input
+                        id="elektriciteit_contractnummer"
+                        value={formData.elektriciteit_contractnummer || ""}
+                        onChange={(e) => setFormData({ ...formData, elektriciteit_contractnummer: e.target.value })}
+                        placeholder="bijv. ELK-345678"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="elektriciteit_meternummer" className="text-sm flex items-center gap-1">
+                        <Gauge className="w-3 h-3" />
+                        Meternummer
+                      </Label>
+                      <Input
+                        id="elektriciteit_meternummer"
+                        value={formData.elektriciteit_meternummer || ""}
+                        onChange={(e) => setFormData({ ...formData, elektriciteit_meternummer: e.target.value })}
+                        placeholder="bijv. E001234567"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Water */}
+                <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Droplets className="w-4 h-4 text-blue-500" />
+                    <h4 className="font-medium text-foreground">Water</h4>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="water_leverancier" className="text-sm">Leverancier</Label>
+                      <Input
+                        id="water_leverancier"
+                        value={formData.water_leverancier || ""}
+                        onChange={(e) => setFormData({ ...formData, water_leverancier: e.target.value })}
+                        placeholder="bijv. Vitens"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="water_contractnummer" className="text-sm flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        Contractnummer
+                      </Label>
+                      <Input
+                        id="water_contractnummer"
+                        value={formData.water_contractnummer || ""}
+                        onChange={(e) => setFormData({ ...formData, water_contractnummer: e.target.value })}
+                        placeholder="bijv. WAT-901234"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="water_meternummer" className="text-sm flex items-center gap-1">
+                        <Gauge className="w-3 h-3" />
+                        Meternummer
+                      </Label>
+                      <Input
+                        id="water_meternummer"
+                        value={formData.water_meternummer || ""}
+                        onChange={(e) => setFormData({ ...formData, water_meternummer: e.target.value })}
+                        placeholder="bijv. W001234567"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="google_drive_link">
+                  Documentenkluis (Google Drive/OneDrive Link)
+                  <InfoTooltip
+                    title="Documentenkluis"
+                    content="Link naar een externe map met al je documenten voor dit pand: contracten, facturen, foto's, etc."
+                  />
+                </Label>
+                <Input
+                  id="google_drive_link"
+                  type="url"
+                  value={formData.google_drive_link || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, google_drive_link: e.target.value })
+                  }
+                  placeholder="https://drive.google.com/..."
+                />
+              </div>
+
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="waarom_gekocht">
+                  Waarom heb je dit pand gekocht?
+                  <InfoTooltip
+                    title="Legacy Notitie"
+                    content="Leg vast waarom je dit pand hebt gekocht. Handig voor jezelf en voor toekomstige overdracht aan familie."
+                  />
+                </Label>
+                <Textarea
+                  id="waarom_gekocht"
+                  value={formData.waarom_gekocht || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, waarom_gekocht: e.target.value })
+                  }
+                  placeholder="Strategische ligging nabij het centrum, goed huurrendement..."
+                  rows={3}
+                />
+              </div>
+
+              {/* Risicokaart */}
+              <div className="col-span-2 pt-4 border-t">
+                <RisicoKaart
+                  juridisch={formData.risico_juridisch || 1}
+                  markt={formData.risico_markt || 1}
+                  fiscaal={formData.risico_fiscaal || 1}
+                  fysiek={formData.risico_fysiek || 1}
+                  operationeel={formData.risico_operationeel || 1}
+                  onChange={(field, value) => setFormData({ ...formData, [`risico_${field}`]: value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                className="flex-1"
+              >
+                Annuleren
+              </Button>
+              <Button type="submit" className="flex-1 gradient-primary text-primary-foreground">
+                {editingProperty ? "Opslaan" : "Toevoegen"}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
