@@ -26,13 +26,17 @@ export interface MultiUnitInputs {
   pandNaam: string;
   aankoopprijs: number;
   imt: number;
+  imtAutomatisch: boolean; // Calculate IMT automatically
   notarisKosten: number;
   renovatieKosten: number;
   eigenInleg: number;
   hypotheekBedrag: number;
+  hypotheekMaandlast: number;
+  maandlastHandmatig: boolean; // true = manual input, false = calculate
   rentePercentage: number;
   looptijdJaren: number;
   marktwaarde: number;
+  pandType: 'woning' | 'niet-woning'; // For IMT calculation
   
   // Units
   units: UnitInput[];
@@ -40,8 +44,9 @@ export interface MultiUnitInputs {
   // Gemeenschappelijke kosten
   gemeenschappelijkeKosten: GemeenschappelijkeKosten;
   
-  // Tax settings
-  irsPercentage: number; // e.g., 28%
+  // Tax settings - IRS
+  irsJaar: number; // Year for which IRS is calculated (affects regime)
+  contractduurJaren: number; // Contract duration for old regime
 }
 
 export interface UnitAnalysis {
@@ -137,8 +142,70 @@ function calculateIRR(cashflows: number[], maxIterations: number = 100): number 
   return rate * 100;
 }
 
+// Helper: Calculate IRS percentage based on year and contract duration
+function calculateIRSPercentage(jaar: number, contractduurJaren: number, units: UnitInput[]): number {
+  // Calculate average monthly rent across units
+  const totaalMaandHuur = units.reduce((sum, u) => sum + u.maandhuur, 0);
+  const gemiddeldeMaandHuur = units.length > 0 ? totaalMaandHuur / units.length : 0;
+  
+  // New regime 2026-2029: based on monthly rent threshold €2,300
+  if (jaar >= 2026 && jaar <= 2029) {
+    if (gemiddeldeMaandHuur <= 2300) {
+      return 10; // Reduced rate for affordable housing
+    }
+    return 25; // Standard rate
+  }
+  
+  // Old regime ≤2025 or after 2029: based on contract duration
+  if (contractduurJaren < 2) {
+    return 28; // Short-term
+  } else if (contractduurJaren < 5) {
+    return 25;
+  } else if (contractduurJaren < 10) {
+    return 15;
+  } else if (contractduurJaren < 20) {
+    return 10;
+  } else {
+    return 5; // 20+ years
+  }
+}
+
+// Calculate IMT based on Portuguese 2025 rates
+export function calculateIMTForMultiUnit(
+  aankoopprijs: number,
+  pandType: 'woning' | 'niet-woning' = 'niet-woning'
+): number {
+  if (aankoopprijs <= 0) return 0;
+
+  // Non-residential (investment): 6.5% flat rate
+  if (pandType === 'niet-woning') {
+    return Math.round(aankoopprijs * 0.065 * 100) / 100;
+  }
+
+  // Residential properties - progressive rates
+  let imtBedrag = 0;
+
+  if (aankoopprijs <= 101917) {
+    imtBedrag = 0;
+  } else if (aankoopprijs <= 139412) {
+    imtBedrag = aankoopprijs * 0.02 - 2038.34;
+  } else if (aankoopprijs <= 190086) {
+    imtBedrag = aankoopprijs * 0.05 - 6220.70;
+  } else if (aankoopprijs <= 316772) {
+    imtBedrag = aankoopprijs * 0.07 - 10022.42;
+  } else if (aankoopprijs <= 633453) {
+    imtBedrag = aankoopprijs * 0.08 - 13189.14;
+  } else if (aankoopprijs <= 1102920) {
+    imtBedrag = aankoopprijs * 0.06;
+  } else {
+    imtBedrag = aankoopprijs * 0.075;
+  }
+
+  return Math.max(0, Math.round(imtBedrag * 100) / 100);
+}
+
 export function analyzeMultiUnit(inputs: MultiUnitInputs): MultiUnitAnalysis {
-  const { units, gemeenschappelijkeKosten, eigenInleg, hypotheekBedrag, rentePercentage, looptijdJaren, marktwaarde, aankoopprijs, imt, notarisKosten, renovatieKosten, irsPercentage } = inputs;
+  const { units, gemeenschappelijkeKosten, eigenInleg, hypotheekBedrag, rentePercentage, looptijdJaren, marktwaarde, aankoopprijs, imt, notarisKosten, renovatieKosten, irsJaar, contractduurJaren, maandlastHandmatig, hypotheekMaandlast } = inputs;
   
   // Calculate totals
   const totaleInvestering = aankoopprijs + imt + notarisKosten + renovatieKosten;
@@ -151,8 +218,13 @@ export function analyzeMultiUnit(inputs: MultiUnitInputs): MultiUnitAnalysis {
     (gemeenschappelijkeKosten.onderhoud_jaarlijks / 12) +
     (gemeenschappelijkeKosten.verzekering_jaarlijks / 12);
   
-  // Monthly mortgage payment
-  const maandelijkseHypotheek = calculatePMT(hypotheekBedrag, rentePercentage, looptijdJaren);
+  // Monthly mortgage payment - use manual input or calculate
+  const maandelijkseHypotheek = maandlastHandmatig 
+    ? hypotheekMaandlast 
+    : calculatePMT(hypotheekBedrag, rentePercentage, looptijdJaren);
+  
+  // Calculate IRS percentage based on regime
+  const irsPercentage = calculateIRSPercentage(irsJaar, contractduurJaren, units);
   
   // Analyze each unit
   const unitAnalyses: UnitAnalysis[] = units.map(unit => {
