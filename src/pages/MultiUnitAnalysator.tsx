@@ -20,7 +20,9 @@ import {
   ChevronUp,
   Database,
   RefreshCw,
+  FileDown,
 } from "lucide-react";
+import { generateMultiUnitPDF } from "@/lib/multiUnitPdfExport";
 import { 
   MultiUnitInputs, 
   UnitInput, 
@@ -487,6 +489,15 @@ export default function MultiUnitAnalysator() {
               Analyseer panden met meerdere units - 15+ metrics per unit en totaal
             </p>
           </div>
+          {analysis && (
+            <Button
+              onClick={() => generateMultiUnitPDF(analysis, inputs)}
+              className="gap-2"
+            >
+              <FileDown className="h-4 w-4" />
+              Exporteer PDF
+            </Button>
+          )}
         </div>
 
         {/* Property Selector Card */}
