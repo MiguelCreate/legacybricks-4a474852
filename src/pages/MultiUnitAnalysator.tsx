@@ -18,6 +18,8 @@ import {
   Settings,
   ChevronDown,
   ChevronUp,
+  Database,
+  RefreshCw,
 } from "lucide-react";
 import { 
   MultiUnitInputs, 
@@ -32,6 +34,43 @@ import { UnitInputForm } from "@/components/multiunit/UnitInputForm";
 import { MultiUnitBeginnerView } from "@/components/multiunit/MultiUnitBeginnerView";
 import { MultiUnitAdvancedView } from "@/components/multiunit/MultiUnitAdvancedView";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+interface DatabaseProperty {
+  id: string;
+  naam: string;
+  locatie: string;
+  aankoopprijs: number;
+  eigen_inleg: number | null;
+  maandelijkse_huur: number | null;
+  renovatie_kosten: number | null;
+  notaris_kosten: number | null;
+  imt_betaald: number | null;
+  waardering: number | null;
+  gas_maandelijks: number | null;
+  water_maandelijks: number | null;
+  elektriciteit_maandelijks: number | null;
+  condominium_maandelijks: number | null;
+  onderhoud_jaarlijks: number | null;
+  verzekering_jaarlijks: number | null;
+  aantal_units: number;
+}
+
+interface DatabaseRoom {
+  id: string;
+  naam: string;
+  property_id: string;
+  oppervlakte_m2: number | null;
+  huurprijs: number;
+}
+
+interface DatabaseLoan {
+  id: string;
+  property_id: string;
+  maandlast: number;
+  hoofdsom: number | null;
+  rente_percentage: number | null;
+  looptijd_jaren: number | null;
+}
 
 const defaultUnit = (): UnitInput => ({
   id: crypto.randomUUID(),
@@ -73,6 +112,11 @@ export default function MultiUnitAnalysator() {
     kosten: false,
   });
   
+  // Database properties
+  const [properties, setProperties] = useState<DatabaseProperty[]>([]);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(false);
+  
   // Form inputs
   const [inputs, setInputs] = useState<MultiUnitInputs>({
     pandNaam: "",
@@ -100,6 +144,174 @@ export default function MultiUnitAnalysator() {
   });
   
   const [analysis, setAnalysis] = useState<MultiUnitAnalysis | null>(null);
+
+  // Fetch properties from database
+  const fetchProperties = async () => {
+    if (!user) return;
+    
+    setIsLoadingProperties(true);
+    try {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("id, naam, locatie, aankoopprijs, eigen_inleg, maandelijkse_huur, renovatie_kosten, notaris_kosten, imt_betaald, waardering, gas_maandelijks, water_maandelijks, elektriciteit_maandelijks, condominium_maandelijks, onderhoud_jaarlijks, verzekering_jaarlijks, aantal_units")
+        .eq("user_id", user.id)
+        .order("naam");
+      
+      if (error) throw error;
+      setProperties(data || []);
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+      toast({
+        title: "Fout bij ophalen panden",
+        description: "Kon panden niet laden uit de database.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingProperties(false);
+    }
+  };
+
+  // Load property data when selected
+  const loadPropertyData = async (propertyId: string) => {
+    if (!propertyId) return;
+    
+    const property = properties.find(p => p.id === propertyId);
+    if (!property) return;
+
+    try {
+      // Fetch rooms/units for this property
+      const { data: rooms } = await supabase
+        .from("rooms")
+        .select("id, naam, oppervlakte_m2, huurprijs")
+        .eq("property_id", propertyId);
+
+      // Fetch loans for this property
+      const { data: loans } = await supabase
+        .from("loans")
+        .select("maandlast, hoofdsom, rente_percentage, looptijd_jaren")
+        .eq("property_id", propertyId);
+
+      // Create units from rooms or generate based on aantal_units
+      let units: UnitInput[];
+      if (rooms && rooms.length > 0) {
+        const factor = 100 / rooms.length;
+        units = rooms.map((room, index) => ({
+          id: room.id,
+          naam: room.naam || `Unit ${index + 1}`,
+          oppervlakte_m2: room.oppervlakte_m2 || 50,
+          maandhuur: room.huurprijs || 0,
+          verdelingsfactor_pct: factor,
+          energielabel: "C" as const,
+          huurderretentie_maanden: 12,
+          renovatiebehoeftescore: 3,
+          bezettingsgraad: 95,
+          huurdertype: "langdurig" as const,
+        }));
+      } else {
+        // Generate units based on aantal_units
+        const numUnits = property.aantal_units || 1;
+        const factor = 100 / numUnits;
+        const huurPerUnit = property.maandelijkse_huur ? property.maandelijkse_huur / numUnits : 500;
+        units = Array.from({ length: numUnits }, (_, i) => ({
+          ...defaultUnit(),
+          id: crypto.randomUUID(),
+          naam: `Unit ${i + 1}`,
+          maandhuur: huurPerUnit,
+          verdelingsfactor_pct: factor,
+        }));
+      }
+
+      // Get loan data
+      const loan = loans && loans.length > 0 ? loans[0] : null;
+      const hypotheekBedrag = loan?.hoofdsom || 0;
+      const rentePercentage = loan?.rente_percentage || 3.5;
+      const looptijdJaren = loan?.looptijd_jaren || 30;
+      const maandlast = loan?.maandlast || 0;
+
+      // Calculate eigenInleg if not set
+      const totaalKosten = property.aankoopprijs + (property.notaris_kosten || 0) + (property.renovatie_kosten || 0) + (property.imt_betaald || 0);
+      const eigenInleg = property.eigen_inleg || (totaalKosten - hypotheekBedrag);
+
+      setInputs({
+        pandNaam: property.naam,
+        aankoopprijs: property.aankoopprijs,
+        imt: property.imt_betaald || calculateIMTForMultiUnit(property.aankoopprijs, 'niet-woning'),
+        imtAutomatisch: !property.imt_betaald,
+        notarisKosten: property.notaris_kosten || 0,
+        renovatieKosten: property.renovatie_kosten || 0,
+        eigenInleg: eigenInleg > 0 ? eigenInleg : 0,
+        hypotheekBedrag: hypotheekBedrag,
+        hypotheekMaandlast: maandlast,
+        maandlastHandmatig: maandlast > 0,
+        rentePercentage: rentePercentage,
+        looptijdJaren: looptijdJaren,
+        marktwaarde: property.waardering || property.aankoopprijs,
+        pandType: 'niet-woning',
+        units: units,
+        gemeenschappelijkeKosten: {
+          gas_maandelijks: property.gas_maandelijks || 0,
+          water_maandelijks: property.water_maandelijks || 0,
+          vve_maandelijks: property.condominium_maandelijks || 0,
+          onderhoud_jaarlijks: property.onderhoud_jaarlijks || 0,
+          verzekering_jaarlijks: property.verzekering_jaarlijks || 0,
+        },
+        irsJaar: new Date().getFullYear(),
+        contractduurJaren: 1,
+      });
+
+      toast({
+        title: "Pand geladen",
+        description: `Data van "${property.naam}" is geladen met ${units.length} units.`,
+      });
+    } catch (error) {
+      console.error("Error loading property data:", error);
+      toast({
+        title: "Fout bij laden",
+        description: "Kon pandgegevens niet volledig laden.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fetch properties on mount
+  useEffect(() => {
+    fetchProperties();
+  }, [user]);
+
+  // Handle property selection
+  const handlePropertySelect = (propertyId: string) => {
+    if (propertyId === "new") {
+      setSelectedPropertyId(null);
+      // Reset to default values
+      setInputs({
+        pandNaam: "",
+        aankoopprijs: 300000,
+        imt: 19500,
+        imtAutomatisch: true,
+        notarisKosten: 4000,
+        renovatieKosten: 20000,
+        eigenInleg: 85000,
+        hypotheekBedrag: 215000,
+        hypotheekMaandlast: 0,
+        maandlastHandmatig: false,
+        rentePercentage: 3.5,
+        looptijdJaren: 30,
+        marktwaarde: 320000,
+        pandType: 'niet-woning',
+        units: [
+          { ...defaultUnit(), naam: "Unit 1", verdelingsfactor_pct: 33.33 },
+          { ...defaultUnit(), id: crypto.randomUUID(), naam: "Unit 2", verdelingsfactor_pct: 33.33 },
+          { ...defaultUnit(), id: crypto.randomUUID(), naam: "Unit 3", verdelingsfactor_pct: 33.34 },
+        ],
+        gemeenschappelijkeKosten: defaultKosten,
+        irsJaar: new Date().getFullYear(),
+        contractduurJaren: 1,
+      });
+    } else {
+      setSelectedPropertyId(propertyId);
+      loadPropertyData(propertyId);
+    }
+  };
   
   // Fetch mode preference
   useEffect(() => {
@@ -276,6 +488,59 @@ export default function MultiUnitAnalysator() {
             </p>
           </div>
         </div>
+
+        {/* Property Selector Card */}
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Database className="h-4 w-4 text-primary" />
+              Laad pand uit database
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1">
+                <Select
+                  value={selectedPropertyId || "new"}
+                  onValueChange={handlePropertySelect}
+                >
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Kies een bestaand pand..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">
+                      <span className="flex items-center gap-2">
+                        ➕ Nieuwe analyse (handmatig invoeren)
+                      </span>
+                    </SelectItem>
+                    {properties.map((property) => (
+                      <SelectItem key={property.id} value={property.id}>
+                        <span className="flex items-center gap-2">
+                          <Building2 className="h-3 w-3" />
+                          {property.naam} ({property.aantal_units} units)
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={fetchProperties}
+                disabled={isLoadingProperties}
+                className="h-10 w-10"
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoadingProperties ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
+            {selectedPropertyId && (
+              <p className="text-xs text-muted-foreground mt-2">
+                📊 Data geladen van: {properties.find(p => p.id === selectedPropertyId)?.naam}
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Mode Toggle */}
         <MultiUnitModeToggle mode={mode} onModeChange={handleModeChange} />
