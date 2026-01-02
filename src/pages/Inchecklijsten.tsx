@@ -165,6 +165,8 @@ const Inchecklijsten = () => {
         signatureUrl = await uploadFile(signatureFile, signaturePath);
       }
 
+      const isCompleted = formData.items.every(item => item.checked);
+      
       const checklistData = {
         property_id: formData.property_id,
         huurder_naam: formData.huurder_naam,
@@ -175,7 +177,7 @@ const Inchecklijsten = () => {
           opmerkingen: formData.opmerkingen,
           foto_drive_link: formData.foto_drive_link,
         },
-        voltooid: formData.items.every(item => item.checked),
+        voltooid: isCompleted,
         foto_link: photoUrl,
         handtekening: signatureUrl,
       };
@@ -188,6 +190,11 @@ const Inchecklijsten = () => {
 
         if (error) throw error;
 
+        // If uitcheck (retour) is completed, archive the tenant
+        if (formData.type === "retour" && isCompleted) {
+          await archiveTenantByName(formData.huurder_naam, formData.property_id);
+        }
+
         toast({
           title: "Checklist bijgewerkt",
           description: "De checklist is succesvol opgeslagen.",
@@ -197,9 +204,16 @@ const Inchecklijsten = () => {
 
         if (error) throw error;
 
+        // If uitcheck (retour) is completed, archive the tenant
+        if (formData.type === "retour" && isCompleted) {
+          await archiveTenantByName(formData.huurder_naam, formData.property_id);
+        }
+
         toast({
           title: "Checklist aangemaakt",
-          description: "De inchecklijst is succesvol aangemaakt.",
+          description: formData.type === "retour" && isCompleted 
+            ? "De uitchecklijst is voltooid en de huurder is gearchiveerd."
+            : "De inchecklijst is succesvol aangemaakt.",
         });
       }
 
@@ -212,6 +226,36 @@ const Inchecklijsten = () => {
         description: error.message || "Er is iets misgegaan",
         variant: "destructive",
       });
+    }
+  };
+
+  const archiveTenantByName = async (tenantName: string, propertyId: string) => {
+    try {
+      // Find the tenant by name and property
+      const { data: matchingTenants, error: findError } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("property_id", propertyId)
+        .eq("naam", tenantName)
+        .eq("actief", true);
+
+      if (findError) throw findError;
+
+      if (matchingTenants && matchingTenants.length > 0) {
+        const { error: updateError } = await supabase
+          .from("tenants")
+          .update({ actief: false })
+          .eq("id", matchingTenants[0].id);
+
+        if (updateError) throw updateError;
+
+        toast({
+          title: "Huurder gearchiveerd",
+          description: `${tenantName} is automatisch gearchiveerd na voltooiing van de uitcheck.`,
+        });
+      }
+    } catch (error) {
+      console.error("Error archiving tenant:", error);
     }
   };
 
