@@ -454,7 +454,27 @@ const Dashboard = () => {
                     ) : (
                       <div className="grid md:grid-cols-2 gap-4">
                         {topProperties.map((property) => (
-                          <PropertyCard key={property.id} {...property} />
+                          <PropertyCard 
+                            key={property.id} 
+                            {...property}
+                            onClick={() => navigate(`/panden/${property.id}`)}
+                            onEdit={() => navigate(`/panden?edit=${property.id}`)}
+                            onPin={async () => {
+                              await supabase
+                                .from("properties")
+                                .update({ is_pinned: !property.isPinned })
+                                .eq("id", property.id);
+                              fetchDashboardData();
+                            }}
+                            onArchive={async () => {
+                              await supabase
+                                .from("properties")
+                                .update({ gearchiveerd: true })
+                                .eq("id", property.id);
+                              fetchDashboardData();
+                            }}
+                            onViewDocuments={() => navigate(`/panden/${property.id}?tab=documenten`)}
+                          />
                         ))}
                       </div>
                     )}

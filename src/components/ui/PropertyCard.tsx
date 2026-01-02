@@ -17,6 +17,10 @@ interface PropertyCardProps {
   tenant?: string;
   isPinned?: boolean;
   onClick?: () => void;
+  onEdit?: () => void;
+  onPin?: () => void;
+  onArchive?: () => void;
+  onViewDocuments?: () => void;
 }
 
 const statusConfig = {
@@ -41,6 +45,10 @@ export const PropertyCard = ({
   tenant,
   isPinned,
   onClick,
+  onEdit,
+  onPin,
+  onArchive,
+  onViewDocuments,
 }: PropertyCardProps) => {
   const statusInfo = statusConfig[status];
 
@@ -81,10 +89,10 @@ export const PropertyCard = ({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="glass-strong">
-            <DropdownMenuItem>Bewerken</DropdownMenuItem>
-            <DropdownMenuItem>Pinnen</DropdownMenuItem>
-            <DropdownMenuItem>Documenten</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Archiveren</DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit?.(); }}>Bewerken</DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onPin?.(); }}>{isPinned ? "Losmaken" : "Pinnen"}</DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewDocuments?.(); }}>Documenten</DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onArchive?.(); }} className="text-destructive">Archiveren</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
