@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Plus, Search, Phone, Mail, Star, Euro, Calendar, Building2, Layers, ExternalLink, DoorOpen, Send, Shield, Pencil, MoreVertical, Trash2, Archive, RotateCcw } from "lucide-react";
+import { Users, Plus, Search, Phone, Mail, Star, Euro, Calendar, Building2, Layers, ExternalLink, DoorOpen, Send, Shield, Pencil, MoreVertical, Trash2, Archive, RotateCcw, ClipboardCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 type Tenant = Tables<"tenants">;
 type Property = Tables<"properties">;
 type Room = Tables<"rooms">;
+type Checklist = Tables<"checklists">;
 
 const Huurders = () => {
   const { user } = useAuth();
@@ -44,6 +45,7 @@ const Huurders = () => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"actief" | "gearchiveerd" | "alle">("actief");
@@ -71,19 +73,22 @@ const Huurders = () => {
 
   const fetchData = async () => {
     try {
-      const [tenantsRes, propertiesRes, roomsRes] = await Promise.all([
+      const [tenantsRes, propertiesRes, roomsRes, checklistsRes] = await Promise.all([
         supabase.from("tenants").select("*").order("created_at", { ascending: false }),
         supabase.from("properties").select("*").eq("gearchiveerd", false),
         supabase.from("rooms").select("*"),
+        supabase.from("checklists").select("*"),
       ]);
 
       if (tenantsRes.error) throw tenantsRes.error;
       if (propertiesRes.error) throw propertiesRes.error;
       if (roomsRes.error) throw roomsRes.error;
+      if (checklistsRes.error) throw checklistsRes.error;
 
       setTenants(tenantsRes.data || []);
       setProperties(propertiesRes.data || []);
       setRooms(roomsRes.data || []);
+      setChecklists(checklistsRes.data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -302,6 +307,12 @@ const Huurders = () => {
     return properties.find((p) => p.id === propertyId);
   };
 
+  const getTenantChecklist = (tenant: Tenant) => {
+    return checklists.find(
+      (c) => c.property_id === tenant.property_id && c.huurder_naam === tenant.naam
+    );
+  };
+
   const handleEmailTenant = (tenant: Tenant) => {
     if (!tenant.email) {
       toast({
@@ -447,6 +458,7 @@ const Huurders = () => {
               {filteredTenants.map((tenant, index) => {
                 const property = getProperty(tenant.property_id);
                 const roomName = getRoomName(tenant.room_id);
+                const checklist = getTenantChecklist(tenant);
                 const propertyRooms = getPropertyRooms(tenant.property_id);
 
                 return (
@@ -545,6 +557,23 @@ const Huurders = () => {
                         <Phone className="w-4 h-4" />
                         <span>{tenant.telefoon}</span>
                       </div>
+                    )}
+                    
+                    {/* Checklist link */}
+                    {checklist && (
+                      <button
+                        onClick={() => navigate('/inchecklijsten')}
+                        className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors group w-full text-left"
+                      >
+                        <ClipboardCheck className="w-4 h-4" />
+                        <span className="flex-1">
+                          {checklist.type === 'incheck' ? 'Inchecklijst' : 'Uitchecklijst'}
+                          {checklist.voltooid && (
+                            <Badge variant="success" className="ml-2 text-xs">Voltooid</Badge>
+                          )}
+                        </span>
+                        <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
                     )}
                   </div>
 
