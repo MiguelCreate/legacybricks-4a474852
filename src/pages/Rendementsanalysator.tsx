@@ -51,7 +51,6 @@ import { AnalysatorModeToggle } from "@/components/analysator/AnalysatorModeTogg
 import { BeginnerAnalysatorView } from "@/components/analysator/BeginnerAnalysatorView";
 import { SavedPropertiesPanel } from "@/components/analysator/SavedPropertiesPanel";
 import { TaxCalculator } from "@/components/analysator/TaxCalculator";
-import { AIPropertyAnalyzer } from "@/components/analysator/AIPropertyAnalyzer";
 
 type TimeFrame = "5j" | "10j" | "15j" | "30j";
 
@@ -789,8 +788,6 @@ export default function Rendementsanalysator() {
               </div>
             </InputSection>
 
-            {/* AI Property Analyzer */}
-            <AIPropertyAnalyzer onApplyToAnalyzer={handleLoadProperty} />
 
             {/* Saved Properties Panel */}
             <SavedPropertiesPanel onLoadProperty={handleLoadProperty} />
