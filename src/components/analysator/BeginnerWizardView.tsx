@@ -40,15 +40,11 @@ export function BeginnerWizardView({
   const isResultStep = currentStep === 4;
 
   const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    }
+    setCurrentStep((s) => Math.min(s + 1, steps.length - 1));
   };
 
   const handlePrev = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
+    setCurrentStep((s) => Math.max(s - 1, 0));
   };
 
   return (
@@ -59,17 +55,24 @@ export function BeginnerWizardView({
         onStepClick={setCurrentStep} 
       />
 
-      {isResultStep && analysis ? (
-        <WizardResultStep
-          analysis={analysis}
-          onPrev={handlePrev}
-          propertyName={propertyName}
-          setPropertyName={setPropertyName}
-          propertyLocation={propertyLocation}
-          setPropertyLocation={setPropertyLocation}
-          onSave={onSave}
-          onSwitchToAdvanced={onSwitchToAdvanced}
-        />
+      {isResultStep ? (
+        analysis ? (
+          <WizardResultStep
+            analysis={analysis}
+            inputs={inputs}
+            onPrev={handlePrev}
+            propertyName={propertyName}
+            setPropertyName={setPropertyName}
+            propertyLocation={propertyLocation}
+            setPropertyLocation={setPropertyLocation}
+            onSave={onSave}
+            onSwitchToAdvanced={onSwitchToAdvanced}
+          />
+        ) : (
+          <div className="rounded-lg border bg-card p-6 text-sm text-muted-foreground">
+            Berekening laden...
+          </div>
+        )
       ) : (
         <WizardInputStep
           step={currentStep}

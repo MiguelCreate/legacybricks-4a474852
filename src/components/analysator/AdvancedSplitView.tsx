@@ -169,17 +169,60 @@ export function AdvancedSplitView({
                     </SelectContent>
                   </Select>
                 </div>
+
                 {(inputs.mortgageInputType || "ltv") === "ltv" ? (
                   <CompactInput label="LTV" value={inputs.ltv} onChange={(v) => updateInput("ltv", v)} suffix="%" />
                 ) : (
-                  <CompactInput label="Eigen inleg" value={inputs.downpayment || 0} onChange={(v) => {
-                    updateInput("downpayment", v);
-                    const ltv = inputs.purchasePrice > 0 ? ((inputs.purchasePrice - v) / inputs.purchasePrice) * 100 : 0;
-                    updateInput("ltv", Math.max(0, Math.min(100, ltv)));
-                  }} prefix="€" />
+                  <CompactInput
+                    label="Eigen inleg"
+                    value={inputs.downpayment || 0}
+                    onChange={(v) => {
+                      updateInput("downpayment", v);
+                      const ltv = inputs.purchasePrice > 0 ? ((inputs.purchasePrice - v) / inputs.purchasePrice) * 100 : 0;
+                      updateInput("ltv", Math.max(0, Math.min(100, ltv)));
+                    }}
+                    prefix="€"
+                  />
                 )}
+
                 <CompactInput label="Rente" value={inputs.interestRate} onChange={(v) => updateInput("interestRate", v)} suffix="%" />
                 <CompactInput label="Looptijd" value={inputs.loanTermYears} onChange={(v) => updateInput("loanTermYears", v)} suffix="jr" />
+
+                {(() => {
+                  const mortgageType = inputs.mortgageInputType || "ltv";
+                  const loanAmount =
+                    mortgageType === "downpayment"
+                      ? Math.max(0, inputs.purchasePrice - Number(inputs.downpayment ?? 0))
+                      : inputs.purchasePrice * (inputs.ltv / 100);
+                  const calcPMT = (principal: number, annualRate: number, years: number) => {
+                    if (principal <= 0 || years <= 0) return 0;
+                    if (annualRate <= 0) return principal / (years * 12);
+                    const monthlyRate = annualRate / 100 / 12;
+                    const numPayments = years * 12;
+                    return (
+                      principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+                      (Math.pow(1 + monthlyRate, numPayments) - 1)
+                    );
+                  };
+                  const calculatedMonthlyMortgage = calcPMT(loanAmount, inputs.interestRate, inputs.loanTermYears);
+                  const monthlyMortgage = inputs.monthlyMortgageOverride ?? calculatedMonthlyMortgage;
+
+                  return (
+                    <>
+                      <CompactInput
+                        label="Maandlast"
+                        value={monthlyMortgage}
+                        onChange={(v) => updateInput("monthlyMortgageOverride", v)}
+                        prefix="€"
+                        tooltip="Standaard berekend. Pas aan als je een afwijkende maandlast hebt."
+                      />
+                      <div className="rounded-md bg-secondary/30 p-2">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Hypotheek (berekend)</p>
+                        <p className="text-sm font-semibold">€{Math.round(loanAmount).toLocaleString("nl-NL")}</p>
+                      </div>
+                    </>
+                  );
+                })()}
               </CardContent>
             </Card>
 

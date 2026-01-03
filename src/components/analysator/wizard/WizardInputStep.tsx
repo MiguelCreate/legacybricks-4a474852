@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,6 +6,17 @@ import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { AnalysisInputs } from "@/lib/rendementsCalculations";
+
+const calcPMT = (principal: number, annualRate: number, years: number) => {
+  if (principal <= 0 || years <= 0) return 0;
+  if (annualRate <= 0) return principal / (years * 12);
+  const monthlyRate = annualRate / 100 / 12;
+  const numPayments = years * 12;
+  return (
+    principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+    (Math.pow(1 + monthlyRate, numPayments) - 1)
+  );
+};
 
 interface WizardInputStepProps {
   step: number;
@@ -109,18 +120,27 @@ export function WizardInputStep({ step, inputs, updateInput, onNext, onPrev, isF
             </div>
           </div>
         );
-      case 1:
+      case 1: {
+        const mortgageType = inputs.mortgageInputType || "ltv";
+        const loanAmount =
+          mortgageType === "downpayment"
+            ? Math.max(0, inputs.purchasePrice - Number(inputs.downpayment ?? 0))
+            : inputs.purchasePrice * (inputs.ltv / 100);
+        const calculatedMonthlyMortgage = calcPMT(loanAmount, inputs.interestRate, inputs.loanTermYears);
+        const monthlyMortgage = inputs.monthlyMortgageOverride ?? calculatedMonthlyMortgage;
+
         return (
           <div className="space-y-6">
             <div>
               <CardTitle className="text-lg mb-1">🏦 Financiering</CardTitle>
               <CardDescription>Hoe financier je de aankoop?</CardDescription>
             </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">Financieringswijze</Label>
-                <Select 
-                  value={inputs.mortgageInputType || "ltv"} 
+                <Select
+                  value={inputs.mortgageInputType || "ltv"}
                   onValueChange={(v) => updateInput("mortgageInputType", v)}
                 >
                   <SelectTrigger className="h-9">
@@ -132,7 +152,8 @@ export function WizardInputStep({ step, inputs, updateInput, onNext, onPrev, isF
                   </SelectContent>
                 </Select>
               </div>
-              {(inputs.mortgageInputType || "ltv") === "ltv" ? (
+
+              {mortgageType === "ltv" ? (
                 <CompactInput
                   label="LTV (Loan-to-Value)"
                   value={inputs.ltv}
@@ -146,13 +167,14 @@ export function WizardInputStep({ step, inputs, updateInput, onNext, onPrev, isF
                   value={inputs.downpayment || 0}
                   onChange={(v) => {
                     updateInput("downpayment", v);
-                    const loanAmount = inputs.purchasePrice - v;
-                    const ltv = inputs.purchasePrice > 0 ? (loanAmount / inputs.purchasePrice) * 100 : 0;
+                    const newLoanAmount = inputs.purchasePrice - v;
+                    const ltv = inputs.purchasePrice > 0 ? (newLoanAmount / inputs.purchasePrice) * 100 : 0;
                     updateInput("ltv", Math.max(0, Math.min(100, ltv)));
                   }}
                   prefix="€"
                 />
               )}
+
               <CompactInput
                 label="Rente"
                 value={inputs.interestRate}
@@ -165,9 +187,23 @@ export function WizardInputStep({ step, inputs, updateInput, onNext, onPrev, isF
                 onChange={(v) => updateInput("loanTermYears", v)}
                 suffix="jaar"
               />
+
+              <CompactInput
+                label="Maandlast hypotheek"
+                value={monthlyMortgage}
+                onChange={(v) => updateInput("monthlyMortgageOverride", v)}
+                prefix="€"
+                tooltip="Standaard berekend op basis van rente + looptijd. Pas aan als je een afwijkende maandlast verwacht."
+              />
+
+              <div className="rounded-lg bg-secondary/30 p-3 sm:col-span-2">
+                <p className="text-xs text-muted-foreground">Hypotheek (berekend)</p>
+                <p className="text-lg font-semibold">€{Math.round(loanAmount).toLocaleString("nl-NL")}</p>
+              </div>
             </div>
           </div>
         );
+      }
       case 2:
         return (
           <div className="space-y-6">
@@ -297,24 +333,26 @@ export function WizardInputStep({ step, inputs, updateInput, onNext, onPrev, isF
     <Card className="shadow-card">
       <CardContent className="pt-6">
         {renderStepContent()}
-        <div className="flex justify-between mt-6 pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={onPrev}
-            disabled={isFirst}
-            className="gap-2"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Vorige
-          </Button>
-          <Button
-            onClick={onNext}
-            className="gap-2"
-          >
-            {isLast ? "Bekijk Resultaten" : "Volgende"}
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
+         <div className="flex justify-between mt-6 pt-4 border-t">
+           <Button
+             type="button"
+             variant="outline"
+             onClick={onPrev}
+             disabled={isFirst}
+             className="gap-2"
+           >
+             <ChevronLeft className="w-4 h-4" />
+             Vorige
+           </Button>
+           <Button
+             type="button"
+             onClick={onNext}
+             className="gap-2"
+           >
+             {isLast ? "Bekijk Resultaten" : "Volgende"}
+             <ChevronRight className="w-4 h-4" />
+           </Button>
+         </div>
       </CardContent>
     </Card>
   );
