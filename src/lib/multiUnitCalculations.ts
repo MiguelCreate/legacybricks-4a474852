@@ -1,4 +1,5 @@
 // Multi-Unit Investment Analysis Calculations
+import { calculateIMT2025 } from './portugueseTaxCalculations';
 
 export interface UnitInput {
   id: string;
@@ -170,38 +171,15 @@ function calculateIRSPercentage(jaar: number, contractduurJaren: number, units: 
   }
 }
 
-// Calculate IMT based on Portuguese 2025 rates
+// Calculate IMT based on Portuguese 2026 rates
+// Uses calculateIMT2025 from portugueseTaxCalculations for consistency
+
 export function calculateIMTForMultiUnit(
   aankoopprijs: number,
   pandType: 'woning' | 'niet-woning' = 'niet-woning'
 ): number {
-  if (aankoopprijs <= 0) return 0;
-
-  // Non-residential (investment): 6.5% flat rate
-  if (pandType === 'niet-woning') {
-    return Math.round(aankoopprijs * 0.065 * 100) / 100;
-  }
-
-  // Residential properties - progressive rates
-  let imtBedrag = 0;
-
-  if (aankoopprijs <= 101917) {
-    imtBedrag = 0;
-  } else if (aankoopprijs <= 139412) {
-    imtBedrag = aankoopprijs * 0.02 - 2038.34;
-  } else if (aankoopprijs <= 190086) {
-    imtBedrag = aankoopprijs * 0.05 - 6220.70;
-  } else if (aankoopprijs <= 316772) {
-    imtBedrag = aankoopprijs * 0.07 - 10022.42;
-  } else if (aankoopprijs <= 633453) {
-    imtBedrag = aankoopprijs * 0.08 - 13189.14;
-  } else if (aankoopprijs <= 1102920) {
-    imtBedrag = aankoopprijs * 0.06;
-  } else {
-    imtBedrag = aankoopprijs * 0.075;
-  }
-
-  return Math.max(0, Math.round(imtBedrag * 100) / 100);
+  const result = calculateIMT2025(aankoopprijs, pandType);
+  return result.bedrag;
 }
 
 export function analyzeMultiUnit(inputs: MultiUnitInputs): MultiUnitAnalysis {

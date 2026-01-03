@@ -12,6 +12,18 @@ export interface IMTResult {
   uitleg: string;
 }
 
+/**
+ * IMT 2026 progressive brackets for "woning" (residential):
+ * - Tot €106.346 → 0%
+ * - €106.347 – €145.470 → 2% marginaal
+ * - €145.471 – €198.347 → 5% marginaal  
+ * - €198.348 – €330.539 → 7% marginaal
+ * - €330.540 – €633.453 → 8% marginaal
+ * - €633.454 – €1.102.920 → 6% taxa única
+ * - Boven €1.102.920 → 7,5% taxa única
+ * 
+ * For "niet-woning" (investment): flat 6.5%
+ */
 export function calculateIMT2025(
   aankoopprijs: number,
   pandType: 'woning' | 'niet-woning' = 'niet-woning'
@@ -26,9 +38,8 @@ export function calculateIMT2025(
     };
   }
 
-  // 2025 rates for non-residential (investment) properties
+  // Non-residential (investment): 6.5% flat rate (taxa única)
   if (pandType === 'niet-woning') {
-    // Non-residential: 6.5% flat rate (taxa única)
     const imtBedrag = aankoopprijs * 0.065;
     return {
       bedrag: Math.round(imtBedrag * 100) / 100,
@@ -39,39 +50,61 @@ export function calculateIMT2025(
     };
   }
 
-  // 2025 rates for residential properties (woning)
-  // Progressive rates with deductions
+  // 2026 progressive rates for residential properties (woning)
+  // Using progressive bracket calculation
   let imtBedrag = 0;
   let marginaalTarief = 0;
   let taxaUnica = false;
   let uitleg = '';
 
-  if (aankoopprijs <= 101917) {
+  // Bracket thresholds (2026 projection)
+  const BRACKET_1 = 106346;  // 0%
+  const BRACKET_2 = 145470;  // 2% marginaal
+  const BRACKET_3 = 198347;  // 5% marginaal
+  const BRACKET_4 = 330539;  // 7% marginaal
+  const BRACKET_5 = 633453;  // 8% marginaal
+  const BRACKET_6 = 1102920; // 6% taxa única above this
+  // Above BRACKET_6: 7.5% taxa única
+
+  if (aankoopprijs <= BRACKET_1) {
+    // Tot €106.346 → 0%
     imtBedrag = 0;
     marginaalTarief = 0;
-    uitleg = 'Vrijgesteld tot €101.917 voor woningen.';
-  } else if (aankoopprijs <= 139412) {
-    imtBedrag = aankoopprijs * 0.02 - 2038.34;
+    uitleg = 'Vrijgesteld tot €106.346 voor woningen.';
+  } else if (aankoopprijs <= BRACKET_2) {
+    // €106.347 – €145.470 → 2% marginaal
+    // Progressive calculation: 0% on first bracket, 2% on excess
+    imtBedrag = (aankoopprijs - BRACKET_1) * 0.02;
     marginaalTarief = 2;
-    uitleg = 'Progressief tarief 2% met aftrek.';
-  } else if (aankoopprijs <= 190086) {
-    imtBedrag = aankoopprijs * 0.05 - 6220.70;
+    uitleg = 'Progressief tarief: 0% tot €106.346, daarna 2%.';
+  } else if (aankoopprijs <= BRACKET_3) {
+    // €145.471 – €198.347 → 5% marginaal
+    imtBedrag = (BRACKET_2 - BRACKET_1) * 0.02 + (aankoopprijs - BRACKET_2) * 0.05;
     marginaalTarief = 5;
-    uitleg = 'Progressief tarief 5% met aftrek.';
-  } else if (aankoopprijs <= 316772) {
-    imtBedrag = aankoopprijs * 0.07 - 10022.42;
+    uitleg = 'Progressief tarief: 2% tot €145.470, daarna 5%.';
+  } else if (aankoopprijs <= BRACKET_4) {
+    // €198.348 – €330.539 → 7% marginaal
+    imtBedrag = (BRACKET_2 - BRACKET_1) * 0.02 + 
+                (BRACKET_3 - BRACKET_2) * 0.05 + 
+                (aankoopprijs - BRACKET_3) * 0.07;
     marginaalTarief = 7;
-    uitleg = 'Progressief tarief 7% met aftrek.';
-  } else if (aankoopprijs <= 633453) {
-    imtBedrag = aankoopprijs * 0.08 - 13189.14;
+    uitleg = 'Progressief tarief: 5% tot €198.347, daarna 7%.';
+  } else if (aankoopprijs <= BRACKET_5) {
+    // €330.540 – €633.453 → 8% marginaal
+    imtBedrag = (BRACKET_2 - BRACKET_1) * 0.02 + 
+                (BRACKET_3 - BRACKET_2) * 0.05 + 
+                (BRACKET_4 - BRACKET_3) * 0.07 +
+                (aankoopprijs - BRACKET_4) * 0.08;
     marginaalTarief = 8;
-    uitleg = 'Progressief tarief 8% met aftrek.';
-  } else if (aankoopprijs <= 1102920) {
+    uitleg = 'Progressief tarief: 7% tot €330.539, daarna 8%.';
+  } else if (aankoopprijs <= BRACKET_6) {
+    // €633.454 – €1.102.920 → 6% taxa única
     imtBedrag = aankoopprijs * 0.06;
     marginaalTarief = 6;
     taxaUnica = true;
-    uitleg = 'Taxa única 6% voor woningen boven €633.453.';
+    uitleg = 'Taxa única 6% voor woningen €633.454 – €1.102.920.';
   } else {
+    // Boven €1.102.920 → 7,5% taxa única
     imtBedrag = aankoopprijs * 0.075;
     marginaalTarief = 7.5;
     taxaUnica = true;
@@ -83,7 +116,7 @@ export function calculateIMT2025(
   return {
     bedrag: Math.max(0, Math.round(imtBedrag * 100) / 100),
     marginaalTarief,
-    gemiddeldTarief: Math.round(gemiddeldTarief * 100) / 100,
+    gemiddeldTarief: Math.round(gemiddeldTarief * 10000) / 10000, // 4 decimals for accuracy
     taxaUnica,
     uitleg
   };

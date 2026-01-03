@@ -108,41 +108,50 @@ export function calculateCashOnCash(annualNetCashflow: number, ownCapital: numbe
 }
 
 /**
- * Calculate IMT (transfer tax) for Portugal
- * Progressive rates for residential property
+ * Calculate IMT (transfer tax) for Portugal - 2026 rates
+ * Progressive rates for residential property ("woning")
+ * Flat 6.5% for investment property ("niet-woning")
  */
 export function calculateIMT(purchasePrice: number, isFirstHome: boolean = false): number {
   if (purchasePrice <= 0) return 0;
   
-  // 2024 rates for residential property in Portugal mainland
-  const brackets = isFirstHome
-    ? [
-        { limit: 101917, rate: 0, deduction: 0 },
-        { limit: 139412, rate: 0.02, deduction: 2038.34 },
-        { limit: 190086, rate: 0.05, deduction: 6220.70 },
-        { limit: 316772, rate: 0.07, deduction: 10022.42 },
-        { limit: 633453, rate: 0.08, deduction: 13189.14 },
-        { limit: 1102920, rate: 0.06, deduction: 0 },
-        { limit: Infinity, rate: 0.075, deduction: 0 },
-      ]
-    : [
-        { limit: 101917, rate: 0.01, deduction: 0 },
-        { limit: 139412, rate: 0.02, deduction: 1019.17 },
-        { limit: 190086, rate: 0.05, deduction: 5201.53 },
-        { limit: 316772, rate: 0.07, deduction: 9003.25 },
-        { limit: 633453, rate: 0.08, deduction: 12170.87 },
-        { limit: 1102920, rate: 0.06, deduction: 0 },
-        { limit: Infinity, rate: 0.075, deduction: 0 },
-      ];
-
-  for (const bracket of brackets) {
-    if (purchasePrice <= bracket.limit) {
-      const imt = purchasePrice * bracket.rate - bracket.deduction;
-      return Math.max(0, Math.round(imt * 100) / 100);
-    }
+  // For non-first home (investment): flat 6.5%
+  if (!isFirstHome) {
+    return Math.round(purchasePrice * 0.065 * 100) / 100;
   }
   
-  return Math.round(purchasePrice * 0.075 * 100) / 100;
+  // 2026 progressive rates for residential property (woning)
+  const BRACKET_1 = 106346;  // 0%
+  const BRACKET_2 = 145470;  // 2% marginaal
+  const BRACKET_3 = 198347;  // 5% marginaal
+  const BRACKET_4 = 330539;  // 7% marginaal
+  const BRACKET_5 = 633453;  // 8% marginaal
+  const BRACKET_6 = 1102920; // 6% taxa única above this
+  
+  let imtBedrag = 0;
+
+  if (purchasePrice <= BRACKET_1) {
+    imtBedrag = 0;
+  } else if (purchasePrice <= BRACKET_2) {
+    imtBedrag = (purchasePrice - BRACKET_1) * 0.02;
+  } else if (purchasePrice <= BRACKET_3) {
+    imtBedrag = (BRACKET_2 - BRACKET_1) * 0.02 + (purchasePrice - BRACKET_2) * 0.05;
+  } else if (purchasePrice <= BRACKET_4) {
+    imtBedrag = (BRACKET_2 - BRACKET_1) * 0.02 + 
+                (BRACKET_3 - BRACKET_2) * 0.05 + 
+                (purchasePrice - BRACKET_3) * 0.07;
+  } else if (purchasePrice <= BRACKET_5) {
+    imtBedrag = (BRACKET_2 - BRACKET_1) * 0.02 + 
+                (BRACKET_3 - BRACKET_2) * 0.05 + 
+                (BRACKET_4 - BRACKET_3) * 0.07 +
+                (purchasePrice - BRACKET_4) * 0.08;
+  } else if (purchasePrice <= BRACKET_6) {
+    imtBedrag = purchasePrice * 0.06;
+  } else {
+    imtBedrag = purchasePrice * 0.075;
+  }
+
+  return Math.max(0, Math.round(imtBedrag * 100) / 100);
 }
 
 /**

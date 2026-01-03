@@ -132,6 +132,7 @@ export default function Rendementsanalysator() {
         if (priceParam) {
           const price = parseInt(priceParam);
           newInputs.purchasePrice = price;
+          // IMT for investors (niet-woning) = 6.5% flat rate
           newInputs.imt = Math.round(price * 0.065);
           newInputs.downpayment = Math.round(price * 0.25);
         }
@@ -192,6 +193,7 @@ export default function Rendementsanalysator() {
       const next = { ...prev, [key]: value } as AnalysisInputs;
 
       // Auto-calc IMT + IMI whenever purchase price changes
+      // IMT for investors (niet-woning) = 6.5% flat rate
       if (key === "purchasePrice") {
         const price = typeof value === "number" ? value : Number(value);
         next.imt = Math.round(price * 0.065);
