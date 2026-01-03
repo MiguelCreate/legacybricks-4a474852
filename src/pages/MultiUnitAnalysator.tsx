@@ -35,6 +35,7 @@ import { MultiUnitModeToggle } from "@/components/multiunit/MultiUnitModeToggle"
 import { UnitInputForm } from "@/components/multiunit/UnitInputForm";
 import { MultiUnitBeginnerView } from "@/components/multiunit/MultiUnitBeginnerView";
 import { MultiUnitAdvancedView } from "@/components/multiunit/MultiUnitAdvancedView";
+import { MultiUnitBeginnerWizardView } from "@/components/multiunit/MultiUnitBeginnerWizardView";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface DatabaseProperty {
@@ -558,6 +559,18 @@ export default function MultiUnitAnalysator() {
         {/* Mode Toggle */}
         <MultiUnitModeToggle mode={mode} onModeChange={handleModeChange} />
 
+        {/* Beginner Mode: Wizard View */}
+        {mode === "beginner" ? (
+          <MultiUnitBeginnerWizardView
+            inputs={inputs}
+            analysis={analysis}
+            updateInput={updateInput}
+            updateKosten={updateKosten}
+            berekendeMaandlast={berekendeMaandlast}
+            onSwitchToAdvanced={() => handleModeChange("gevorderd")}
+            onExportPDF={analysis ? () => generateMultiUnitPDF(analysis, inputs) : undefined}
+          />
+        ) : (
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Input Column */}
           <div className="space-y-4 lg:col-span-1">
@@ -925,17 +938,14 @@ export default function MultiUnitAnalysator() {
 
             {/* Analysis Results */}
             {analysis && (
-              mode === "beginner" ? (
-                <MultiUnitBeginnerView analysis={analysis} />
-              ) : (
-                <MultiUnitAdvancedView 
-                  analysis={analysis} 
-                  pandNaam={inputs.pandNaam || "Multi-Unit Analyse"} 
-                />
-              )
+              <MultiUnitAdvancedView 
+                analysis={analysis} 
+                pandNaam={inputs.pandNaam || "Multi-Unit Analyse"} 
+              />
             )}
           </div>
         </div>
+        )}
       </div>
     </AppLayout>
   );
