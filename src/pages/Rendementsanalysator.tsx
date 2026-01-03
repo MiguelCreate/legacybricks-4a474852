@@ -12,6 +12,7 @@ import {
   InvestmentAnalysis,
   getRiskAssessment,
 } from "@/lib/rendementsCalculations";
+import { calculateIMT2025 } from "@/lib/portugueseTaxCalculations";
 import { PartnerOverview } from "@/components/analysator/PartnerOverview";
 import { GuidedTour } from "@/components/analysator/GuidedTour";
 import { AnalysatorModeToggle } from "@/components/analysator/AnalysatorModeToggle";
@@ -50,7 +51,8 @@ export default function Rendementsanalysator() {
   // Form inputs
   const [inputs, setInputs] = useState<AnalysisInputs>({
     purchasePrice: 250000,
-    imt: 12500,
+    pandType: 'niet-woning',
+    imt: 16250, // 6.5% for niet-woning
     notaryFees: 3500,
     renovationCosts: 15000,
     furnishingCosts: 5000,
@@ -192,15 +194,22 @@ export default function Rendementsanalysator() {
     setInputs((prev) => {
       const next = { ...prev, [key]: value } as AnalysisInputs;
 
-      // Auto-calc IMT + IMI whenever purchase price changes
-      // IMT for investors (niet-woning) = 6.5% flat rate
-      if (key === "purchasePrice") {
-        const price = typeof value === "number" ? value : Number(value);
-        next.imt = Math.round(price * 0.065);
+      // Auto-calc IMT + IMI whenever purchase price or pandType changes
+      if (key === "purchasePrice" || key === "pandType") {
+        const price = key === "purchasePrice" 
+          ? (typeof value === "number" ? value : Number(value))
+          : Number(next.purchasePrice);
+        const pandType = key === "pandType" 
+          ? (value as 'woning' | 'niet-woning')
+          : (next.pandType || 'niet-woning');
+        
+        // Use proper IMT calculation based on pandType
+        const imtResult = calculateIMT2025(price, pandType);
+        next.imt = Math.round(imtResult.bedrag);
         next.imiYearly = Math.round(price * 0.003);
 
         // Keep LTV in sync when user is in downpayment mode
-        if ((next.mortgageInputType || "ltv") === "downpayment") {
+        if (key === "purchasePrice" && (next.mortgageInputType || "ltv") === "downpayment") {
           const down = Number(next.downpayment ?? 0);
           next.ltv = price > 0 ? Math.max(0, Math.min(100, ((price - down) / price) * 100)) : 0;
         }

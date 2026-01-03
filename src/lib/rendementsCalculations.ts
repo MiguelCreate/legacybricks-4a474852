@@ -131,6 +131,7 @@ export interface InvestmentAnalysis {
 export interface AnalysisInputs {
   // Purchase
   purchasePrice: number;
+  pandType: 'woning' | 'niet-woning'; // Property type for IMT calculation
   imt: number;
   notaryFees: number;
   renovationCosts: number;

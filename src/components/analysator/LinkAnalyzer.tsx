@@ -148,6 +148,7 @@ export function LinkAnalyzer({ onAnalysisComplete }: LinkAnalyzerProps) {
       // Run full analysis with standard assumptions
       const inputs: AnalysisInputs = {
         purchasePrice: propertyInfo.price,
+        pandType: 'niet-woning',
         imt: propertyInfo.price * (STANDARD_ASSUMPTIONS.imtPercent / 100),
         notaryFees: propertyInfo.price * (STANDARD_ASSUMPTIONS.notaryPercent / 100),
         renovationCosts: 0,
@@ -188,6 +189,7 @@ export function LinkAnalyzer({ onAnalysisComplete }: LinkAnalyzerProps) {
 
     const inputs: AnalysisInputs = {
       purchasePrice: customInputs.price,
+      pandType: 'niet-woning',
       imt: customInputs.price * (STANDARD_ASSUMPTIONS.imtPercent / 100),
       notaryFees: customInputs.price * (STANDARD_ASSUMPTIONS.notaryPercent / 100),
       renovationCosts: 0,
