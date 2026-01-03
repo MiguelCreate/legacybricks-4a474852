@@ -267,6 +267,7 @@ export const AdvancedModeKPIs = ({ analysis, property, loans }: AdvancedModeKPIs
           <SensitivityAnalysis 
             baseInputs={{
               purchasePrice: Number(property.aankoopprijs),
+              pandType: 'niet-woning',
               imt: Number(property.imt_betaald) || 0,
               notaryFees: Number(property.notaris_kosten) || 0,
               renovationCosts: Number(property.renovatie_kosten) || 0,

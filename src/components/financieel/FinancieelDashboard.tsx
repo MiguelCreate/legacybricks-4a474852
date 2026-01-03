@@ -77,6 +77,7 @@ export const FinancieelDashboard = ({ property, loans }: FinancieelDashboardProp
     // Build analysis inputs from property data
     const inputs: AnalysisInputs = {
       purchasePrice: Number(property.aankoopprijs) || 0,
+      pandType: 'niet-woning',
       imt: Number(property.imt_betaald) || 0,
       notaryFees: Number(property.notaris_kosten) || 0,
       renovationCosts: Number(property.renovatie_kosten) || 0,

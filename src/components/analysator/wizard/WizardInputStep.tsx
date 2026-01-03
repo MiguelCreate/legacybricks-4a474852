@@ -92,12 +92,36 @@ export function WizardInputStep({ step, inputs, updateInput, onNext, onPrev, isF
                 prefix="€"
                 tooltip="De vraagprijs of jouw bod op het pand"
               />
+              <div className="space-y-1">
+                <div className="flex items-center gap-1">
+                  <Label className="text-xs text-muted-foreground">Type pand</Label>
+                  <InfoTooltip 
+                    title="Type pand" 
+                    content="Woning = eigen bewoning of secundaire woning (progressief tarief). Niet-woning = investeerders, toeristische verhuur (vast 6,5%)." 
+                  />
+                </div>
+                <Select
+                  value={inputs.pandType || 'niet-woning'}
+                  onValueChange={(v) => updateInput("pandType", v as 'woning' | 'niet-woning')}
+                >
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="woning">🏠 Woning (eigen bewoning)</SelectItem>
+                    <SelectItem value="niet-woning">🏢 Niet-woning (investeerder)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <CompactInput
                 label="IMT (overdrachtsbelasting)"
                 value={inputs.imt}
                 onChange={(v) => updateInput("imt", v)}
                 prefix="€"
-                tooltip="Eenmalige belasting bij aankoop (0-8%)"
+                tooltip={inputs.pandType === 'woning' 
+                  ? "Progressief tarief: 0% tot €106.346, daarna 2%→5%→7%→8%" 
+                  : "Vast tarief 6,5% voor investeerders"
+                }
               />
               <CompactInput
                 label="Notariskosten"
