@@ -17,10 +17,11 @@ import {
   Save,
   BarChart3
 } from "lucide-react";
-import { InvestmentAnalysis, getRiskAssessment } from "@/lib/rendementsCalculations";
+import { InvestmentAnalysis, AnalysisInputs, getRiskAssessment } from "@/lib/rendementsCalculations";
 
 interface WizardResultStepProps {
   analysis: InvestmentAnalysis;
+  inputs: AnalysisInputs;
   onPrev: () => void;
   propertyName: string;
   setPropertyName: (name: string) => void;
@@ -30,17 +31,38 @@ interface WizardResultStepProps {
   onSwitchToAdvanced: () => void;
 }
 
-export function WizardResultStep({ 
-  analysis, 
-  onPrev, 
-  propertyName, 
-  setPropertyName, 
-  propertyLocation, 
+export function WizardResultStep({
+  analysis,
+  inputs,
+  onPrev,
+  propertyName,
+  setPropertyName,
+  propertyLocation,
   setPropertyLocation,
   onSave,
-  onSwitchToAdvanced
+  onSwitchToAdvanced,
 }: WizardResultStepProps) {
   const riskAssessment = getRiskAssessment(analysis);
+
+  const euro = (n: number) => `€${Math.round(n).toLocaleString("nl-NL")}`;
+  const calcPMT = (principal: number, annualRate: number, years: number) => {
+    if (principal <= 0 || years <= 0) return 0;
+    if (annualRate <= 0) return principal / (years * 12);
+    const monthlyRate = annualRate / 100 / 12;
+    const numPayments = years * 12;
+    return (
+      principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+      (Math.pow(1 + monthlyRate, numPayments) - 1)
+    );
+  };
+
+  const mortgageType = inputs.mortgageInputType || "ltv";
+  const loanAmount =
+    mortgageType === "downpayment"
+      ? Math.max(0, inputs.purchasePrice - Number(inputs.downpayment ?? 0))
+      : inputs.purchasePrice * (inputs.ltv / 100);
+  const calculatedMonthlyMortgage = calcPMT(loanAmount, inputs.interestRate, inputs.loanTermYears);
+  const monthlyMortgage = inputs.monthlyMortgageOverride ?? calculatedMonthlyMortgage;
   
   const getStatusConfig = (level: string) => {
     switch (level) {
@@ -104,7 +126,7 @@ export function WizardResultStep({
               </p>
             </div>
             <Badge variant="outline" className="text-lg px-4 py-2">
-              {monthlyCashflow >= 0 ? '+' : ''}€{monthlyCashflow.toLocaleString("nl-NL")}/mnd
+              {monthlyCashflow >= 0 ? "+" : ""}{euro(monthlyCashflow)}/mnd
             </Badge>
           </div>
         </CardContent>
@@ -115,22 +137,85 @@ export function WizardResultStep({
         <Card className="bg-secondary/30">
           <CardContent className="py-4 text-center">
             <p className="text-xs text-muted-foreground mb-1">Totale Investering</p>
-            <p className="text-xl font-bold">€{analysis.totalInvestment.toLocaleString("nl-NL")}</p>
+            <p className="text-xl font-bold">{euro(analysis.totalInvestment)}</p>
           </CardContent>
         </Card>
         <Card className="bg-secondary/30">
           <CardContent className="py-4 text-center">
             <p className="text-xs text-muted-foreground mb-1">Eigen Inleg</p>
-            <p className="text-xl font-bold">€{analysis.ownCapital.toLocaleString("nl-NL")}</p>
+            <p className="text-xl font-bold">{euro(analysis.ownCapital)}</p>
           </CardContent>
         </Card>
         <Card className="bg-secondary/30 col-span-2 sm:col-span-1">
           <CardContent className="py-4 text-center">
             <p className="text-xs text-muted-foreground mb-1">Hypotheek</p>
-            <p className="text-xl font-bold">€{analysis.loanAmount.toLocaleString("nl-NL")}</p>
+            <p className="text-xl font-bold">{euro(analysis.loanAmount)}</p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Input Summary */}
+      <Card className="shadow-card">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Invoercheck</CardTitle>
+          <CardDescription>Controleer snel je aannames uit de vorige stappen</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Aankoop</p>
+              <p>Aankoopprijs: <span className="font-medium">{euro(inputs.purchasePrice)}</span></p>
+              <p>IMT: <span className="font-medium">{euro(inputs.imt)}</span></p>
+              <p>Notaris: <span className="font-medium">{euro(inputs.notaryFees)}</span></p>
+              <p>Renovatie: <span className="font-medium">{euro(inputs.renovationCosts)}</span></p>
+              <p>Inrichting: <span className="font-medium">{euro(inputs.furnishingCosts)}</span></p>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Financiering</p>
+              <p>
+                Methode: <span className="font-medium">{mortgageType === "ltv" ? "LTV" : "Eigen inleg"}</span>
+              </p>
+              {mortgageType === "ltv" ? (
+                <p>LTV: <span className="font-medium">{inputs.ltv.toFixed(0)}%</span></p>
+              ) : (
+                <p>Eigen inleg: <span className="font-medium">{euro(Number(inputs.downpayment ?? 0))}</span></p>
+              )}
+              <p>Hypotheek: <span className="font-medium">{euro(loanAmount)}</span></p>
+              <p>Rente: <span className="font-medium">{inputs.interestRate.toFixed(2)}%</span></p>
+              <p>Looptijd: <span className="font-medium">{inputs.loanTermYears} jaar</span></p>
+              <p>Maandlast: <span className="font-medium">{euro(monthlyMortgage)}</span></p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Verhuur</p>
+              <p>
+                Type: <span className="font-medium">
+                  {inputs.rentalType === "longterm" ? "Langdurig" : inputs.rentalType === "shortterm" ? "Korte termijn" : "Gemengd"}
+                </span>
+              </p>
+              {(inputs.rentalType === "longterm" || inputs.rentalType === "mixed") && (
+                <p>Huur (LT): <span className="font-medium">{euro(inputs.monthlyRentLT)}/mnd</span></p>
+              )}
+              {(inputs.rentalType === "shortterm" || inputs.rentalType === "mixed") && (
+                <p>ST: <span className="font-medium">{inputs.stOccupancy.toFixed(0)}%</span> bezetting · <span className="font-medium">{euro(inputs.stADR)}</span> ADR</p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Kosten</p>
+              <p>Beheer: <span className="font-medium">{inputs.managementPercent.toFixed(0)}%</span></p>
+              <p>Onderhoud: <span className="font-medium">{euro(inputs.maintenanceYearly)}/jr</span></p>
+              <p>IMI: <span className="font-medium">{euro(inputs.imiYearly)}/jr</span></p>
+              <p>Verzekering: <span className="font-medium">{euro(inputs.insuranceYearly)}/jr</span></p>
+              <p>VvE: <span className="font-medium">{euro(inputs.condoMonthly)}/mnd</span></p>
+              <p>Utilities: <span className="font-medium">{euro(inputs.utilitiesMonthly)}/mnd</span></p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* KPI Grid */}
       <Card className="shadow-card">
@@ -191,7 +276,7 @@ export function WizardResultStep({
               />
             </div>
           </div>
-          <Button onClick={onSave} className="w-full gap-2">
+          <Button type="button" onClick={onSave} className="w-full gap-2">
             <Save className="w-4 h-4" />
             Opslaan als Nieuw Pand
           </Button>
@@ -200,11 +285,11 @@ export function WizardResultStep({
 
       {/* Navigation */}
       <div className="flex flex-col sm:flex-row justify-between gap-3">
-        <Button variant="outline" onClick={onPrev} className="gap-2">
+        <Button type="button" variant="outline" onClick={onPrev} className="gap-2">
           <ChevronLeft className="w-4 h-4" />
           Terug naar Invoer
         </Button>
-        <Button variant="secondary" onClick={onSwitchToAdvanced} className="gap-2">
+        <Button type="button" variant="secondary" onClick={onSwitchToAdvanced} className="gap-2">
           <BarChart3 className="w-4 h-4" />
           Bekijk Gedetailleerde Analyse
         </Button>

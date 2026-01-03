@@ -188,7 +188,24 @@ export default function Rendementsanalysator() {
   }, [inputs]);
   
   const updateInput = (key: keyof AnalysisInputs, value: number | string) => {
-    setInputs(prev => ({ ...prev, [key]: value }));
+    setInputs((prev) => {
+      const next = { ...prev, [key]: value } as AnalysisInputs;
+
+      // Auto-calc IMT + IMI whenever purchase price changes
+      if (key === "purchasePrice") {
+        const price = typeof value === "number" ? value : Number(value);
+        next.imt = Math.round(price * 0.065);
+        next.imiYearly = Math.round(price * 0.003);
+
+        // Keep LTV in sync when user is in downpayment mode
+        if ((next.mortgageInputType || "ltv") === "downpayment") {
+          const down = Number(next.downpayment ?? 0);
+          next.ltv = price > 0 ? Math.max(0, Math.min(100, ((price - down) / price) * 100)) : 0;
+        }
+      }
+
+      return next;
+    });
   };
 
   const handleLoadProperty = (loadedInputs: Partial<AnalysisInputs>, name: string, location: string) => {

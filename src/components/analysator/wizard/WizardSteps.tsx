@@ -17,6 +17,7 @@ export function WizardSteps({ currentStep, steps, onStepClick }: WizardStepsProp
         return (
           <div key={index} className="flex items-center flex-1">
             <button
+              type="button"
               onClick={() => onStepClick(index)}
               className={cn(
                 "flex flex-col items-center gap-2 relative z-10 cursor-pointer group",

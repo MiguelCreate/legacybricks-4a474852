@@ -142,6 +142,7 @@ export interface AnalysisInputs {
   downpayment?: number; // absolute amount in euros
   interestRate: number; // percentage
   loanTermYears: number;
+  monthlyMortgageOverride?: number; // optional manual monthly payment
   
   // Rental Income
   monthlyRentLT: number; // Long-term monthly rent
@@ -263,7 +264,11 @@ export function analyzeInvestment(inputs: AnalysisInputs): InvestmentAnalysis {
   const ownCapital = totalInvestment - loanAmount;
   
   // Calculate mortgage payment
-  const monthlyMortgage = calculatePMT(loanAmount, inputs.interestRate, inputs.loanTermYears);
+  const calculatedMonthlyMortgage = calculatePMT(loanAmount, inputs.interestRate, inputs.loanTermYears);
+  const monthlyMortgage =
+    typeof inputs.monthlyMortgageOverride === "number" && inputs.monthlyMortgageOverride >= 0
+      ? inputs.monthlyMortgageOverride
+      : calculatedMonthlyMortgage;
   const annualDebtService = monthlyMortgage * 12;
   
   // Generate yearly cashflow projections
