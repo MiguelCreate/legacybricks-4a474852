@@ -464,8 +464,9 @@ const Huurders = () => {
                 return (
                 <div
                   key={tenant.id}
-                  className="p-4 sm:p-5 bg-card rounded-xl border shadow-card hover:shadow-glow transition-all duration-300 animate-slide-up"
+                  className="p-4 sm:p-5 bg-card rounded-xl border shadow-card hover:shadow-glow transition-all duration-300 animate-slide-up cursor-pointer"
                   style={{ animationDelay: `${index * 0.05}s` }}
+                  onClick={() => handleEdit(tenant)}
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -485,7 +486,10 @@ const Huurders = () => {
                       </Badge>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="p-2 rounded-lg hover:bg-accent">
+                          <button 
+                            className="p-2 rounded-lg hover:bg-accent"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <MoreVertical className="w-4 h-4 text-muted-foreground" />
                           </button>
                         </DropdownMenuTrigger>
@@ -520,7 +524,7 @@ const Huurders = () => {
                   <div className="space-y-2 text-sm">
                     {/* Property link */}
                     <button
-                      onClick={() => navigate('/panden')}
+                      onClick={(e) => { e.stopPropagation(); navigate('/panden'); }}
                       className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors group w-full text-left"
                     >
                       <Building2 className="w-4 h-4" />
@@ -562,7 +566,7 @@ const Huurders = () => {
                     {/* Checklist link */}
                     {checklist && (
                       <button
-                        onClick={() => navigate('/inchecklijsten')}
+                        onClick={(e) => { e.stopPropagation(); navigate('/inchecklijsten'); }}
                         className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors group w-full text-left"
                       >
                         <ClipboardCheck className="w-4 h-4" />
