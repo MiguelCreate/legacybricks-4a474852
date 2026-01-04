@@ -22,7 +22,7 @@ const JSON_SCHEMA = `{
 }`;
 
 const SYSTEM_PROMPT = `Je bent een vastgoed-analist die advertenties van woningen analyseert. 
-Je krijgt de tekst van een vastgoedadvertentie en moet hieruit gestructureerde data extraheren.
+Je krijgt de tekst of een screenshot van een vastgoedadvertentie en moet hieruit gestructureerde data extraheren.
 
 Analyseer de advertentie en schat realistisch de waarden voor elke veld. Als een veld niet te bepalen is, gebruik null.
 
@@ -43,18 +43,23 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { content, url } = await req.json();
+    const { content, url, contentType, screenshot } = await req.json();
 
-    if (!content) {
-      console.log('No content provided');
+    // Support both text content and screenshot
+    if (!content && !screenshot) {
+      console.log('No content or screenshot provided');
       return new Response(
-        JSON.stringify({ success: false, error: 'Content is required' }),
+        JSON.stringify({ success: false, error: 'Content or screenshot is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    const isVisionMode = contentType === 'image' || !!screenshot;
     console.log('Analyzing listing from URL:', url);
-    console.log('Content length:', content.length);
+    console.log('Mode:', isVisionMode ? 'vision (screenshot)' : 'text');
+    if (!isVisionMode) {
+      console.log('Content length:', content?.length || 0);
+    }
 
     const projectRef = Deno.env.get('SUPABASE_URL')?.match(/https:\/\/([^.]+)/)?.[1] || '';
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
@@ -62,7 +67,57 @@ Deno.serve(async (req) => {
     console.log('Project ref:', projectRef);
     console.log('Has Lovable API key:', !!lovableApiKey);
 
-    // Use Lovable AI proxy for Gemini
+    // Build messages based on content type
+    let messages;
+    
+    if (isVisionMode) {
+      // Vision mode: send screenshot to AI
+      const imageData = screenshot || content;
+      const imageUrl = imageData.startsWith('data:') ? imageData : `data:image/png;base64,${imageData}`;
+      
+      messages = [
+        { 
+          role: 'user', 
+          content: [
+            {
+              type: 'text',
+              text: `${SYSTEM_PROMPT}
+
+Analyseer deze screenshot van een vastgoedadvertentie en geef de data terug in dit exacte JSON-formaat:
+${JSON_SCHEMA}
+
+Advertentie URL: ${url || 'Onbekend'}`
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageUrl
+              }
+            }
+          ]
+        }
+      ];
+    } else {
+      // Text mode: send markdown content
+      messages = [
+        { 
+          role: 'system', 
+          content: SYSTEM_PROMPT 
+        },
+        { 
+          role: 'user', 
+          content: `Analyseer deze vastgoedadvertentie en geef de data terug in dit exacte JSON-formaat:
+${JSON_SCHEMA}
+
+Advertentie URL: ${url || 'Onbekend'}
+
+Advertentie tekst:
+${content.substring(0, 8000)}` 
+        }
+      ];
+    }
+
+    // Use Gemini Flash for both text and vision (it supports multimodal)
     const response = await fetch('https://ai.lovable.dev/api/chat', {
       method: 'POST',
       headers: {
@@ -72,22 +127,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        messages: [
-          { 
-            role: 'system', 
-            content: SYSTEM_PROMPT 
-          },
-          { 
-            role: 'user', 
-            content: `Analyseer deze vastgoedadvertentie en geef de data terug in dit exacte JSON-formaat:
-${JSON_SCHEMA}
-
-Advertentie URL: ${url || 'Onbekend'}
-
-Advertentie tekst:
-${content.substring(0, 8000)}` 
-          }
-        ],
+        messages,
       }),
     });
 

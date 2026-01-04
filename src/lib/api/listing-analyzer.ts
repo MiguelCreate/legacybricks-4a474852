@@ -51,16 +51,27 @@ export type ApiResponse<T> = {
   success: boolean;
   error?: string;
   data?: T;
+  usedScreenshotFallback?: boolean;
 };
 
+interface ScrapeResponse {
+  success: boolean;
+  error?: string;
+  blocked?: boolean;
+  data?: {
+    markdown?: string;
+    screenshot?: string;
+    usedFallback?: boolean;
+  };
+}
+
 export const listingAnalyzerApi = {
-  // Scrape a listing URL
-  async scrapeUrl(url: string): Promise<ApiResponse<string>> {
-    const { data, error } = await supabase.functions.invoke('firecrawl-scrape', {
+  // Scrape a listing URL (returns markdown or screenshot)
+  async scrapeUrl(url: string): Promise<ApiResponse<{ markdown?: string; screenshot?: string; usedFallback: boolean }>> {
+    const { data, error } = await supabase.functions.invoke<ScrapeResponse>('firecrawl-scrape', {
       body: { 
         url, 
         options: { 
-          formats: ['markdown'],
           onlyMainContent: true 
         } 
       },
@@ -70,7 +81,7 @@ export const listingAnalyzerApi = {
       return { success: false, error: error.message };
     }
 
-    // Check for blocking/captcha
+    // Check for blocking/captcha with no fallback
     if (data?.blocked) {
       return { success: false, error: data.error || 'Website geblokkeerd' };
     }
@@ -79,19 +90,33 @@ export const listingAnalyzerApi = {
       return { success: false, error: data?.error || 'Scraping mislukt' };
     }
 
-    // Handle v1 API response structure
-    const markdown = data?.data?.markdown || data?.markdown;
-    if (!markdown) {
+    const responseData = data.data;
+    if (!responseData?.markdown && !responseData?.screenshot) {
       return { success: false, error: 'Geen content gevonden op pagina' };
     }
 
-    return { success: true, data: markdown };
+    return { 
+      success: true, 
+      data: {
+        markdown: responseData.markdown,
+        screenshot: responseData.screenshot,
+        usedFallback: responseData.usedFallback || false
+      }
+    };
   },
 
-  // Analyze scraped content with AI
-  async analyzeContent(content: string, url: string): Promise<ApiResponse<ParsedProperty>> {
+  // Analyze content with AI (text or vision)
+  async analyzeContent(
+    content: string, 
+    url: string, 
+    contentType: 'text' | 'image' = 'text'
+  ): Promise<ApiResponse<ParsedProperty>> {
+    const body = contentType === 'image' 
+      ? { screenshot: content, url, contentType }
+      : { content, url, contentType };
+
     const { data, error } = await supabase.functions.invoke('analyze-listing', {
-      body: { content, url },
+      body,
     });
 
     if (error) {
@@ -105,16 +130,35 @@ export const listingAnalyzerApi = {
     return { success: true, data: data.data };
   },
 
-  // Combined scrape + analyze
+  // Combined scrape + analyze with automatic screenshot fallback
   async analyzeUrl(url: string): Promise<ApiResponse<ParsedProperty>> {
-    // Step 1: Scrape
+    // Step 1: Scrape (returns markdown or screenshot)
     const scrapeResult = await this.scrapeUrl(url);
     if (!scrapeResult.success || !scrapeResult.data) {
       return { success: false, error: scrapeResult.error || 'Failed to scrape URL' };
     }
 
+    const { markdown, screenshot, usedFallback } = scrapeResult.data;
+
     // Step 2: Analyze with AI
-    return this.analyzeContent(scrapeResult.data, url);
+    let analysisResult: ApiResponse<ParsedProperty>;
+
+    if (usedFallback && screenshot) {
+      // Use vision analysis for screenshot
+      console.log('Using vision analysis for screenshot');
+      analysisResult = await this.analyzeContent(screenshot, url, 'image');
+    } else if (markdown) {
+      // Use text analysis for markdown
+      analysisResult = await this.analyzeContent(markdown, url, 'text');
+    } else {
+      return { success: false, error: 'Geen content beschikbaar voor analyse' };
+    }
+
+    // Add fallback flag to result
+    return {
+      ...analysisResult,
+      usedScreenshotFallback: usedFallback
+    };
   },
 };
 

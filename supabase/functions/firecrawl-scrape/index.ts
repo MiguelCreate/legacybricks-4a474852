@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
 
     console.log('Scraping URL:', formattedUrl);
 
+    // Request both markdown AND screenshot for fallback
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -43,11 +44,10 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         url: formattedUrl,
-        formats: options?.formats || ['markdown'],
+        formats: ['markdown', 'screenshot'], // Request both for fallback
         onlyMainContent: options?.onlyMainContent ?? true,
-        waitFor: options?.waitFor || 3000, // Wait for JS to load
+        waitFor: options?.waitFor || 3000,
         timeout: 30000,
-        // Use stealth mode to bypass anti-bot
         actions: [
           { type: 'wait', milliseconds: 2000 }
         ],
@@ -64,37 +64,60 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if we got blocked (captcha, 403, etc.)
+    // Extract markdown and screenshot from response
     const markdown = data?.data?.markdown || data?.markdown || '';
+    const screenshot = data?.data?.screenshot || data?.screenshot || '';
     const statusCode = data?.data?.metadata?.statusCode || data?.metadata?.statusCode;
     
-    if (statusCode === 403 || markdown.includes('captcha') || markdown.includes('geo.captcha-delivery.com')) {
-      console.error('Site blocked access - captcha detected');
+    console.log('Scrape response - markdown length:', markdown.length, 'screenshot available:', !!screenshot);
+
+    // Check if we got blocked (captcha, 403, etc.)
+    const isBlocked = statusCode === 403 || 
+                      markdown.includes('captcha') || 
+                      markdown.includes('geo.captcha-delivery.com') ||
+                      markdown.includes('Access Denied') ||
+                      markdown.includes('Please verify you are human');
+
+    if (isBlocked || markdown.length < 100) {
+      console.log('Markdown blocked or insufficient, checking screenshot fallback...');
+      
+      // If we have a screenshot, use it as fallback
+      if (screenshot) {
+        console.log('Using screenshot fallback');
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            data: { 
+              screenshot,
+              usedFallback: true 
+            }
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // No screenshot available either
+      console.error('Both markdown and screenshot failed');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Deze website blokkeert automatische toegang. Probeer een andere advertentie of kopieer de tekst handmatig.',
+          error: 'Deze website blokkeert automatische toegang en screenshot fallback is niet beschikbaar.',
           blocked: true
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Check if we got meaningful content
-    if (markdown.length < 100) {
-      console.error('Insufficient content scraped:', markdown.length, 'chars');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Kon geen inhoud van de pagina ophalen. De website kan geblokkeerd zijn of de URL is onjuist.'
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log('Scrape successful, content length:', markdown.length);
+    // Success with markdown
+    console.log('Scrape successful with markdown, content length:', markdown.length);
     return new Response(
-      JSON.stringify({ success: true, data: { markdown } }),
+      JSON.stringify({ 
+        success: true, 
+        data: { 
+          markdown,
+          usedFallback: false 
+        } 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
