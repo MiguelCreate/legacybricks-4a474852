@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
     const { content, url } = await req.json();
 
     if (!content) {
+      console.log('No content provided');
       return new Response(
         JSON.stringify({ success: false, error: 'Content is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -55,13 +56,19 @@ Deno.serve(async (req) => {
     console.log('Analyzing listing from URL:', url);
     console.log('Content length:', content.length);
 
+    const projectRef = Deno.env.get('SUPABASE_URL')?.match(/https:\/\/([^.]+)/)?.[1] || '';
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    
+    console.log('Project ref:', projectRef);
+    console.log('Has Lovable API key:', !!lovableApiKey);
+
     // Use Lovable AI proxy for Gemini
     const response = await fetch('https://ai.lovable.dev/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-        'x-supabase-project-ref': Deno.env.get('SUPABASE_PROJECT_ID') || '',
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'x-supabase-project-ref': projectRef,
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
@@ -84,11 +91,13 @@ ${content.substring(0, 8000)}`
       }),
     });
 
+    console.log('AI API response status:', response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('AI API error:', errorText);
       return new Response(
-        JSON.stringify({ success: false, error: `AI analysis failed: ${response.status}` }),
+        JSON.stringify({ success: false, error: `AI analysis failed: ${response.status} - ${errorText}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -97,11 +106,12 @@ ${content.substring(0, 8000)}`
     console.log('AI Response received');
 
     const aiContent = aiResponse.choices?.[0]?.message?.content || '';
+    console.log('AI content length:', aiContent.length);
     
     // Extract JSON from response
     const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      console.error('No JSON found in AI response:', aiContent);
+      console.error('No JSON found in AI response:', aiContent.substring(0, 500));
       return new Response(
         JSON.stringify({ success: false, error: 'Could not extract JSON from AI response' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
