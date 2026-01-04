@@ -2,3 +2,9 @@ project_id = "zmwgtpbtizllwuutripu"
 
 [functions.generate-property-advice]
 verify_jwt = false
+
+[functions.firecrawl-scrape]
+verify_jwt = false
+
+[functions.analyze-listing]
+verify_jwt = false
