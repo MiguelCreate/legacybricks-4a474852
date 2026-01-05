@@ -109,11 +109,17 @@ const Dashboard = () => {
     }
   };
 
-  // Calculate statistics
+  // Filter data to only include items from user's properties (extra security layer)
+  const userPropertyIds = properties.map(p => p.id);
+  const userTenants = tenants.filter(t => userPropertyIds.includes(t.property_id));
+  const userLoans = loans.filter(l => userPropertyIds.includes(l.property_id));
+  const userContracts = contracts.filter(c => userPropertyIds.includes(c.property_id));
+
+  // Calculate statistics using filtered data
   const totalPortfolioValue = properties.reduce((sum, p) => sum + Number(p.waardering || p.aankoopprijs), 0);
-  const totalDebt = loans.reduce((sum, l) => sum + Number(l.restschuld || l.hoofdsom || 0), 0);
+  const totalDebt = userLoans.reduce((sum, l) => sum + Number(l.restschuld || l.hoofdsom || 0), 0);
   const nettoVermogen = totalPortfolioValue - totalDebt;
-  const totalMonthlyRent = tenants.reduce((sum, t) => sum + Number(t.huurbedrag), 0);
+  const totalMonthlyRent = userTenants.reduce((sum, t) => sum + Number(t.huurbedrag), 0);
 
   const calculateMonthlyCashflow = () => {
     return properties.reduce((sum, property) => {
@@ -149,7 +155,7 @@ const Dashboard = () => {
       }, 0) / properties.length
     : 0;
 
-  const expiringContracts = contracts.filter((c) => {
+  const expiringContracts = userContracts.filter((c) => {
     const daysUntilEnd = Math.ceil((new Date(c.einddatum).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     return daysUntilEnd <= 90 && daysUntilEnd >= 0;
   });
@@ -158,7 +164,7 @@ const Dashboard = () => {
     .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
     .slice(0, 4)
     .map((p) => {
-      const tenant = tenants.find((t) => t.property_id === p.id);
+      const tenant = userTenants.find((t) => t.property_id === p.id);
       return {
         id: p.id,
         name: p.naam,

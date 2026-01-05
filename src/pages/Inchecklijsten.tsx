@@ -109,9 +109,17 @@ const Inchecklijsten = () => {
       if (propertiesRes.error) throw propertiesRes.error;
       if (tenantsRes.error) throw tenantsRes.error;
 
-      setChecklists(checklistsRes.data || []);
-      setProperties(propertiesRes.data || []);
-      setTenants(tenantsRes.data || []);
+      // Store properties first to filter other data
+      const userProperties = propertiesRes.data || [];
+      setProperties(userProperties);
+      
+      // Filter checklists and tenants to only include those from user's properties
+      const userPropertyIds = userProperties.map(p => p.id);
+      const userChecklists = (checklistsRes.data || []).filter(c => userPropertyIds.includes(c.property_id));
+      const userTenants = (tenantsRes.data || []).filter(t => userPropertyIds.includes(t.property_id));
+      
+      setChecklists(userChecklists);
+      setTenants(userTenants);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({

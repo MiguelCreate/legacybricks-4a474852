@@ -125,10 +125,18 @@ const Aannemers = () => {
       if (linksRes.error) throw linksRes.error;
       if (tenantsRes.error) throw tenantsRes.error;
 
+      // Store properties first to filter other data
+      const userProperties = propertiesRes.data || [];
+      setProperties(userProperties);
+      
+      // Filter tenants and property_contractors to only include those from user's properties
+      const userPropertyIds = userProperties.map(p => p.id);
+      const userTenants = (tenantsRes.data || []).filter((t: Tenant) => userPropertyIds.includes(t.property_id));
+      const userPropertyContractors = (linksRes.data || []).filter((pc: PropertyContractor) => userPropertyIds.includes(pc.property_id));
+      
       setContractors(contractorsRes.data || []);
-      setProperties(propertiesRes.data || []);
-      setPropertyContractors(linksRes.data || []);
-      setTenants(tenantsRes.data || []);
+      setPropertyContractors(userPropertyContractors);
+      setTenants(userTenants);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({

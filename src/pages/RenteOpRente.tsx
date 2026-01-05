@@ -47,10 +47,20 @@ const RenteOpRente = () => {
       if (profileRes.data) {
         setProfile(profileRes.data);
       }
-      setTenants(tenantsRes.data || []);
-      setProperties(propertiesRes.data || []);
-      setLoans(loansRes.data || []);
-      setRecurringExpenses(recurringRes.data || []);
+      
+      // Store properties first to filter other data
+      const userProperties = propertiesRes.data || [];
+      setProperties(userProperties);
+      
+      // Filter tenants, loans, and recurring expenses to only include those from user's properties
+      const userPropertyIds = userProperties.map(p => p.id);
+      const userTenants = (tenantsRes.data || []).filter(t => userPropertyIds.includes(t.property_id));
+      const userLoans = (loansRes.data || []).filter(l => userPropertyIds.includes(l.property_id));
+      const userRecurring = (recurringRes.data || []).filter(r => userPropertyIds.includes(r.property_id));
+      
+      setTenants(userTenants);
+      setLoans(userLoans);
+      setRecurringExpenses(userRecurring);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
