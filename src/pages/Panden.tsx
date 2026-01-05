@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink, Calendar, Clock, DoorOpen, BedDouble, Percent, Sparkles, Map, Wrench, Eye, ArrowLeft, Shield, FileText, Gauge } from "lucide-react";
+import { Building2, Plus, Search, Filter, MapPin, Euro, Users, MoreVertical, Star, Pencil, Trash2, Archive, ArchiveRestore, AlertTriangle, Droplets, Flame, Zap, Home, Layers, ExternalLink, Calendar, Clock, DoorOpen, BedDouble, Percent, Sparkles, Map, Wrench, Eye, ArrowLeft, Shield, FileText, Gauge } from "lucide-react";
 import { PropertyMap } from "@/components/panden/PropertyMap";
 import { RoomManager } from "@/components/panden/RoomManager";
 import { PropertyFeaturesManager } from "@/components/panden/PropertyFeaturesManager";
@@ -396,6 +396,30 @@ const Panden = () => {
     }
   };
 
+  const handleUnarchive = async (property: Property) => {
+    try {
+      const { error } = await supabase
+        .from("properties")
+        .update({ gearchiveerd: false })
+        .eq("id", property.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Pand hersteld",
+        description: `${property.naam} is weer actief.`,
+      });
+
+      fetchProperties();
+    } catch (error: any) {
+      toast({
+        title: "Fout",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDelete = async (property: Property) => {
     if (!confirm(`Weet je zeker dat je "${property.naam}" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.`)) {
       return;
@@ -679,10 +703,17 @@ const Panden = () => {
                             <Star className="w-4 h-4 mr-2" />
                             {property.is_pinned ? "Pin verwijderen" : "Pinnen"}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleArchive(property)}>
-                            <Archive className="w-4 h-4 mr-2" />
-                            Archiveren
-                          </DropdownMenuItem>
+                          {property.gearchiveerd ? (
+                            <DropdownMenuItem onClick={() => handleUnarchive(property)}>
+                              <ArchiveRestore className="w-4 h-4 mr-2" />
+                              Herstellen
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => handleArchive(property)}>
+                              <Archive className="w-4 h-4 mr-2" />
+                              Archiveren
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             onClick={() => handleDelete(property)}
                             className="text-destructive focus:text-destructive"
