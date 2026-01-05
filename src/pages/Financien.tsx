@@ -47,6 +47,7 @@ import { BeginnerFinancienView } from "@/components/financien/BeginnerFinancienV
 import { RecurringExpensesManager } from "@/components/financien/RecurringExpensesManager";
 import { PortfolioTaxSummary } from "@/components/financien/PortfolioTaxSummary";
 import { PropertyValueAnalysis } from "@/components/financien/PropertyValueAnalysis";
+import { DetailedCostBreakdown } from "@/components/financien/DetailedCostBreakdown";
 import { CashflowBreakdown } from "@/components/dashboard/CashflowBreakdown";
 import { CashflowBarChart } from "@/components/dashboard/CashflowBarChart";
 import { calculatePropertyCashflow, TenantRent } from "@/lib/financialCalculations";
@@ -488,6 +489,13 @@ const Financien = () => {
                 netCashflow={netCashflow}
                 portfolioValue={portfolioValue}
                 grossYield={grossYield}
+              />
+              
+              {/* Detailed Cost Breakdown */}
+              <DetailedCostBreakdown
+                properties={properties}
+                tenants={userTenants}
+                loans={userLoans}
               />
               
               {/* Cashflow Visualization Section - also in beginner mode */}
