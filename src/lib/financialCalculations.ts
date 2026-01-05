@@ -1,5 +1,5 @@
 // Financial calculation utilities for Portuguese real estate
-
+import { calculateIRS } from '@/lib/portugueseTaxCalculations';
 /**
  * Calculate PMT (monthly payment) for a loan
  * Formula: PMT = P * [r(1+r)^n] / [(1+r)^n - 1]
@@ -218,9 +218,6 @@ export function calculatePropertyCashflow(
   otherExpensesMonthly: number = 0,
   irsOptions?: IRSOptions
 ): PropertyCashflow {
-  // Import dynamically to avoid circular dependency
-  const { calculateIRS } = require('@/lib/portugueseTaxCalculations');
-  
   const grossIncome = monthlyRent + subsidyMonthly;
   
   const imi = (propertyValue * imiRate) / 12;
