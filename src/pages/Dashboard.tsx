@@ -123,10 +123,13 @@ const Dashboard = () => {
 
   const calculateMonthlyCashflow = () => {
     return properties.reduce((sum, property) => {
-      // Use userLoans instead of loans to ensure data isolation
+      // Bereken werkelijke huurinkomsten van actieve huurders voor dit pand
+      const propertyTenants = userTenants.filter(t => t.property_id === property.id);
+      const actualRent = propertyTenants.reduce((s, t) => s + Number(t.huurbedrag || 0), 0);
+      
       const loan = userLoans.find((l) => l.property_id === property.id);
       const cashflowResult = calculatePropertyCashflow(
-        Number(property.maandelijkse_huur) || 0,
+        actualRent,
         Number(property.subsidie_bedrag) || 0,
         loan ? Number(loan.maandlast) : 0,
         Number(property.aankoopprijs),
@@ -151,7 +154,8 @@ const Dashboard = () => {
 
   const gemiddeldRendement = properties.length > 0
     ? properties.reduce((sum, p) => {
-        const jaarHuur = (Number(p.maandelijkse_huur) || 0) * 12;
+        const propertyTenants = userTenants.filter(t => t.property_id === p.id);
+        const jaarHuur = propertyTenants.reduce((s, t) => s + Number(t.huurbedrag || 0), 0) * 12;
         return sum + calculateGrossYield(jaarHuur, Number(p.aankoopprijs));
       }, 0) / properties.length
     : 0;
@@ -172,7 +176,7 @@ const Dashboard = () => {
         location: p.locatie,
         status: p.status,
         healthScore: p.gezondheidsscore || 5,
-        monthlyIncome: Number(p.maandelijkse_huur) || 0,
+        monthlyIncome: userTenants.filter(t => t.property_id === p.id).reduce((s, t) => s + Number(t.huurbedrag || 0), 0),
         tenant: tenant?.naam,
         isPinned: p.is_pinned || false,
       };
