@@ -46,6 +46,7 @@ import { FinancienModeToggle } from "@/components/financien/FinancienModeToggle"
 import { BeginnerFinancienView } from "@/components/financien/BeginnerFinancienView";
 import { RecurringExpensesManager } from "@/components/financien/RecurringExpensesManager";
 import { PortfolioTaxSummary } from "@/components/financien/PortfolioTaxSummary";
+import { PropertyValueAnalysis } from "@/components/financien/PropertyValueAnalysis";
 
 type Expense = Tables<"expenses">;
 type Payment = Tables<"payments">;
@@ -823,6 +824,9 @@ const Financien = () => {
                   </CollapsibleContent>
                 </div>
               </Collapsible>
+
+              {/* Property Value Analysis */}
+              <PropertyValueAnalysis properties={properties} loans={loans} />
             </>
           )}
         </div>
