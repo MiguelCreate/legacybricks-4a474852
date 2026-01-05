@@ -27,7 +27,6 @@ import AIAdvertentieAnalyzer from "./pages/AIAdvertentieAnalyzer";
 import Aannemers from "./pages/Aannemers";
 import VvEOverzicht from "./pages/VvEOverzicht";
 import Academy from "./pages/Academy";
-import VerkopenOfBehouden from "./pages/VerkopenOfBehouden";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,7 +60,6 @@ const App = () => (
               <Route path="/aannemers" element={<ProtectedRoute><Aannemers /></ProtectedRoute>} />
               <Route path="/vve" element={<ProtectedRoute><VvEOverzicht /></ProtectedRoute>} />
               <Route path="/academy" element={<ProtectedRoute><Academy /></ProtectedRoute>} />
-              <Route path="/verkopen-of-behouden" element={<ProtectedRoute><VerkopenOfBehouden /></ProtectedRoute>} />
               <Route path="/instellingen" element={<ProtectedRoute><Instellingen /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
