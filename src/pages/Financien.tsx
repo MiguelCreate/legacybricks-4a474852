@@ -47,6 +47,8 @@ import { BeginnerFinancienView } from "@/components/financien/BeginnerFinancienV
 import { RecurringExpensesManager } from "@/components/financien/RecurringExpensesManager";
 import { PortfolioTaxSummary } from "@/components/financien/PortfolioTaxSummary";
 import { PropertyValueAnalysis } from "@/components/financien/PropertyValueAnalysis";
+import { CashflowBreakdown } from "@/components/dashboard/CashflowBreakdown";
+import { CashflowBarChart } from "@/components/dashboard/CashflowBarChart";
 
 type Expense = Tables<"expenses">;
 type Payment = Tables<"payments">;
@@ -447,14 +449,30 @@ const Financien = () => {
           <FinancienModeToggle mode={mode} onModeChange={handleModeChange} />
 
           {mode === "beginner" ? (
-            <BeginnerFinancienView
-              totalMonthlyRent={totalMonthlyRent}
-              totalMonthlyLoanPayments={totalMonthlyLoanPayments}
-              monthlyExpenses={monthlyExpenses}
-              netCashflow={netCashflow}
-              portfolioValue={portfolioValue}
-              grossYield={grossYield}
-            />
+            <>
+              <BeginnerFinancienView
+                totalMonthlyRent={totalMonthlyRent}
+                totalMonthlyLoanPayments={totalMonthlyLoanPayments}
+                monthlyExpenses={monthlyExpenses}
+                netCashflow={netCashflow}
+                portfolioValue={portfolioValue}
+                grossYield={grossYield}
+              />
+              
+              {/* Cashflow Visualization Section - also in beginner mode */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <CashflowBarChart 
+                  properties={properties} 
+                  tenants={userTenants} 
+                  loans={userLoans} 
+                />
+                <CashflowBreakdown 
+                  properties={properties} 
+                  tenants={userTenants} 
+                  loans={userLoans} 
+                />
+              </div>
+            </>
           ) : (
             <>
               {/* Stats Grid */}
@@ -510,6 +528,20 @@ const Financien = () => {
                     title: "Netto Rendement",
                     content: "Jaarlijkse netto cashflow gedeeld door de totale waarde van je portefeuille. Dit is je werkelijke rendement na alle kosten.",
                   }}
+                />
+              </div>
+
+              {/* Cashflow Visualization Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <CashflowBarChart 
+                  properties={properties} 
+                  tenants={userTenants} 
+                  loans={userLoans} 
+                />
+                <CashflowBreakdown 
+                  properties={properties} 
+                  tenants={userTenants} 
+                  loans={userLoans} 
                 />
               </div>
 
