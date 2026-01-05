@@ -24,6 +24,7 @@ import Inchecklijsten from "./pages/Inchecklijsten";
 import Rendementsanalysator from "./pages/Rendementsanalysator";
 import MultiUnitAnalysator from "./pages/MultiUnitAnalysator";
 import AIAdvertentieAnalyzer from "./pages/AIAdvertentieAnalyzer";
+import VerkopenOfBehouden from "./pages/VerkopenOfBehouden";
 import Aannemers from "./pages/Aannemers";
 import VvEOverzicht from "./pages/VvEOverzicht";
 import Academy from "./pages/Academy";
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="/analysator" element={<ProtectedRoute><Rendementsanalysator /></ProtectedRoute>} />
               <Route path="/multi-unit" element={<ProtectedRoute><MultiUnitAnalysator /></ProtectedRoute>} />
               <Route path="/ai-analyzer" element={<ProtectedRoute><AIAdvertentieAnalyzer /></ProtectedRoute>} />
+              <Route path="/verkopen-of-behouden" element={<ProtectedRoute><VerkopenOfBehouden /></ProtectedRoute>} />
               <Route path="/aannemers" element={<ProtectedRoute><Aannemers /></ProtectedRoute>} />
               <Route path="/vve" element={<ProtectedRoute><VvEOverzicht /></ProtectedRoute>} />
               <Route path="/academy" element={<ProtectedRoute><Academy /></ProtectedRoute>} />
