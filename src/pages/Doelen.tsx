@@ -21,6 +21,7 @@ type Goal = Tables<"goals">;
 type Property = Tables<"properties">;
 type Loan = Tables<"loans">;
 type Profile = Tables<"profiles">;
+type Tenant = Tables<"tenants">;
 
 const Doelen = () => {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ const Doelen = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -44,20 +46,23 @@ const Doelen = () => {
 
   const fetchData = async () => {
     try {
-      const [goalsRes, propertiesRes, loansRes, profileRes] = await Promise.all([
+      const [goalsRes, propertiesRes, loansRes, tenantsRes, profileRes] = await Promise.all([
         supabase.from("goals").select("*").order("prioriteit", { ascending: false }).order("created_at", { ascending: false }),
         supabase.from("properties").select("*").eq("gearchiveerd", false),
         supabase.from("loans").select("*"),
+        supabase.from("tenants").select("*").eq("actief", true),
         supabase.from("profiles").select("*").maybeSingle(),
       ]);
 
       if (goalsRes.error) throw goalsRes.error;
       if (propertiesRes.error) throw propertiesRes.error;
       if (loansRes.error) throw loansRes.error;
+      if (tenantsRes.error) throw tenantsRes.error;
 
       setGoals(goalsRes.data || []);
       setProperties(propertiesRes.data || []);
       setLoans(loansRes.data || []);
+      setTenants(tenantsRes.data || []);
       setProfile(profileRes.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -165,7 +170,7 @@ const Doelen = () => {
 
   const calculateGoalMetrics = (goal: Goal) => {
     const property = properties.find(p => p.id === goal.bron_property_id);
-    const surplus = property ? calculatePropertySurplus(property, loans) : null;
+    const surplus = property ? calculatePropertySurplus(property, loans, tenants) : null;
     const remaining = Number(goal.doelbedrag) - Number(goal.huidig_bedrag);
     const monthlyInleg = Number(goal.maandelijkse_inleg || 0);
     const propertySurplus = surplus && surplus > 0 ? surplus * 0.1 : 0;
@@ -179,8 +184,8 @@ const Doelen = () => {
     
     const activeGoalsExcludingCurrent = goals.filter(g => !g.bereikt && g.id !== goal.id && !g.gepauzeerd);
     
-    // Calculate total property surplus
-    const totalPropertySurplus = properties.reduce((sum, p) => sum + calculatePropertySurplus(p, loans), 0);
+    // Calculate total property surplus (using consistent calculation with tenants)
+    const totalPropertySurplus = properties.reduce((sum, p) => sum + calculatePropertySurplus(p, loans, tenants), 0);
     
     // Calculate total commitments
     const totalCommitments = activeGoalsExcludingCurrent.reduce((sum, g) => sum + Number(g.maandelijkse_inleg || 0), 0) + monthlyInleg;
@@ -250,7 +255,7 @@ const Doelen = () => {
 
         <div className="px-4 md:px-6 lg:px-8 pb-8 space-y-8">
           {/* Impact Dashboard */}
-          <ImpactDashboard goals={goals} properties={properties} loans={loans} />
+          <ImpactDashboard goals={goals} properties={properties} loans={loans} tenants={tenants} />
 
           {/* Smart Suggestions */}
           <SmartSuggestions goals={goals} properties={properties} profile={profile} onSuggestGoal={handleSuggestGoal} />

@@ -11,14 +11,16 @@ import { calculatePropertySurplus } from "./useGoalCalculations";
 type Goal = Tables<"goals">;
 type Property = Tables<"properties">;
 type Loan = Tables<"loans">;
+type Tenant = Tables<"tenants">;
 
 interface ImpactDashboardProps {
   goals: Goal[];
   properties: Property[];
   loans: Loan[];
+  tenants: Tenant[];
 }
 
-export const ImpactDashboard = ({ goals, properties, loans }: ImpactDashboardProps) => {
+export const ImpactDashboard = ({ goals, properties, loans, tenants }: ImpactDashboardProps) => {
   const calculations = useMemo(() => {
     const activeGoals = goals.filter(g => !g.bereikt && !g.gepauzeerd);
     const completedGoals = goals.filter(g => g.bereikt);
@@ -28,9 +30,9 @@ export const ImpactDashboard = ({ goals, properties, loans }: ImpactDashboardPro
       return sum + Number(goal.maandelijkse_inleg || 0);
     }, 0);
     
-    // Total property surplus
+    // Total property surplus (using consistent calculation with tenants)
     const totalPropertySurplus = properties.reduce((sum, property) => {
-      return sum + calculatePropertySurplus(property, loans);
+      return sum + calculatePropertySurplus(property, loans, tenants);
     }, 0);
     
     // Amount allocated from property surplus (10% per linked goal)
@@ -38,7 +40,7 @@ export const ImpactDashboard = ({ goals, properties, loans }: ImpactDashboardPro
     const allocatedFromSurplus = linkedGoals.reduce((sum, goal) => {
       const property = properties.find(p => p.id === goal.bron_property_id);
       if (property) {
-        const surplus = calculatePropertySurplus(property, loans);
+        const surplus = calculatePropertySurplus(property, loans, tenants);
         return sum + (surplus > 0 ? surplus * 0.1 : 0);
       }
       return sum;
@@ -93,7 +95,7 @@ export const ImpactDashboard = ({ goals, properties, loans }: ImpactDashboardPro
       monthsToFreedom,
       remainingCashflow: totalPropertySurplus - totalEffectiveContribution,
     };
-  }, [goals, properties, loans]);
+  }, [goals, properties, loans, tenants]);
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
