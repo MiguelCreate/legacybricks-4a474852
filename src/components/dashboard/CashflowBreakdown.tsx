@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, Home, Users, Landmark, Receipt, TrendingUp, TrendingDown } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
-import { calculatePropertyCashflow } from "@/lib/financialCalculations";
+import { calculatePropertyCashflow, TenantRent } from "@/lib/financialCalculations";
 
 type Property = Tables<"properties">;
 type Tenant = Tables<"tenants">;
@@ -55,6 +55,11 @@ export const CashflowBreakdown = ({ properties, tenants, loans }: CashflowBreakd
     const vacancyBuffer = totalRent * ((Number(property.leegstand_buffer_percentage) || 5) / 100);
     const managementCost = totalRent * ((Number(property.beheerkosten_percentage) || 0) / 100);
     
+    // Create tenant rents array for per-tenant IRS calculation
+    const tenantRents: TenantRent[] = propertyTenants.map(t => ({
+      monthlyRent: Number(t.huurbedrag || 0)
+    }));
+    
     const cashflowResult = calculatePropertyCashflow(
       totalRent,
       Number(property.subsidie_bedrag) || 0,
@@ -66,7 +71,8 @@ export const CashflowBreakdown = ({ properties, tenants, loans }: CashflowBreakd
       Number(property.leegstand_buffer_percentage) || 5,
       Number(property.beheerkosten_percentage) || 0,
       0, // other expenses
-      { jaarHuurinkomst: new Date().getFullYear() }
+      { jaarHuurinkomst: new Date().getFullYear() },
+      tenantRents // Pass tenant rents for per-tenant IRS calculation
     );
 
     return {
