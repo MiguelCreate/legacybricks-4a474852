@@ -205,6 +205,11 @@ export interface IRSOptions {
   dhdContract?: boolean;
 }
 
+export interface TenantRent {
+  monthlyRent: number;
+  irsOptions?: IRSOptions;
+}
+
 export function calculatePropertyCashflow(
   monthlyRent: number,
   subsidyMonthly: number,
@@ -216,7 +221,8 @@ export function calculatePropertyCashflow(
   vacancyBufferPercent: number,
   managementPercent: number,
   otherExpensesMonthly: number = 0,
-  irsOptions?: IRSOptions
+  irsOptions?: IRSOptions,
+  tenantRents?: TenantRent[] // Optional: individual tenant rents for per-tenant IRS calculation
 ): PropertyCashflow {
   const grossIncome = monthlyRent + subsidyMonthly;
   
@@ -226,21 +232,42 @@ export function calculatePropertyCashflow(
   const vacancyBuffer = grossIncome * (vacancyBufferPercent / 100);
   const management = grossIncome * (managementPercent / 100);
   
-  // Calculate IRS using the Portuguese tax calculation
+  // Calculate IRS - per tenant if tenant rents are provided, otherwise on total rent
   const currentYear = new Date().getFullYear();
-  const irsResult = calculateIRS({
-    jaarHuurinkomst: irsOptions?.jaarHuurinkomst ?? currentYear,
-    maandHuur: monthlyRent,
-    contractduurJaren: irsOptions?.contractduurJaren ?? 1,
-    aantalVerlengingen: irsOptions?.aantalVerlengingen ?? 0,
-    englobamento: irsOptions?.englobamento ?? false,
-    dhdContract: irsOptions?.dhdContract ?? false,
-  });
+  let totalIrsMonthly = 0;
+  let avgTarief = 0;
   
-  // Explicitly calculate monthly IRS by dividing yearly amount by 12
-  const irsMonthly = irsResult.jaarlijksBedrag / 12;
+  if (tenantRents && tenantRents.length > 0) {
+    // Calculate IRS per tenant (each tenant's rent checked against €2,300 threshold)
+    let totalTarief = 0;
+    tenantRents.forEach(tenant => {
+      const irsResult = calculateIRS({
+        jaarHuurinkomst: tenant.irsOptions?.jaarHuurinkomst ?? irsOptions?.jaarHuurinkomst ?? currentYear,
+        maandHuur: tenant.monthlyRent,
+        contractduurJaren: tenant.irsOptions?.contractduurJaren ?? irsOptions?.contractduurJaren ?? 1,
+        aantalVerlengingen: tenant.irsOptions?.aantalVerlengingen ?? irsOptions?.aantalVerlengingen ?? 0,
+        englobamento: tenant.irsOptions?.englobamento ?? irsOptions?.englobamento ?? false,
+        dhdContract: tenant.irsOptions?.dhdContract ?? irsOptions?.dhdContract ?? false,
+      });
+      totalIrsMonthly += irsResult.jaarlijksBedrag / 12;
+      totalTarief += irsResult.tarief;
+    });
+    avgTarief = totalTarief / tenantRents.length;
+  } else {
+    // Fallback: calculate on total rent (legacy behavior)
+    const irsResult = calculateIRS({
+      jaarHuurinkomst: irsOptions?.jaarHuurinkomst ?? currentYear,
+      maandHuur: monthlyRent,
+      contractduurJaren: irsOptions?.contractduurJaren ?? 1,
+      aantalVerlengingen: irsOptions?.aantalVerlengingen ?? 0,
+      englobamento: irsOptions?.englobamento ?? false,
+      dhdContract: irsOptions?.dhdContract ?? false,
+    });
+    totalIrsMonthly = irsResult.jaarlijksBedrag / 12;
+    avgTarief = irsResult.tarief;
+  }
   
-  const totalExpenses = mortgagePayment + imi + irsMonthly + insurance + maintenance + 
+  const totalExpenses = mortgagePayment + imi + totalIrsMonthly + insurance + maintenance + 
                         vacancyBuffer + management + otherExpensesMonthly;
   
   return {
@@ -248,14 +275,14 @@ export function calculatePropertyCashflow(
     expenses: {
       mortgage: Math.round(mortgagePayment * 100) / 100,
       imi: Math.round(imi * 100) / 100,
-      irs: Math.round(irsMonthly * 100) / 100,
+      irs: Math.round(totalIrsMonthly * 100) / 100,
       insurance: Math.round(insurance * 100) / 100,
       maintenance: Math.round(maintenance * 100) / 100,
       vacancyBuffer: Math.round(vacancyBuffer * 100) / 100,
       management: Math.round(management * 100) / 100,
       other: Math.round(otherExpensesMonthly * 100) / 100,
     },
-    irsTarief: irsResult.tarief,
+    irsTarief: Math.round(avgTarief * 100) / 100,
     netCashflow: Math.round((grossIncome - totalExpenses) * 100) / 100,
   };
 }

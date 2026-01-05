@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { calculateGrossYield, calculatePropertyCashflow } from "@/lib/financialCalculations";
+import { calculateGrossYield, calculatePropertyCashflow, TenantRent } from "@/lib/financialCalculations";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Property = Tables<"properties">;
@@ -128,6 +128,11 @@ const Dashboard = () => {
       const propertyTenants = userTenants.filter(t => t.property_id === property.id);
       const actualRent = propertyTenants.reduce((s, t) => s + Number(t.huurbedrag || 0), 0);
       
+      // Create tenant rents array for per-tenant IRS calculation
+      const tenantRents: TenantRent[] = propertyTenants.map(t => ({
+        monthlyRent: Number(t.huurbedrag || 0)
+      }));
+      
       const loan = userLoans.find((l) => l.property_id === property.id);
       const cashflowResult = calculatePropertyCashflow(
         actualRent,
@@ -138,7 +143,10 @@ const Dashboard = () => {
         Number(property.verzekering_jaarlijks) || 0,
         Number(property.onderhoud_jaarlijks) || 0,
         Number(property.leegstand_buffer_percentage) || 5,
-        Number(property.beheerkosten_percentage) || 0
+        Number(property.beheerkosten_percentage) || 0,
+        0, // other expenses
+        { jaarHuurinkomst: new Date().getFullYear() },
+        tenantRents // Pass tenant rents for per-tenant IRS calculation
       );
       return sum + cashflowResult.netCashflow;
     }, 0);

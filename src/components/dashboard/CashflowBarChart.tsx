@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
 import { Tables } from "@/integrations/supabase/types";
-import { calculatePropertyCashflow } from "@/lib/financialCalculations";
+import { calculatePropertyCashflow, TenantRent } from "@/lib/financialCalculations";
 import { BarChart3 } from "lucide-react";
 
 type Property = Tables<"properties">;
@@ -31,6 +31,11 @@ export const CashflowBarChart = ({ properties, tenants, loans }: CashflowBarChar
     
     const loanPayment = loan ? Number(loan.maandlast) : 0;
     
+    // Create tenant rents array for per-tenant IRS calculation
+    const tenantRents: TenantRent[] = propertyTenants.map(t => ({
+      monthlyRent: Number(t.huurbedrag || 0)
+    }));
+    
     const cashflowResult = calculatePropertyCashflow(
       totalRent,
       Number(property.subsidie_bedrag) || 0,
@@ -40,7 +45,10 @@ export const CashflowBarChart = ({ properties, tenants, loans }: CashflowBarChar
       Number(property.verzekering_jaarlijks) || 0,
       Number(property.onderhoud_jaarlijks) || 0,
       Number(property.leegstand_buffer_percentage) || 5,
-      Number(property.beheerkosten_percentage) || 0
+      Number(property.beheerkosten_percentage) || 0,
+      0, // other expenses
+      { jaarHuurinkomst: new Date().getFullYear() },
+      tenantRents // Pass tenant rents for per-tenant IRS calculation
     );
 
     // Truncate property name for chart display
