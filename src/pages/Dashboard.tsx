@@ -123,7 +123,8 @@ const Dashboard = () => {
 
   const calculateMonthlyCashflow = () => {
     return properties.reduce((sum, property) => {
-      const loan = loans.find((l) => l.property_id === property.id);
+      // Use userLoans instead of loans to ensure data isolation
+      const loan = userLoans.find((l) => l.property_id === property.id);
       const cashflowResult = calculatePropertyCashflow(
         Number(property.maandelijkse_huur) || 0,
         Number(property.subsidie_bedrag) || 0,
@@ -268,7 +269,7 @@ const Dashboard = () => {
                               },
                               { 
                                 label: "Aantal Huurders", 
-                                value: tenants.length,
+                                value: userTenants.length,
                                 explanation: "Het totaal aantal actieve huurders in al onze panden."
                               },
                             ]
@@ -327,7 +328,7 @@ const Dashboard = () => {
                   <StatCard
                     title="Huurinkomsten"
                     value={`€${totalMonthlyRent.toLocaleString("nl-NL")}`}
-                    subtitle={`${tenants.length} huurders`}
+                    subtitle={`${userTenants.length} huurders`}
                     icon={<Wallet className="w-5 h-5 text-primary" />}
                     tooltip={{
                       title: "Maandelijkse Huurinkomsten",
