@@ -85,10 +85,19 @@ const Huurders = () => {
       if (roomsRes.error) throw roomsRes.error;
       if (checklistsRes.error) throw checklistsRes.error;
 
-      setTenants(tenantsRes.data || []);
-      setProperties(propertiesRes.data || []);
-      setRooms(roomsRes.data || []);
-      setChecklists(checklistsRes.data || []);
+      // Store properties first to filter other data
+      const userProperties = propertiesRes.data || [];
+      setProperties(userProperties);
+      
+      // Filter tenants, rooms and checklists to only include those from user's properties
+      const userPropertyIds = userProperties.map(p => p.id);
+      const userTenants = (tenantsRes.data || []).filter(t => userPropertyIds.includes(t.property_id));
+      const userRooms = (roomsRes.data || []).filter(r => userPropertyIds.includes(r.property_id));
+      const userChecklists = (checklistsRes.data || []).filter(c => userPropertyIds.includes(c.property_id));
+      
+      setTenants(userTenants);
+      setRooms(userRooms);
+      setChecklists(userChecklists);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({

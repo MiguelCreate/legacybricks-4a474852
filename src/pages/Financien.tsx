@@ -178,21 +178,28 @@ const Financien = () => {
     }
   };
 
-  // Calculate stats
-  const totalMonthlyRent = tenants.reduce((sum, t) => sum + Number(t.huurbedrag), 0);
-  const totalMonthlyLoanPayments = loans.reduce((sum, l) => sum + Number(l.maandlast), 0);
+  // Filter data to only include items from user's properties (extra security layer)
+  const userPropertyIds = properties.map(p => p.id);
+  const userTenants = tenants.filter(t => userPropertyIds.includes(t.property_id));
+  const userLoans = loans.filter(l => userPropertyIds.includes(l.property_id));
+  const userExpenses = expenses.filter(e => userPropertyIds.includes(e.property_id));
+  const userPayments = payments.filter(p => userPropertyIds.includes(p.property_id));
+
+  // Calculate stats using filtered data
+  const totalMonthlyRent = userTenants.reduce((sum, t) => sum + Number(t.huurbedrag), 0);
+  const totalMonthlyLoanPayments = userLoans.reduce((sum, l) => sum + Number(l.maandlast), 0);
   
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   
-  const monthlyExpenses = expenses
+  const monthlyExpenses = userExpenses
     .filter((e) => {
       const date = new Date(e.datum);
       return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
     })
     .reduce((sum, e) => sum + Number(e.bedrag), 0);
 
-  const monthlyPaymentsReceived = payments
+  const monthlyPaymentsReceived = userPayments
     .filter((p) => {
       const date = new Date(p.datum);
       return date.getMonth() === currentMonth && date.getFullYear() === currentYear && p.status === "betaald";

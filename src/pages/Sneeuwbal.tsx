@@ -67,9 +67,17 @@ const Sneeuwbal = () => {
       if (loansRes.error) throw loansRes.error;
       if (tenantsRes.error) throw tenantsRes.error;
 
-      setProperties(propertiesRes.data || []);
-      setLoans(loansRes.data || []);
-      setTenants(tenantsRes.data || []);
+      // Store properties first to filter other data
+      const userProperties = propertiesRes.data || [];
+      setProperties(userProperties);
+      
+      // Filter loans and tenants to only include those from user's properties
+      const userPropertyIds = userProperties.map(p => p.id);
+      const userLoans = (loansRes.data || []).filter(l => userPropertyIds.includes(l.property_id));
+      const userTenants = (tenantsRes.data || []).filter(t => userPropertyIds.includes(t.property_id));
+      
+      setLoans(userLoans);
+      setTenants(userTenants);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
