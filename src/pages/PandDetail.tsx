@@ -16,6 +16,7 @@ import { VvEModule } from "@/components/vve/VvEModule";
 import { FinancieelDashboard } from "@/components/financieel/FinancieelDashboard";
 import { PortugueseTaxCalculator } from "@/components/panden/PortugueseTaxCalculator";
 import { PropertyDocuments } from "@/components/panden/PropertyDocuments";
+import { ReciboDeRendaTracker } from "@/components/panden/ReciboDeRendaTracker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -372,11 +373,20 @@ const PandDetail = () => {
             </TabsContent>
 
             <TabsContent value="belasting" className="mt-0">
-              <PortugueseTaxCalculator
-                aankoopprijs={Number(property.aankoopprijs)}
-                maandelijksHuur={Number(property.maandelijkse_huur || 0)}
-                imiTarief={property.imi_percentage ? Number(property.imi_percentage) : undefined}
-              />
+              <div className="space-y-6">
+                <PortugueseTaxCalculator
+                  aankoopprijs={Number(property.aankoopprijs)}
+                  maandelijksHuur={Number(property.maandelijkse_huur || 0)}
+                  imiTarief={property.imi_percentage ? Number(property.imi_percentage) : undefined}
+                />
+                
+                {/* Recibo de Renda Tracker */}
+                <ReciboDeRendaTracker
+                  propertyId={property.id}
+                  propertyName={property.naam}
+                  tenantRents={[]}
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="documenten" className="mt-0">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Target, Plus, Sparkles, CheckCircle2, Trash2, Sliders } from "lucide-react";
+import { Target, Plus, Sparkles, CheckCircle2, Trash2, Sliders, Flame } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
@@ -14,6 +14,7 @@ import { GoalFormDialog } from "@/components/doelen/GoalFormDialog";
 import { ImpactDashboard } from "@/components/doelen/ImpactDashboard";
 import { SmartSuggestions } from "@/components/doelen/SmartSuggestions";
 import { ScenarioComparison } from "@/components/doelen/ScenarioComparison";
+import { MultiPropertyFireGoal } from "@/components/doelen/MultiPropertyFireGoal";
 import { GOAL_TYPES, type GoalType } from "@/components/doelen/goalTypes";
 import { calculatePropertySurplus } from "@/components/doelen/useGoalCalculations";
 
@@ -259,6 +260,21 @@ const Doelen = () => {
 
           {/* Smart Suggestions */}
           <SmartSuggestions goals={goals} properties={properties} profile={profile} onSuggestGoal={handleSuggestGoal} />
+
+          {/* Multi-Property FIRE Goal */}
+          {properties.length > 0 && (
+            <section>
+              <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Flame className="w-5 h-5 text-warning" />
+                FIRE Portfolio Analyse
+              </h2>
+              <MultiPropertyFireGoal
+                properties={properties}
+                loans={loans}
+                tenants={tenants}
+              />
+            </section>
+          )}
 
           {/* Active Goals */}
           <section>
