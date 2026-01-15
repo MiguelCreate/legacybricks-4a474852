@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Building2, MapPin, Euro, Pencil, TrendingUp, Home, DoorOpen, BarChart3, Palette, Users, Calculator, FolderOpen, Receipt } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Euro, Pencil, TrendingUp, Home, DoorOpen, BarChart3, Palette, Users, Calculator, FolderOpen, Receipt, Activity } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import { FinancieelDashboard } from "@/components/financieel/FinancieelDashboard
 import { PortugueseTaxCalculator } from "@/components/panden/PortugueseTaxCalculator";
 import { PropertyDocuments } from "@/components/panden/PropertyDocuments";
 import { ReciboDeRendaTracker } from "@/components/panden/ReciboDeRendaTracker";
+import { PropertyHealthScore } from "@/components/panden/PropertyHealthScore";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -324,19 +325,40 @@ const PandDetail = () => {
             </TabsContent>
 
             <TabsContent value="risico" className="mt-0">
-              <RisicoKaart
-                juridisch={property.risico_juridisch || 1}
-                markt={property.risico_markt || 1}
-                fiscaal={property.risico_fiscaal || 1}
-                fysiek={property.risico_fysiek || 1}
-                operationeel={property.risico_operationeel || 1}
-                readonly
-                vveReservePercentage={
-                  Number(property.vve_reserve_streef || 0) > 0
-                    ? (Number(property.vve_reserve_huidig || 0) / Number(property.vve_reserve_streef)) * 100
-                    : undefined
-                }
-              />
+              <div className="space-y-6">
+                <PropertyHealthScore
+                  gezondheidsscore={property.gezondheidsscore || undefined}
+                  energielabel={property.energielabel || undefined}
+                  maandelijksHuur={Number(property.maandelijkse_huur || 0)}
+                  aankoopprijs={Number(property.aankoopprijs)}
+                  waardering={property.waardering ? Number(property.waardering) : undefined}
+                  status={property.status}
+                  risicoJuridisch={property.risico_juridisch || 1}
+                  risicoMarkt={property.risico_markt || 1}
+                  risicoFiscaal={property.risico_fiscaal || 1}
+                  risicoFysiek={property.risico_fysiek || 1}
+                  risicoOperationeel={property.risico_operationeel || 1}
+                  energieVervaldatum={property.energie_vervaldatum || undefined}
+                  verzekeringsVervaldatum={property.gebouw_verzekering_vervaldatum || undefined}
+                  bezettingspercentage={property.st_bezetting_percentage ? Number(property.st_bezetting_percentage) : undefined}
+                  typeVerhuur={property.type_verhuur || undefined}
+                  vveReserveHuidig={Number(property.vve_reserve_huidig || 0)}
+                  vveReserveStreef={Number(property.vve_reserve_streef || 0)}
+                />
+                <RisicoKaart
+                  juridisch={property.risico_juridisch || 1}
+                  markt={property.risico_markt || 1}
+                  fiscaal={property.risico_fiscaal || 1}
+                  fysiek={property.risico_fysiek || 1}
+                  operationeel={property.risico_operationeel || 1}
+                  readonly
+                  vveReservePercentage={
+                    Number(property.vve_reserve_streef || 0) > 0
+                      ? (Number(property.vve_reserve_huidig || 0) / Number(property.vve_reserve_streef)) * 100
+                      : undefined
+                  }
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="vve" className="mt-0">
