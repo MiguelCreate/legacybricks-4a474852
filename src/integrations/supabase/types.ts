@@ -1647,7 +1647,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_cloud_connection: {
+        Args: { p_provider: string }
+        Returns: {
+          account_email: string
+          id: string
+          provider: string
+        }[]
+      }
     }
     Enums: {
       analyse_status: "concept" | "potentieel" | "actief"
