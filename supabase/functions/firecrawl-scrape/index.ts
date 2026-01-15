@@ -35,7 +35,8 @@ Deno.serve(async (req) => {
 
     console.log('Scraping URL:', formattedUrl);
 
-    // Request both markdown AND screenshot for fallback
+    // ALWAYS request screenshot first for guaranteed fallback
+    // Then try markdown extraction
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -44,20 +45,42 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         url: formattedUrl,
-        formats: ['markdown', 'screenshot'], // Request both for fallback
+        formats: ['screenshot', 'markdown'], // Screenshot FIRST for guaranteed fallback
         onlyMainContent: options?.onlyMainContent ?? true,
-        waitFor: options?.waitFor || 3000,
-        timeout: 30000,
+        waitFor: options?.waitFor || 5000,
+        timeout: 60000,
         actions: [
-          { type: 'wait', milliseconds: 2000 }
+          { type: 'wait', milliseconds: 3000 } // Wait for page to fully load
         ],
       }),
     });
 
     const data = await response.json();
 
+    // Extract screenshot and markdown from response (check both data structures)
+    const screenshot = data?.data?.screenshot || data?.screenshot || '';
+    const markdown = data?.data?.markdown || data?.markdown || '';
+    const statusCode = data?.data?.metadata?.statusCode || data?.metadata?.statusCode;
+    
+    console.log('Scrape response - markdown length:', markdown.length, 'screenshot available:', !!screenshot, 'screenshot length:', screenshot?.length || 0);
+
     if (!response.ok) {
       console.error('Firecrawl API error:', data);
+      
+      // Even on error, if we got a screenshot, use it!
+      if (screenshot) {
+        console.log('API error but screenshot available, using screenshot fallback');
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            data: { 
+              screenshot,
+              usedFallback: true 
+            }
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       
       // Handle specific Firecrawl errors with user-friendly messages
       const errorCode = data?.code || '';
@@ -68,7 +91,7 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: 'Deze website (Idealista) blokkeert alle automatische toegang. Kopieer de advertentietekst handmatig en gebruik de "Plak Tekst" optie.',
+            error: 'Deze website blokkeert automatische toegang. Gebruik de "Plak Tekst" tab om de advertentietekst handmatig in te voeren.',
             blocked: true,
             requiresManualInput: true
           }),
@@ -82,26 +105,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Extract markdown and screenshot from response
-    const markdown = data?.data?.markdown || data?.markdown || '';
-    const screenshot = data?.data?.screenshot || data?.screenshot || '';
-    const statusCode = data?.data?.metadata?.statusCode || data?.metadata?.statusCode;
-    
-    console.log('Scrape response - markdown length:', markdown.length, 'screenshot available:', !!screenshot);
-
-    // Check if we got blocked (captcha, 403, etc.)
+    // Check if markdown looks blocked (captcha, 403, etc.)
     const isBlocked = statusCode === 403 || 
                       markdown.includes('captcha') || 
                       markdown.includes('geo.captcha-delivery.com') ||
                       markdown.includes('Access Denied') ||
-                      markdown.includes('Please verify you are human');
+                      markdown.includes('Please verify you are human') ||
+                      markdown.includes('Checking if the site connection is secure');
 
-    if (isBlocked || markdown.length < 100) {
-      console.log('Markdown blocked or insufficient, checking screenshot fallback...');
+    // If markdown is blocked or too short, prefer screenshot
+    if (isBlocked || markdown.length < 200) {
+      console.log('Markdown blocked or insufficient (length:', markdown.length, '), checking screenshot fallback...');
       
       // If we have a screenshot, use it as fallback
       if (screenshot) {
-        console.log('Using screenshot fallback');
+        console.log('Using screenshot fallback (screenshot length:', screenshot.length, ')');
         return new Response(
           JSON.stringify({ 
             success: true, 
@@ -114,25 +132,27 @@ Deno.serve(async (req) => {
         );
       }
       
-      // No screenshot available either
+      // No screenshot available either - return blocked status
       console.error('Both markdown and screenshot failed');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Deze website blokkeert automatische toegang en screenshot fallback is niet beschikbaar.',
-          blocked: true
+          error: 'Deze website blokkeert automatische toegang. Gebruik de "Plak Tekst" tab.',
+          blocked: true,
+          requiresManualInput: true
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Success with markdown
+    // Success with good markdown content
     console.log('Scrape successful with markdown, content length:', markdown.length);
     return new Response(
       JSON.stringify({ 
         success: true, 
         data: { 
           markdown,
+          screenshot, // Include screenshot for potential fallback use
           usedFallback: false 
         } 
       }),
