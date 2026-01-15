@@ -1435,6 +1435,57 @@ export type Database = {
           },
         ]
       }
+      saved_listings: {
+        Row: {
+          bron: string | null
+          created_at: string
+          foto_url: string | null
+          id: string
+          kamers: number | null
+          locatie: string | null
+          naam: string
+          notities: string | null
+          oppervlakte_m2: number | null
+          status: string | null
+          updated_at: string
+          url: string | null
+          user_id: string
+          vraagprijs: number | null
+        }
+        Insert: {
+          bron?: string | null
+          created_at?: string
+          foto_url?: string | null
+          id?: string
+          kamers?: number | null
+          locatie?: string | null
+          naam: string
+          notities?: string | null
+          oppervlakte_m2?: number | null
+          status?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id: string
+          vraagprijs?: number | null
+        }
+        Update: {
+          bron?: string | null
+          created_at?: string
+          foto_url?: string | null
+          id?: string
+          kamers?: number | null
+          locatie?: string | null
+          naam?: string
+          notities?: string | null
+          oppervlakte_m2?: number | null
+          status?: string | null
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+          vraagprijs?: number | null
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           actief: boolean

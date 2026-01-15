@@ -11,8 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   Info, TrendingUp, Home, Wallet, PiggyBank, Heart, 
-  FileDown, RotateCcw, Scale, Building2, Globe
+  FileDown, RotateCcw, Scale, Building2, Globe, Users
 } from "lucide-react";
+import { CoOwnershipModule, Owner } from "@/components/analysator/CoOwnershipModule";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, 
   LineChart, Line, Legend, Tooltip as RechartsTooltip
@@ -98,6 +99,13 @@ const VerkopenOfBehouden = () => {
 
   const [activeTab, setActiveTab] = useState('input');
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  
+  // Co-ownership state
+  const [coOwnershipEnabled, setCoOwnershipEnabled] = useState(false);
+  const [owners, setOwners] = useState<Owner[]>([
+    { id: '1', naam: 'Eigenaar 1', eigendomPercentage: 50, eigenInbreng: 0, hypotheekAandeel: 0, maandBijdrage: 0 },
+    { id: '2', naam: 'Eigenaar 2', eigendomPercentage: 50, eigenInbreng: 0, hypotheekAandeel: 0, maandBijdrage: 0 },
+  ]);
 
   const handleAnalyze = () => {
     const analysis = analyzeProperty(inputs);
@@ -571,6 +579,20 @@ const VerkopenOfBehouden = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Co-ownership Module */}
+            <CoOwnershipModule
+              enabled={coOwnershipEnabled}
+              onToggle={setCoOwnershipEnabled}
+              owners={owners}
+              onOwnersChange={setOwners}
+              totalPropertyValue={inputs.currentMarketValue}
+              totalMortgage={inputs.remainingMortgage}
+              monthlyRent={inputs.monthlyRent}
+              monthlyMortgagePayment={inputs.remainingMortgage * (inputs.mortgageRate / 100 / 12)}
+              monthlyCosts={inputs.maintenanceCosts + (inputs.monthlyRent * inputs.vacancyRate / 100)}
+              irsPercentage={inputs.rentalTaxRegime === 'autonomous' ? 28 : 25}
+            />
 
             {/* Assumptions & Goals */}
             <Card>
