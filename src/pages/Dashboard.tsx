@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Building2, Users, Euro, TrendingUp, Plus, Receipt, AlertTriangle, FileText, Compass, Wallet } from "lucide-react";
+import { Building2, Users, Euro, TrendingUp, Plus, Receipt, AlertTriangle, FileText, Compass, Wallet, Heart } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExportMenu, ExportData } from "@/components/ui/ExportMenu";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -20,6 +21,7 @@ import { VrijheidsDashboard } from "@/components/dashboard/VrijheidsDashboard";
 import { AudioSamenvatting } from "@/components/dashboard/AudioSamenvatting";
 import { VvEMeldingen } from "@/components/dashboard/VvEMeldingen";
 import { CashflowBreakdown } from "@/components/dashboard/CashflowBreakdown";
+import { FavorietenTab } from "@/components/dashboard/FavorietenTab";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -216,7 +218,7 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto">
         <WelcomeHeader />
 
-        <div className="px-4 md:px-6 lg:px-8 space-y-8 pb-8">
+        <div className="px-4 md:px-6 lg:px-8 space-y-6 pb-8">
           {/* Stilte-Modus Toggle */}
           <StilteModus 
             vrijheidMaanden={vrijheidMaanden}
@@ -225,7 +227,19 @@ const Dashboard = () => {
           />
 
           {stilteModusAan ? null : (
-            <>
+            <Tabs defaultValue="overzicht" className="space-y-6">
+              <TabsList className="grid w-full max-w-xs grid-cols-2">
+                <TabsTrigger value="overzicht" className="gap-2">
+                  <Building2 className="w-4 h-4" />
+                  Overzicht
+                </TabsTrigger>
+                <TabsTrigger value="favorieten" className="gap-2">
+                  <Heart className="w-4 h-4" />
+                  Favorieten
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overzicht" className="space-y-8">
               {/* ===================== SECTIE 1: OVERZICHT ===================== */}
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -518,7 +532,12 @@ const Dashboard = () => {
                   />
                 </div>
               </section>
-            </>
+              </TabsContent>
+
+              <TabsContent value="favorieten">
+                <FavorietenTab />
+              </TabsContent>
+            </Tabs>
           )}
         </div>
       </div>
