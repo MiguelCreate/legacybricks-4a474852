@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Building2, Calculator, PenLine, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Building2, Calculator, PenLine, Plus, Trash2, ChevronDown, ChevronUp, Check, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,8 +23,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import type { Tables, Enums } from "@/integrations/supabase/types";
 
 type Property = Tables<"properties">;
@@ -97,6 +99,8 @@ export const HypotheekDialog = ({
   const [hypotheekType, setHypotheekType] = useState<Enums<"loan_type">>("eenvoudig");
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
   const [expandedParts, setExpandedParts] = useState<Set<number>>(new Set([0]));
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastAutoSaved, setLastAutoSaved] = useState<Date | null>(null);
   
   // Simple form state
   const [simpleForm, setSimpleForm] = useState({
@@ -107,6 +111,74 @@ export const HypotheekDialog = ({
 
   // Advanced form state - supports multiple parts
   const [loanParts, setLoanParts] = useState<LoanPartForm[]>([emptyLoanPart()]);
+
+  // Autosave key for localStorage backup
+  const autoSaveKey = `hypotheek_${selectedPropertyId || 'new'}`;
+
+  // Save loan parts to database
+  const saveLoanParts = useCallback(async (parts: LoanPartForm[]) => {
+    if (!selectedPropertyId || hypotheekType !== "gevorderd") return;
+    
+    setIsAutoSaving(true);
+    try {
+      for (const part of parts) {
+        if (part.hoofdsom <= 0) continue; // Skip empty parts
+        
+        const loanData = {
+          property_id: selectedPropertyId,
+          maandlast: part.useCalculated 
+            ? calculateMonthlyPayment(part.hoofdsom, part.rente_percentage, part.looptijd_jaren)
+            : part.customMaandlast,
+          hypotheek_type: "gevorderd" as Enums<"loan_type">,
+          hoofdsom: part.hoofdsom,
+          rente_percentage: part.rente_percentage,
+          looptijd_jaren: part.looptijd_jaren,
+          rente_type: part.rente_type,
+          startdatum: part.startdatum,
+          restschuld: part.restschuld,
+        };
+        
+        if (part.id) {
+          await supabase.from("loans").update(loanData).eq("id", part.id);
+        }
+      }
+      setLastAutoSaved(new Date());
+    } catch (error) {
+      console.error('Autosave failed:', error);
+    } finally {
+      setIsAutoSaving(false);
+    }
+  }, [selectedPropertyId, hypotheekType]);
+
+  // Autosave hook for advanced form
+  const { hasUnsavedChanges } = useAutoSave({
+    data: loanParts,
+    key: autoSaveKey,
+    onSave: saveLoanParts,
+    debounceMs: 2000,
+    enabled: hypotheekType === "gevorderd" && !!selectedPropertyId && loanParts.some(p => p.id && p.hoofdsom > 0),
+  });
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    if (open && selectedPropertyId && hypotheekType === "gevorderd") {
+      try {
+        const savedData = localStorage.getItem(`autosave_hypotheek_${selectedPropertyId}`);
+        if (savedData) {
+          const parsed = JSON.parse(savedData) as LoanPartForm[];
+          // Only restore if we have unsaved data
+          if (parsed.some(p => p.hoofdsom > 0)) {
+            toast({
+              title: "Niet-opgeslagen gegevens hersteld",
+              description: "Je hypotheekgegevens zijn hersteld uit de lokale opslag.",
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to restore from localStorage:', e);
+      }
+    }
+  }, [open, selectedPropertyId, hypotheekType, toast]);
 
   // Reset forms when dialog opens/closes or set initial property
   useEffect(() => {
@@ -392,10 +464,32 @@ export const HypotheekDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Hypotheek Beheren</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Hypotheek Beheren</DialogTitle>
+            {hypotheekType === "gevorderd" && selectedPropertyId && (
+              <div className="flex items-center gap-2">
+                {isAutoSaving ? (
+                  <Badge variant="outline" className="gap-1 text-xs">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Opslaan...
+                  </Badge>
+                ) : hasUnsavedChanges ? (
+                  <Badge variant="outline" className="gap-1 text-xs text-yellow-600">
+                    Niet opgeslagen
+                  </Badge>
+                ) : lastAutoSaved ? (
+                  <Badge variant="outline" className="gap-1 text-xs text-green-600">
+                    <Check className="w-3 h-3" />
+                    Opgeslagen
+                  </Badge>
+                ) : null}
+              </div>
+            )}
+          </div>
           <DialogDescription>
             Voeg hypotheekdelen toe of bewerk bestaande hypotheekgegevens per pand. 
             Je kunt meerdere delen met verschillende rentes en looptijden toevoegen.
+            {hypotheekType === "gevorderd" && " Gegevens worden automatisch opgeslagen."}
           </DialogDescription>
         </DialogHeader>
 

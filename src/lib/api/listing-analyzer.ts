@@ -52,12 +52,15 @@ export type ApiResponse<T> = {
   error?: string;
   data?: T;
   usedScreenshotFallback?: boolean;
+  blocked?: boolean;
+  requiresManualInput?: boolean;
 };
 
 interface ScrapeResponse {
   success: boolean;
   error?: string;
   blocked?: boolean;
+  requiresManualInput?: boolean;
   data?: {
     markdown?: string;
     screenshot?: string;
@@ -82,8 +85,13 @@ export const listingAnalyzerApi = {
     }
 
     // Check for blocking/captcha with no fallback
-    if (data?.blocked) {
-      return { success: false, error: data.error || 'Website geblokkeerd' };
+    if (data?.blocked || data?.requiresManualInput) {
+      return { 
+        success: false, 
+        error: data.error || 'Website geblokkeerd', 
+        blocked: true,
+        requiresManualInput: data.requiresManualInput 
+      };
     }
 
     if (!data?.success) {
@@ -135,7 +143,12 @@ export const listingAnalyzerApi = {
     // Step 1: Scrape (returns markdown or screenshot)
     const scrapeResult = await this.scrapeUrl(url);
     if (!scrapeResult.success || !scrapeResult.data) {
-      return { success: false, error: scrapeResult.error || 'Failed to scrape URL' };
+      return { 
+        success: false, 
+        error: scrapeResult.error || 'Failed to scrape URL',
+        blocked: scrapeResult.blocked,
+        requiresManualInput: scrapeResult.requiresManualInput
+      };
     }
 
     const { markdown, screenshot, usedFallback } = scrapeResult.data;

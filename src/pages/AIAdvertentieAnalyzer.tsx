@@ -54,8 +54,11 @@ export default function AIAdvertentieAnalyzer() {
   
   // Input state
   const [url, setUrl] = useState("");
+  const [manualText, setManualText] = useState("");
+  const [inputMode, setInputMode] = useState<'url' | 'text'>('url');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showManualFallback, setShowManualFallback] = useState(false);
   
   // Result state
   const [originalJson, setOriginalJson] = useState<ParsedProperty | null>(null);
@@ -65,6 +68,7 @@ export default function AIAdvertentieAnalyzer() {
   // UI state
   const [isSaving, setIsSaving] = useState(false);
   const [jsonCopied, setJsonCopied] = useState(false);
+  const [usedFallback, setUsedFallback] = useState(false);
 
   // Calculate analysis with overrides - memoized for performance
   const analysis = useMemo<AnalysisResult | null>(() => {
@@ -87,8 +91,12 @@ export default function AIAdvertentieAnalyzer() {
   }, [analysis]);
 
   const handleAnalyze = async () => {
-    if (!url.trim()) {
+    if (inputMode === 'url' && !url.trim()) {
       setError("Voer een URL in");
+      return;
+    }
+    if (inputMode === 'text' && !manualText.trim()) {
+      setError("Voer de advertentietekst in");
       return;
     }
 
@@ -96,9 +104,31 @@ export default function AIAdvertentieAnalyzer() {
     setError(null);
     setOriginalJson(null);
     setOverrides({});
+    setUsedFallback(false);
+    setShowManualFallback(false);
 
     try {
-      const result = await listingAnalyzerApi.analyzeUrl(url.trim());
+      let result;
+      
+      if (inputMode === 'text') {
+        // Direct text analysis without scraping
+        result = await listingAnalyzerApi.analyzeContent(manualText.trim(), url || 'Handmatige invoer', 'text');
+        setUsedFallback(true);
+      } else {
+        // URL-based analysis with automatic fallback
+        result = await listingAnalyzerApi.analyzeUrl(url.trim());
+        
+        // Check if we need to show manual fallback
+        if (!result.success && result.error?.includes('blokkeert')) {
+          setShowManualFallback(true);
+          setError(result.error + " Gebruik de 'Plak Tekst' tab om de advertentietekst handmatig in te voeren.");
+          return;
+        }
+        
+        if (result.usedScreenshotFallback) {
+          setUsedFallback(true);
+        }
+      }
       
       if (!result.success || !result.data) {
         throw new Error(result.error || "Analyse mislukt");
@@ -108,7 +138,9 @@ export default function AIAdvertentieAnalyzer() {
       
       toast({
         title: "Analyse voltooid!",
-        description: "De advertentie is succesvol geanalyseerd.",
+        description: usedFallback 
+          ? "De advertentie is geanalyseerd via een alternatieve methode."
+          : "De advertentie is succesvol geanalyseerd.",
       });
     } catch (err: any) {
       console.error("Analysis error:", err);
@@ -209,46 +241,106 @@ export default function AIAdvertentieAnalyzer() {
           </p>
         </div>
 
-        {/* URL Input */}
+        {/* URL/Text Input */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <ExternalLink className="h-5 w-5 text-primary" />
-              Listing URL
+              Advertentie Invoer
             </CardTitle>
             <CardDescription>
-              Plak de URL van de vastgoedadvertentie (bijv. idealista.pt, imovirtual.com)
+              Plak een URL of kopieer de advertentietekst direct
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                type="url"
-                placeholder="https://www.idealista.pt/imovel/..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="flex-1"
-                disabled={isAnalyzing}
-              />
-              <Button onClick={handleAnalyze} disabled={isAnalyzing} className="gap-2">
-                {isAnalyzing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Analyseren...
-                  </>
-                ) : (
-                  <>
-                    <Calculator className="h-4 w-4" />
-                    Analyseer
-                  </>
-                )}
-              </Button>
-            </div>
+            <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as 'url' | 'text')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="url">URL Analyse</TabsTrigger>
+                <TabsTrigger value="text" className={showManualFallback ? "ring-2 ring-primary animate-pulse" : ""}>
+                  Plak Tekst
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="url" className="space-y-4 mt-4">
+                <div className="flex gap-2">
+                  <Input
+                    type="url"
+                    placeholder="https://www.idealista.pt/imovel/..."
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    className="flex-1"
+                    disabled={isAnalyzing}
+                  />
+                  <Button onClick={handleAnalyze} disabled={isAnalyzing} className="gap-2">
+                    {isAnalyzing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Analyseren...
+                      </>
+                    ) : (
+                      <>
+                        <Calculator className="h-4 w-4" />
+                        Analyseer
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="text" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>Advertentie URL (optioneel)</Label>
+                  <Input
+                    type="url"
+                    placeholder="https://www.idealista.pt/imovel/..."
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    disabled={isAnalyzing}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Advertentietekst *</Label>
+                  <textarea
+                    className="w-full min-h-[200px] p-3 border rounded-md bg-background text-foreground resize-y"
+                    placeholder="Kopieer hier de volledige tekst van de vastgoedadvertentie. Inclusief prijs, oppervlakte, locatie, aantal kamers, etc."
+                    value={manualText}
+                    onChange={(e) => setManualText(e.target.value)}
+                    disabled={isAnalyzing}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Tip: Kopieer zoveel mogelijk details uit de advertentie voor een nauwkeurige analyse.
+                  </p>
+                </div>
+                <Button onClick={handleAnalyze} disabled={isAnalyzing || !manualText.trim()} className="gap-2 w-full">
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Analyseren...
+                    </>
+                  ) : (
+                    <>
+                      <Calculator className="h-4 w-4" />
+                      Analyseer Tekst
+                    </>
+                  )}
+                </Button>
+              </TabsContent>
+            </Tabs>
             
             {error && (
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {usedFallback && originalJson && (
+              <Alert>
+                <Sparkles className="h-4 w-4" />
+                <AlertDescription>
+                  Deze analyse is uitgevoerd via een alternatieve methode (screenshot of handmatige tekst). 
+                  Controleer de waarden extra zorgvuldig.
+                </AlertDescription>
               </Alert>
             )}
           </CardContent>
