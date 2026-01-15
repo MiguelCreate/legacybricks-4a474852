@@ -142,6 +142,42 @@ export type Database = {
           },
         ]
       }
+      cloud_connections: {
+        Row: {
+          access_token: string
+          account_email: string | null
+          created_at: string
+          id: string
+          provider: string
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          account_email?: string | null
+          created_at?: string
+          id?: string
+          provider: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          account_email?: string | null
+          created_at?: string
+          id?: string
+          provider?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       comparable_properties: {
         Row: {
           adres: string
@@ -1194,6 +1230,54 @@ export type Database = {
             columns: ["gerelateerd_doel_id"]
             isOneToOne: false
             referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_cloud_folders: {
+        Row: {
+          connection_id: string
+          created_at: string
+          folder_name: string | null
+          id: string
+          property_id: string
+          provider: string
+          root_folder_id: string
+          updated_at: string
+        }
+        Insert: {
+          connection_id: string
+          created_at?: string
+          folder_name?: string | null
+          id?: string
+          property_id: string
+          provider: string
+          root_folder_id: string
+          updated_at?: string
+        }
+        Update: {
+          connection_id?: string
+          created_at?: string
+          folder_name?: string | null
+          id?: string
+          property_id?: string
+          provider?: string
+          root_folder_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_cloud_folders_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "cloud_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_cloud_folders_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
